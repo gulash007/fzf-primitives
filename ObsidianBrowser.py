@@ -40,7 +40,7 @@ class ObsidianBrowser:
     @mods.ansi
     @mods.defaults
     @mods.preview(
-        window_size=80, command="bat %s/{} --color=always", formatter=lambda self, command: command % self.repo_location
+        command="bat %s/{} --color=always", window_size=80, formatter=lambda self, command: command % self.repo_location
     )
     @mods.exit_hotkey
     @mods.exit_on_no_selection
@@ -55,9 +55,9 @@ class ObsidianBrowser:
     @mods.ansi
     @mods.multiselect
     @mods.defaults
-    @mods.preview(window_size=70, command='x={} && echo "${x:9}"', live_clip_preview=True)
-    @mods.exit_hotkey
+    @mods.preview(command='x={} && echo "${x:9}"', window_size=70, live_clip_preview=True)
     @mods.exit_on_no_selection
+    @mods.exit_hotkey
     def get_lines_of_file(self, options: str, file_name: str):
         prompt = FzfPrompt()
         return prompt.prompt(

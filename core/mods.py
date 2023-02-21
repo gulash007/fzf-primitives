@@ -34,8 +34,8 @@ def exit_on_no_selection(func, self, options, *args, **kwargs):
 # TODO: decorator factory type hinting
 # TODO: command is can use Prompt attributes
 def preview(
-    window_size: int,
     command: str,
+    window_size: int = 75,
     formatter: Callable[[Any, str], str] = lambda self, command: command,
     live_clip_preview: bool = False,
 ):

@@ -33,8 +33,8 @@ class ChromeWindowManager:
                 return
 
     @mods.preview(
-        70,
         "source ~/.zshforchrome 2>/dev/null && echo {} | get_chrome_id | read -r window_id && chrome-cli list tabs -w $window_id",
+        70,
     )
     @mods.exit_hotkey
     @mods.exit_on_no_selection
