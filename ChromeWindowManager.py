@@ -1,5 +1,4 @@
 import re
-from pathlib import Path
 
 from pyfzf import FzfPrompt
 from thingies import shell_command
@@ -7,14 +6,10 @@ from thingies import shell_command
 from core import mods
 from core.exceptions import ExitLoop, ExitRound
 
-DEFAULT_REPO_PATH = Path("/Users/honza/Documents/HOLLY")
 WINDOW_ID_REGEX = re.compile("(?<=\[).*(?=\])")
 
 
 class ChromeWindowManager:
-    def __init__(self, repo_location: Path = DEFAULT_REPO_PATH) -> None:
-        self.repo_location = repo_location
-
     def run(self):
         """Runs one round of the application until end state. Loop should be implemented externally"""
         # TODO: maybe there's no need to have options
@@ -36,8 +31,8 @@ class ChromeWindowManager:
         "source ~/.zshforchrome 2>/dev/null && echo {} | get_chrome_id | read -r window_id && chrome-cli list tabs -w $window_id",
         70,
     )
-    @mods.exit_hotkey
     @mods.exit_on_no_selection
+    @mods.exit_hotkey
     def select_window(self, options=""):
         prompt = FzfPrompt()
         return prompt.prompt(choices=shell_command("chrome-cli list windows").split("\n"), fzf_options=options)
