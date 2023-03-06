@@ -35,7 +35,10 @@ class ChromeWindowManager:
     @mods.exit_hotkey
     def select_window(self, options=""):
         prompt = FzfPrompt()
-        return prompt.prompt(choices=shell_command("chrome-cli list windows").split("\n"), fzf_options=options)
+        return prompt.prompt(
+            choices=sorted(shell_command("chrome-cli list windows").split("\n"), key=lambda x: x.split("]")[1]),
+            fzf_options=options,
+        )
 
     def extract_window_id(self, line: str) -> str:
         return WINDOW_ID_REGEX.search(line)[0]
