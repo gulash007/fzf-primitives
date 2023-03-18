@@ -44,12 +44,8 @@ class ChromeWindowManager:
         return WINDOW_ID_REGEX.search(line)[0]
 
     def focus_window(self, window_id: str):
-        shell_command(f'chrome-cli open "" -w "{window_id}"')
-        new_tab_id = shell_command(
-            f"source ~/.zshforchrome && chrome-cli list tabs -w \"{window_id}\" | awk 'END{{print}}' | get_chrome_id"
-        )
-        shell_command(f'chrome-cli close -t "{new_tab_id}"')
-
+        active_tab_id = shell_command(f"brotab active | grep {window_id} | awk '{{ print $1 }}'")
+        shell_command(f'open -a "Google Chrome" && brotab activate {active_tab_id} --focused')
 
 if __name__ == "__main__":
     cwm = ChromeWindowManager()
