@@ -28,7 +28,7 @@ class Options:
     no_sort = OptionsAdder("--no-sort")
     cycle = OptionsAdder("--cycle")
     no_mouse = OptionsAdder("--no-mouse")
-    multiselect = OptionsAdder("--multi")  # ❗: Changes output size. Might define a different class of prompts
+    multiselect = OptionsAdder("--multi")
 
     def __call__(self, func):
         """To use the object as a decorator"""
