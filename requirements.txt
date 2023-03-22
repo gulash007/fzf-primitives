@@ -1,0 +1,6 @@
+pytest
+pyfzf
+clipboard
+string-color
+loguru
+dill

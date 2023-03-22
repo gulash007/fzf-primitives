@@ -5,13 +5,13 @@ from pyfzf import FzfPrompt
 from core.options import Options
 
 
-class Result:
+class Result(list):
     """Expects at least one --expect=hotkey so that it can interpret the first element in fzf_result as hotkey.
     This is implemented in default options for convenience."""
 
     def __init__(self, fzf_result: list[str]) -> None:
         self.hotkey = fzf_result[0] if fzf_result else None
-        self.values = fzf_result[1:]
+        super().__init__(fzf_result[1:])
 
     def consume(self, hotkey: str):
         if self.hotkey == hotkey:
@@ -20,7 +20,7 @@ class Result:
         return False
 
     def __str__(self) -> str:
-        return json.dumps(self.__dict__)
+        return json.dumps({"hotkey": self.hotkey, "values": self})
 
 
 class MyFzfPrompt(FzfPrompt):

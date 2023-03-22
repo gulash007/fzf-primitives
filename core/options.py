@@ -38,13 +38,13 @@ class Options:
 
         return with_options
 
-    def __init__(self, *options: str) -> None:
-        self.options: tuple[str, ...] = options
+    def __init__(self, *fzf_options: str) -> None:
+        self.options: tuple[str, ...] = fzf_options
 
-    def add(self, *additional_options: str) -> Self:
-        return type(self)(*self.options, *additional_options)
+    def add(self, *fzf_options: str) -> Self:
+        return type(self)(*self.options, *fzf_options)
 
-    def bind(self, hotkey: str, action: Callable | str):
+    def bind(self, hotkey: str, action: str):
         if isinstance(action, str):
             return self.add(f"--bind {hotkey}:{action}")
 
@@ -96,6 +96,32 @@ class BORDER:
     left = "left"
     right = "right"
     none = "none"
+class HOTKEY:
+    ctrl_a = "ctrl-a"
+    ctrl_d = "ctrl-d"
+    ctrl_q = "ctrl-q"
+    ctrl_b = "ctrl-b"
+    ctrl_o = "ctrl-o"
+    enter = "enter"
+    f1 = "f1"
+    f2 = "f2"
+    f3 = "f3"
+    f4 = "f4"
+    f5 = "f5"
+    f6 = "f6"
+    f7 = "f7"
+    f8 = "f8"
+    f9 = "f9"
+    f10 = "f10"
+    f11 = "f11"
+    f12 = "f12"
+
+
+class POSITION:
+    up = "up"
+    down = "down"
+    left = "left"
+    right = "right"
 
 
 if __name__ == "__main__":

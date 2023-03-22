@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import json
-from enum import Enum
 from pathlib import Path
-from typing import Callable, Self
+from typing import Callable
 
-from pyfzf import FzfPrompt
-from thingies import SortingKey
+from thingies import SortingKey, shell_command
 
-from core.exceptions import ExitLoop
+from core.MyFzfPrompt import Result, run_fzf_prompt
 from core.options import Options
 
 # class HOTKEY(Enum):
@@ -70,51 +67,54 @@ from core.options import Options
 #         self._command: Callable | str
 
 
-class Result:
-    """Expects at least one --expect=hotkey so that it can interpret the first element in fzf_result as hotkey"""
-
-    def __init__(self, fzf_result: list[str]) -> None:
-        self.hotkey = fzf_result[0]
-        self.values = fzf_result[1:]
-
-    def consume(self, hotkey: str):
-        if self.hotkey == hotkey:
-            self.hotkey = None
-            return True
-        return False
-
-    def __str__(self) -> str:
-        return json.dumps(self.__dict__)
-
-
 REPO_LOCATION = Path("/Users/honza/Documents/HOLLY")
 
 
-class ObsidianBrowser:
-    def run(self):
-        prompt = DirectoryPrompt(REPO_LOCATION)
+class UnexpectedResultType(Exception):
+    pass
+
+
+class BasicLoop:
+    def __init__(self, starting_prompt: Prompt) -> None:
+        self.starting_prompt = starting_prompt
+
+    def run(self) -> Result:
+        prompt = self.starting_prompt
         while True:
-            try:
-                result = prompt()
-                if not isinstance(result, DirectoryPrompt):
-                    return result
+            result = prompt()
+            if isinstance(result, Result):
+                return result
+            elif isinstance(result, Prompt):
                 prompt = result
                 continue
-            except ExitLoop:
-                break
+            else:
+                raise UnexpectedResultType(f"{type(result)}")
 
 
-class DirectoryPrompt:
+class Prompt:
+    def __init__(self) -> None:
+        self._options = Options().defaults
+
+    def __call__(self) -> Result:
+        pass
+
+
+class DirectoryPrompt(Prompt):
     def __init__(self, dirpath: Path, sorting_key: Callable = SortingKey().alphabetically) -> None:
+        super().__init__()
         self.dirpath = dirpath
-        self._options = Options().defaults.ansi
         self._sorting_key = sorting_key
 
-    def __call__(self):
-        files = sorted(self.dirpath.iterdir(), key=self._sorting_key)
-        return Result(FzfPrompt().prompt(choices=files, fzf_options=str(self._options)))
+    @Options().ansi.multiselect
+    def __call__(self, options: Options = Options()) -> Result:
+        files = sorted(
+            (Path(line) for line in shell_command(f"find {self.dirpath} -maxdepth 1").splitlines()),
+            key=self._sorting_key,
+        )
+        return run_fzf_prompt(choices=files, fzf_options=self._options + options)
 
 
-ob = ObsidianBrowser()
+d = DirectoryPrompt(REPO_LOCATION, sorting_key=SortingKey().directory_first.alphabetically)
+basic_loop = BasicLoop(d)
 
-print(ob.run())
+print(basic_loop.run())
