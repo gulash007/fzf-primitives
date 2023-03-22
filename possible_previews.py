@@ -105,6 +105,7 @@ class DirectoryPrompt(Prompt):
         self.dirpath = dirpath
         self._sorting_key = sorting_key
 
+    @mods.hotkey_python(HOTKEY.ctrl_d, lambda self, result: self.double_query(result))
     @Options().ansi.multiselect
     def __call__(self, options: Options = Options()) -> Result:
         files = sorted(
@@ -112,6 +113,10 @@ class DirectoryPrompt(Prompt):
             key=self._sorting_key,
         )
         return run_fzf_prompt(choices=files, fzf_options=self._options + options)
+
+    def double_query(self, result: Result):
+        result.query = f"{result.query}{result.query}"
+        return result
 
 
 d = DirectoryPrompt(REPO_LOCATION, sorting_key=SortingKey().directory_first.alphabetically)

@@ -99,6 +99,17 @@ def hotkey(hotkey: str, action: Callable | str):
     return decorator
 
 
+def hotkey_python(hotkey: str, action: Callable):
+    def deco(func):
+        def wrapper(self, options: Options = Options(), *args, **kwargs):
+            result: Result = func(self, Options().expect(hotkey) + options, *args, **kwargs)
+            return action(self, result) if result.consume(hotkey) else result
+
+        return wrapper
+
+    return deco
+
+
 def clip_output(func):
     @functools.wraps(func)
     def clipping_output(self, options: Options = Options(), *args, **kwargs):
