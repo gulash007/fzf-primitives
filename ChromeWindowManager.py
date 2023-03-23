@@ -1,11 +1,11 @@
 import re
 
-from pyfzf import FzfPrompt
 from core.options import Options
 from thingies import shell_command
 
 from core import mods
 from core.exceptions import ExitLoop, ExitRound
+from core.MyFzfPrompt import Result, run_fzf_prompt
 
 WINDOW_ID_REGEX = re.compile(r"(?<=\[).*(?=\])")
 
@@ -18,7 +18,7 @@ class ChromeWindowManager:
     def run(self):
         """Runs one round of the application until end state. Loop should be implemented externally"""
         # TODO: maybe there's no need to have options
-        window = self.select_window()[1]
+        window = self.select_window()[0]
         # window = self._window_prompt()
         window_id = self.extract_window_id(window)
         self.focus_window(window_id)
@@ -41,11 +41,10 @@ class ChromeWindowManager:
     @mods.exit_round_on_no_selection
     @mods.exit_loop_hotkey
     @Options().defaults
-    def select_window(self, options: Options = Options()):
-        prompt = FzfPrompt()
-        return prompt.prompt(
+    def select_window(self, options: Options = Options()) -> Result:
+        return run_fzf_prompt(
             choices=sorted(shell_command("chrome-cli list windows").split("\n"), key=lambda x: x.split("]")[1]),
-            fzf_options=str(options),
+            fzf_options=options,
         )
 
     def extract_window_id(self, line: str) -> str:
@@ -57,6 +56,7 @@ class ChromeWindowManager:
     def focus_window(self, window_id: str):
         active_tab_id = shell_command(f"brotab active | grep {window_id} | awk '{{ print $1 }}'")
         shell_command(f'open -a "Google Chrome" && brotab activate {active_tab_id} --focused')
+
 
 if __name__ == "__main__":
     cwm = ChromeWindowManager()

@@ -2,6 +2,7 @@ import functools
 from typing import Any, Callable, Optional
 
 import clipboard
+from core.MyFzfPrompt import Result
 
 from core.exceptions import ExitLoop, ExitRound
 from core.options import Options, HOTKEY, POSITION
@@ -22,9 +23,9 @@ def add_options(added_options: Options):
 
 def exit_round_on_no_selection(func):
     def exiting_round_on_no_selection(self, options: Options = Options(), *args, **kwargs):
-        if not (output := func(self, options, *args, **kwargs)):
+        if not (result := func(self, options, *args, **kwargs)):
             raise ExitRound  # TODO: custom message (decorator factory)
-        return output
+        return result
 
     return exiting_round_on_no_selection
 
@@ -67,10 +68,10 @@ def preview(
 def exit_loop_hotkey(func):
     def with_exit_loop_hotkey(self, options: Options = Options(), *args, **kwargs):
         """Should produce a signal (raise an Exception) to end loop"""
-        output = func(self, Options(f"--expect={HOTKEY.ctrl_q}") + options, *args, **kwargs)
-        if output and output[0] == HOTKEY.ctrl_q:
+        result: Result = func(self, Options(f"--expect={HOTKEY.ctrl_q}") + options, *args, **kwargs)
+        if result.hotkey == HOTKEY.ctrl_q:
             raise ExitLoop
-        return output
+        return result
 
     return with_exit_loop_hotkey
 
@@ -113,8 +114,8 @@ def hotkey_python(hotkey: str, action: Callable):
 def clip_output(func):
     @functools.wraps(func)
     def clipping_output(self, options: Options = Options(), *args, **kwargs):
-        result = func(self, options, *args, **kwargs)
-        clipboard.copy("\n".join(result.values))
+        result: Result = func(self, options, *args, **kwargs)
+        clipboard.copy("\n".join(result))
         return result
 
     return clipping_output
