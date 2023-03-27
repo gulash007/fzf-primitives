@@ -4,3 +4,4 @@ clipboard
 string-color
 loguru
 dill
+typer
