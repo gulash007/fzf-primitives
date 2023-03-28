@@ -10,8 +10,12 @@ class Result(list):
     This is implemented in default options for convenience."""
 
     def __init__(self, fzf_result: list[str]) -> None:
-        self.hotkey = fzf_result[0] if fzf_result else None
-        super().__init__(fzf_result[1:])
+        self.hotkey = None
+        self.query = None
+        if fzf_result:
+            self.hotkey = fzf_result[1]
+            self.query = fzf_result[0]
+        super().__init__(fzf_result[2:])
 
     def consume(self, hotkey: str):
         if self.hotkey == hotkey:
@@ -20,7 +24,7 @@ class Result(list):
         return False
 
     def __str__(self) -> str:
-        return json.dumps({"hotkey": self.hotkey, "values": self})
+        return json.dumps({"hotkey": self.hotkey, "query": self.query, "values": self})
 
 
 class MyFzfPrompt(FzfPrompt):
