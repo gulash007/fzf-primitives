@@ -1,4 +1,5 @@
 import json
+from typing import Iterable, Optional
 
 from pyfzf import FzfPrompt
 
@@ -28,7 +29,7 @@ class Result(list):
 
 
 class MyFzfPrompt(FzfPrompt):
-    def prompt(self, choices=None, fzf_options: Options = Options(), delimiter="\n") -> Result:
+    def prompt(self, choices: Iterable = None, fzf_options: Options = Options(), delimiter="\n") -> Result:
         return Result(super().prompt(choices, str(Options().defaults + fzf_options), delimiter))
 
 
