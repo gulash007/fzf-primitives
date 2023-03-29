@@ -1,9 +1,12 @@
 import inspect
-from typing import Any, Callable, Optional
-from core.MyFzfPrompt import Result, MyFzfPrompt
-from possible_previews import Prompt
-from typing import TypeVar
+from typing import Any, Callable, Optional, TypeVar
+
 from thingies import shell_command
+
+from core.exceptions import ExitLoop
+from core.MyFzfPrompt import MyFzfPrompt, Result
+from core.options import HOTKEY, Options
+from possible_previews import Prompt
 
 PromptType = TypeVar("PromptType", bound=Prompt)
 
@@ -21,33 +24,66 @@ def action(hotkey: Optional[str] = None):
 
 # TODO: return to previous selection
 # TODO: return with previous query
+# TODO: Allow multiselect (multioutput)?
+# TODO: How to include --bind hotkeys (internal fzf prompt actions)?
 class ActionMenu(Prompt):
-    def __init__(self, owner: Prompt, query: str, selections: list[str]) -> None:
+    action_menu_hotkey = None
+
+    def __init__(self, owner: Prompt) -> None:
+        super().__init__()
         self.owner = owner
-        self.query = query
-        self.selections = selections
         self.actions = {
-            method_name: method
+            f"{method_name}\t({getattr(method, 'hotkey', '')})": method
             for method_name, method in inspect.getmembers(self, predicate=inspect.ismethod)
             if getattr(method, "is_action", None)
         }
         self.hotkeyed_actions = {action.hotkey: action for action in self.actions.values() if hasattr(action, "hotkey")}
-        super().__init__()
+        self._options = self._options.expect(*self.hotkeyed_actions.keys())
 
-    def __call__(self) -> Result:
+    def __call__(self, query: str, selections: list[str]) -> Any:
         choices = self.actions.keys()
-        action_name = MyFzfPrompt().prompt(choices=choices)[0]  # TODO: extract decorated function
-        return self.actions[action_name](self.query, self.selections)
+        result = MyFzfPrompt().prompt(choices, self._options)  # TODO: extract decorated function get_action
+        if result.hotkey and result.hotkey != HOTKEY.enter and result.hotkey in self.hotkeyed_actions:
+            return self.interpret_hotkey(result.hotkey, query, selections)
+        action_id = result[0]
+        action = self.actions[action_id]
+        return action(query, selections)
 
-    def interpret_hotkey(self, hotkey: str):
-        return self.hotkeyed_actions[hotkey](self.query, self.selections)
+    def interpret_hotkey(self, hotkey: str, query: str, selections: list[str]):
+        action = self.hotkeyed_actions.get(hotkey)
+        return action(query, selections) if action else None
 
-    @action("ctrl-c")
+    # EXAMPLE
+    @action(HOTKEY.ctrl_c)
     def clip_selections(self, query: str, selections: list[str]):
         # shell_command seems faster than pyperclip but not in a loop but that's probably irrelevant
         shell_command("clip", input="\n".join(selections))
+        return True
+
+    @action(HOTKEY.ctrl_q)
+    def quit_app(self, query: str, selections: list[str]):
+        # shell_command seems faster than pyperclip but not in a loop but that's probably irrelevant
+        raise ExitLoop(f"Exiting from {self} with query: {query} and selections: {', '.join(selections)}")
 
 
 if __name__ == "__main__":
-    am = ActionMenu(None, "some query", ["selection1", "selection2"])
-    am()
+
+    class SomePrompt(Prompt):
+        def __call__(self) -> Any:
+            self.action_menu = ActionMenu(self)
+            self._options = self._options.expect(*self.action_menu.hotkeyed_actions.keys())
+            result = self.get_number()
+            if result.hotkey == self.action_menu_hotkey:
+                # TODO: distinguish between action that returns None and not choosing an action
+                action_menu_result = self.action_menu(result.query, list(result))
+                return action_menu_result or self()
+            if result.hotkey in self.action_menu.hotkeyed_actions:
+                return self.action_menu.interpret_hotkey(result.hotkey, result.query, list(result))
+            return result
+
+        @Options().multiselect
+        def get_number(self, options: Options = Options()):
+            return MyFzfPrompt().prompt(["alpha", "beta", "gamma"], self._options + options)
+
+    pr = SomePrompt()
+    print(pr())

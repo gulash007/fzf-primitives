@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable
-from core import mods
+from typing import Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from core.ActionMenu import ActionMenu
 
 from thingies import SortingKey, shell_command
 
 from core.MyFzfPrompt import Result, run_fzf_prompt
-from core.options import HOTKEY, Options
+from core.options import Options, HOTKEY
+from core import mods
 
 # class HOTKEY(Enum):
 #     ctrl_q = "ctrl-q"
@@ -93,8 +96,12 @@ class BasicLoop:
 
 
 class Prompt:
+    action_menu_hotkey = HOTKEY.ctrl_y
+
     def __init__(self) -> None:
         self._options = Options().defaults
+        if self.action_menu_hotkey:
+            self._options = self._options.expect(self.action_menu_hotkey)
 
     def __call__(self) -> Result:
         pass
