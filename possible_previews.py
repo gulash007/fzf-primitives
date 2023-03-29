@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Callable
+from core import mods
 
 from thingies import SortingKey, shell_command
 
 from core.MyFzfPrompt import Result, run_fzf_prompt
-from core.options import Options
+from core.options import HOTKEY, Options
 
 # class HOTKEY(Enum):
 #     ctrl_q = "ctrl-q"
@@ -114,12 +115,9 @@ class DirectoryPrompt(Prompt):
         )
         return run_fzf_prompt(choices=files, fzf_options=self._options + options)
 
-    def double_query(self, result: Result):
-        result.query = f"{result.query}{result.query}"
-        return result
 
+if __name__ == "__main__":
+    d = DirectoryPrompt(REPO_LOCATION, sorting_key=SortingKey().directory_first().alphabetically())
+    basic_loop = BasicLoop(d)
 
-d = DirectoryPrompt(REPO_LOCATION, sorting_key=SortingKey().directory_first.alphabetically)
-basic_loop = BasicLoop(d)
-
-print(basic_loop.run())
+    print(basic_loop.run())
