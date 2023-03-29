@@ -1,5 +1,6 @@
 import inspect
 from typing import Any, Callable, Optional, TypeVar
+from core.BasicLoop import BasicLoop
 
 from thingies import shell_command
 
@@ -13,7 +14,7 @@ PromptType = TypeVar("PromptType", bound=Prompt)
 
 # TODO: Hotkeys class for customizing and checking for hotkey conflicts
 def action(hotkey: Optional[str] = None):
-    def decorator(func: Callable[[PromptType, str, list[str]], Any]):
+    def decorator(func: Callable[[PromptType, Result], Any]):
         func.is_action = True
         if hotkey:
             func.hotkey = hotkey
@@ -26,6 +27,9 @@ def action(hotkey: Optional[str] = None):
 # TODO: return with previous query
 # TODO: Allow multiselect (multioutput)?
 # TODO: How to include --bind hotkeys (internal fzf prompt actions)? Maybe action menu can just serve as a hotkey hint
+# TODO: enter action in ActionMenu
+# TODO: hotkeys only in ActionMenu prompt (not consumed in owner prompt)
+# TODO: Instead of interpreting falsey values as reset, there should be an explicit named exception raised and caught
 class ActionMenu(Prompt):
     _action_menu_type: None = None
     _action_menu_hotkey = None
@@ -33,7 +37,7 @@ class ActionMenu(Prompt):
     def __init__(self, owner: Prompt) -> None:
         super().__init__()
         self.owner = owner
-        self.actions = {
+        self.actions: dict[str, Callable[[Result], Any]] = {
             f"{method_name}\t({getattr(method, 'hotkey', '')})": method
             for method_name, method in inspect.getmembers(self, predicate=inspect.ismethod)
             if getattr(method, "is_action", None)
@@ -52,54 +56,69 @@ class ActionMenu(Prompt):
                     return result
                 if result.hotkey == prompt._action_menu_hotkey:
                     # TODO: distinguish between action that returns None and not choosing an action
-                    action_menu_result = self(result.query, list(result))
-                    return action_menu_result or wrapped_prompt_call(slf)
+                    return self(result) or wrapped_prompt_call(slf)
                 if result.hotkey and result.hotkey in self.hotkeyed_actions:
-                    return self.interpret_hotkey(result.hotkey, result.query, list(result)) or wrapped_prompt_call(slf)
+                    return self.interpret_hotkey(result) or wrapped_prompt_call(slf)
                 return result
 
             return wrapped_prompt_call
 
-        prompt_type.__call__ = decorator(prompt_call_method)
+        prompt_type.__call__ = decorator(prompt_call_method)  # HACK: only use singletons
 
-    def __call__(self, query: str, selections: list[str]) -> Any:
+    def __call__(self, result: Result) -> Any:
         choices = self.actions.keys()
-        result = MyFzfPrompt().prompt(choices, self._options)  # TODO: extract decorated function get_action
-        if not result:
+        action_selection = MyFzfPrompt().prompt(choices, self._options)  # TODO: extract decorated function get_action
+        if not action_selection:
             return
-        if result.hotkey and result.hotkey != HOTKEY.enter and result.hotkey in self.hotkeyed_actions:
-            return self.interpret_hotkey(result.hotkey, query, selections)
-        action_id = result[0]
+        if (
+            action_selection.hotkey
+            and action_selection.hotkey != HOTKEY.enter
+            and action_selection.hotkey in self.hotkeyed_actions
+        ):
+            return self.interpret_hotkey(result)
+        action_id = action_selection[0]
         action = self.actions[action_id]
-        return action(query, selections)
+        return action(result)
 
-    def interpret_hotkey(self, hotkey: str, query: str, selections: list[str]):
-        action = self.hotkeyed_actions.get(hotkey)
-        return action(query, selections) if action else None
+    def interpret_hotkey(self, result: Result):
+        action = self.hotkeyed_actions.get(result.hotkey)
+        return action(result) if action else None
 
     # EXAMPLE
+    @action(HOTKEY.enter)
+    def select(self, result: Result):
+        return result
+
     @action(HOTKEY.ctrl_c)
-    def clip_selections(self, query: str, selections: list[str]):
+    def clip_selections(self, result: Result):
         # shell_command seems faster than pyperclip but not in a loop but that's probably irrelevant
-        shell_command("clip", input="\n".join(selections))
+        shell_command("clip", input="\n".join(result))
 
     @action(HOTKEY.ctrl_q)
-    def quit_app(self, query: str, selections: list[str]):
+    def quit_app(self, result: Result):
         # shell_command seems faster than pyperclip but not in a loop but that's probably irrelevant
-        raise ExitLoop(f"Exiting from {self} with query: {query} and selections: {', '.join(selections)}")
+        raise ExitLoop(f"Exiting from {self} with query: {result.query} and selections: {', '.join(result)}")
 
 
 if __name__ == "__main__":
 
     class SomePrompt(Prompt):
         _action_menu_type = ActionMenu
+        action_menu: ActionMenu
 
         def __call__(self) -> Any:
-            return self.get_number()
+            result = self.get_number()
+            if result.hotkey == HOTKEY.enter:
+                if "🔄" not in result:
+                    self.action_menu.clip_selections(result)
+                return self
+            return result
 
         @Options().multiselect
         def get_number(self, options: Options = Options()):
-            return MyFzfPrompt().prompt(["alpha", "beta", "gamma"], self._options + options)
+            return MyFzfPrompt().prompt(["alpha", "beta", "gamma", "🔄"], self._options + options)
 
-    pr = SomePrompt()
-    print(pr())
+    # pr = SomePrompt()
+    # print(pr())
+    bl = BasicLoop(SomePrompt())
+    print(bl.run())
