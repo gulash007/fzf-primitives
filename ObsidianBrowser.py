@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from pyfzf import FzfPrompt
 from thingies import shell_command
 
 from core import mods
 from core.exceptions import ExitLoop, ExitRound
-from core.options import Options, HOTKEY, POSITION
 from core.MyFzfPrompt import run_fzf_prompt
+from core.options import HOTKEY, POSITION, Options
+from core.previews import PREVIEW
 
 DEFAULT_REPO_PATH = Path("/Users/honza/Documents/HOLLY")
 
@@ -36,16 +36,13 @@ class ObsidianBrowser:
             #     return
 
     # @mods.clip_output
+    @mods.hotkey(hotkey=HOTKEY.ctrl_c, action="execute(echo {} | clip)")
     @mods.hotkey(
         hotkey=HOTKEY.ctrl_o,
         action='execute(file_name={} && note_name=${file_name%.md} && note_name=$(echo $note_name | jq -R -r @uri) && open "obsidian://open?vault=HOLLY&file=${note_name%.md}")',
     )
-    @Options().defaults.ansi
-    @mods.preview(
-        command='bat %s/{} --color=always --theme "Solarized (light)"',
-        window_size=80,
-        formatter=lambda self, command: command % self.repo_location,
-    )
+    @Options().defaults.ansi.multiselect
+    @mods.preview(PREVIEW.file(directory=DEFAULT_REPO_PATH, theme="Solarized (light)"), window_size=80)
     @mods.exit_loop_hotkey
     @mods.exit_round_on_no_selection
     def get_files_and_preview_their_content(self, options: Options = Options()):
