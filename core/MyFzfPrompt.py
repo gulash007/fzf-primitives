@@ -5,6 +5,8 @@ from pyfzf import FzfPrompt
 
 from core.options import Options
 
+__all__ = ["run_fzf_prompt"]
+
 
 class Result(list):
     """Expects at least one --expect=hotkey so that it can interpret the first element in fzf_result as hotkey.
@@ -30,7 +32,7 @@ class Result(list):
 
 class MyFzfPrompt(FzfPrompt):
     def prompt(self, choices: Iterable = None, fzf_options: Options = Options(), delimiter="\n") -> Result:
-        return Result(super().prompt(choices, str(Options().defaults + fzf_options), delimiter))
+        return Result(super().prompt(choices, str(fzf_options), delimiter))
 
 
 DEFAULT_FZF_PROMPT = MyFzfPrompt()
