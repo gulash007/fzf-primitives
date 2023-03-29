@@ -10,8 +10,8 @@ class Result(list):
     This is implemented in default options for convenience."""
 
     def __init__(self, fzf_result: list[str]) -> None:
-        self.hotkey = None
-        self.query = None
+        self.hotkey: Optional[str] = None
+        self.query = ""
         if fzf_result:
             self.hotkey = fzf_result[1]
             self.query = fzf_result[0]
