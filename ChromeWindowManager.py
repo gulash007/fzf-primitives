@@ -1,13 +1,16 @@
 import re
+import time
 
-from core.options import Options
 from thingies import shell_command
 
 from core import mods
 from core.exceptions import ExitLoop, ExitRound
 from core.MyFzfPrompt import Result, run_fzf_prompt
+from core.options import Options
 
 WINDOW_ID_REGEX = re.compile(r"(?<=\[).*(?=\])")
+
+# TODO: hotkey to open clipped link in chosen window
 
 
 class WindowIdRegexNoMatch(Exception):
@@ -22,6 +25,7 @@ class ChromeWindowManager:
         # window = self._window_prompt()
         window_id = self.extract_window_id(window)
         self.focus_window(window_id)
+        time.sleep(2)
 
     def run_in_loop(self):
         while True:
