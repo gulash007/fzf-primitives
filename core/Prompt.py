@@ -74,25 +74,7 @@ from core import mods
 REPO_LOCATION = Path("/Users/honza/Documents/HOLLY")
 
 
-class UnexpectedResultType(Exception):
-    pass
 
-
-class BasicLoop:
-    def __init__(self, starting_prompt: Prompt) -> None:
-        self.starting_prompt = starting_prompt
-
-    def run(self) -> Result:
-        prompt = self.starting_prompt
-        while True:
-            result = prompt()
-            if isinstance(result, Result):
-                return result
-            elif isinstance(result, Prompt):
-                prompt = result
-                continue
-            else:
-                raise UnexpectedResultType(f"{type(result)}")
 
 
 class Prompt:
@@ -107,13 +89,23 @@ class Prompt:
         pass
 
 
+def double_query(obj: Prompt, result: Result):
+    result.query = f"{result.query}{result.query}"
+    return result
+
+
 class DirectoryPrompt(Prompt):
     def __init__(self, dirpath: Path, sorting_key: Callable = SortingKey().alphabetically) -> None:
         super().__init__()
         self.dirpath = dirpath
         self._sorting_key = sorting_key
 
-    @mods.hotkey_python(HOTKEY.ctrl_d, lambda self, result: self.double_query(result))
+    # @mods.hotkey_python(HOTKEY.ctrl_b, )
+    @mods.hotkey(
+        HOTKEY.ctrl_o,
+        'execute(file_name={} && note_name=${file_name%.md} && note_name=$(echo $note_name | jq -R -r @uri) && open "obsidian://open?vault=HOLLY&file=${note_name%.md}")',
+    )
+    @mods.exit_loop_hotkey
     @Options().ansi.multiselect
     def __call__(self, options: Options = Options()) -> Result:
         files = sorted(
