@@ -102,11 +102,11 @@ def hotkey(hotkey: str, action: Callable | str):
 
 def hotkey_python(hotkey: str, action: Callable):
     def deco(func):
-        def wrapper(self, options: Options = Options(), *args, **kwargs):
+        def with_python_hotkey(self, options: Options = Options(), *args, **kwargs):
             result: Result = func(self, Options().expect(hotkey) + options, *args, **kwargs)
             return action(self, result) if result.consume(hotkey) else result
 
-        return wrapper
+        return with_python_hotkey
 
     return deco
 

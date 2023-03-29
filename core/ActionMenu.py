@@ -5,7 +5,7 @@ from core.BasicLoop import BasicLoop
 from thingies import shell_command
 
 from core.exceptions import ExitLoop
-from core.MyFzfPrompt import MyFzfPrompt, Result
+from core.MyFzfPrompt import run_fzf_prompt, Result
 from core.options import HOTKEY, Options
 from core.Prompt import Prompt
 
@@ -27,9 +27,12 @@ def action(hotkey: Optional[str] = None):
 # TODO: return with previous query
 # TODO: Allow multiselect (multioutput)?
 # TODO: How to include --bind hotkeys (internal fzf prompt actions)? Maybe action menu can just serve as a hotkey hint
+# Decorator to turn a function into a script that is then used with --bind 'hotkey:execute(python script/path {q} {+})'
 # TODO: enter action in ActionMenu
 # TODO: hotkeys only in ActionMenu prompt (not consumed in owner prompt)
 # TODO: Instead of interpreting falsey values as reset, there should be an explicit named exception raised and caught
+# TODO: Sort actions
+# TODO: Show action menu as preview (to see hotkeys without restarting prompt)
 class ActionMenu(Prompt):
     _action_menu_type: None = None
     _action_menu_hotkey = None
@@ -67,7 +70,7 @@ class ActionMenu(Prompt):
 
     def __call__(self, result: Result) -> Any:
         choices = self.actions.keys()
-        action_selection = MyFzfPrompt().prompt(choices, self._options)  # TODO: extract decorated function get_action
+        action_selection = run_fzf_prompt(choices, self._options)  # TODO: extract decorated function get_action
         if not action_selection:
             return
         if (
@@ -116,7 +119,7 @@ if __name__ == "__main__":
 
         @Options().multiselect
         def get_number(self, options: Options = Options()):
-            return MyFzfPrompt().prompt(["alpha", "beta", "gamma", "🔄"], self._options + options)
+            return run_fzf_prompt(["alpha", "beta", "gamma", "🔄"], self._options + options)
 
     # pr = SomePrompt()
     # print(pr())
