@@ -61,7 +61,7 @@ class ActionMenu(Prompt):
                     # TODO: distinguish between action that returns None and not choosing an action
                     return self(result) or wrapped_prompt_call(slf)
                 if result.hotkey and result.hotkey in self.hotkeyed_actions:
-                    return self.interpret_hotkey(result) or wrapped_prompt_call(slf)
+                    return self._interpret_hotkey(result) or wrapped_prompt_call(slf)
                 return result
 
             return wrapped_prompt_call
@@ -78,12 +78,12 @@ class ActionMenu(Prompt):
             and action_selection.hotkey != HOTKEY.enter
             and action_selection.hotkey in self.hotkeyed_actions
         ):
-            return self.interpret_hotkey(result)
+            return self._interpret_hotkey(result)
         action_id = action_selection[0]
         action = self.actions[action_id]
         return action(result)
 
-    def interpret_hotkey(self, result: Result):
+    def _interpret_hotkey(self, result: Result):
         action = self.hotkeyed_actions.get(result.hotkey)
         return action(result) if action else None
 
