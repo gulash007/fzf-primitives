@@ -10,7 +10,6 @@ DEFAULT_OPTS = [
     "--no-mouse",
     "--bind=alt-shift-up:preview-half-page-up,alt-shift-down:preview-half-page-down",
     "--preview-window=wrap",
-    "--expect=enter",
 ]
 
 
