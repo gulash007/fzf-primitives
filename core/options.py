@@ -2,8 +2,6 @@ from __future__ import annotations
 from typing import Self, Type
 
 DEFAULT_OPTS = [
-    "--expect=enter",  # MANDATORY
-    "--print-query",  # MANDATORY
     "--layout=reverse",
     "--info=inline",
     "--cycle",
