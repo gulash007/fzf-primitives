@@ -2,10 +2,10 @@ import functools
 from typing import Any, Callable, Optional
 
 import clipboard
-from core.MyFzfPrompt import Result
+from .MyFzfPrompt import Result
 
-from core.exceptions import ExitLoop, ExitRound
-from core.options import Options, HOTKEY, POSITION
+from .exceptions import ExitLoop, ExitRound
+from .options import Options, HOTKEY, POSITION
 
 # FUNCTION DECORATOR
 

@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Self, Type
 
 if TYPE_CHECKING:
-    from core.ActionMenu import ActionMenu
+    from .ActionMenu import ActionMenu
 
-from core.MyFzfPrompt import Result
-from core.options import HOTKEY, Options
+from .MyFzfPrompt import Result
+from .options import HOTKEY, Options
 
 
 class Prompt:

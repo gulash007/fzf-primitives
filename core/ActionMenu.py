@@ -1,13 +1,13 @@
 import inspect
 from typing import Any, Callable, Optional, TypeVar
-from core.BasicLoop import BasicLoop
+from .BasicLoop import BasicLoop
 
 from thingies import shell_command
 
-from core.exceptions import ExitLoop
-from core.MyFzfPrompt import run_fzf_prompt, Result
-from core.options import HOTKEY, Options
-from core.Prompt import Prompt
+from .exceptions import ExitLoop
+from .MyFzfPrompt import run_fzf_prompt, Result
+from .options import HOTKEY, Options
+from .Prompt import Prompt
 
 PromptType = TypeVar("PromptType", bound=Prompt)
 

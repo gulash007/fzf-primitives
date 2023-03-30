@@ -2,11 +2,11 @@ from pathlib import Path
 
 from thingies import shell_command
 
-from core import mods
-from core.exceptions import ExitLoop, ExitRound
-from core.MyFzfPrompt import run_fzf_prompt
-from core.options import HOTKEY, POSITION, Options
-from core.previews import PREVIEW
+from .core import mods
+from .core.exceptions import ExitLoop, ExitRound
+from .core.MyFzfPrompt import run_fzf_prompt
+from .core.options import HOTKEY, POSITION, Options
+from .core.previews import PREVIEW
 
 DEFAULT_REPO_PATH = Path("/Users/honza/Documents/HOLLY")
 

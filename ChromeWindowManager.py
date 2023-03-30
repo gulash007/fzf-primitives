@@ -3,10 +3,10 @@ import time
 
 from thingies import shell_command
 
-from core import mods
-from core.exceptions import ExitLoop, ExitRound
-from core.MyFzfPrompt import Result, run_fzf_prompt
-from core.options import Options
+from .core import mods
+from .core.exceptions import ExitLoop, ExitRound
+from .core.MyFzfPrompt import Result, run_fzf_prompt
+from .core.options import Options
 
 WINDOW_ID_REGEX = re.compile(r"(?<=\[).*(?=\])")
 

@@ -1,6 +1,6 @@
 from typing import Callable
 
-from core.options import Options
+from .options import Options
 from pyfzf import FzfPrompt
 
 

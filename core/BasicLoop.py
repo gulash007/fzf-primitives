@@ -1,5 +1,5 @@
-from core.MyFzfPrompt import Result
-from core.Prompt import Prompt
+from .MyFzfPrompt import Result
+from .Prompt import Prompt
 
 
 class UnexpectedResultType(Exception):

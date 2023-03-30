@@ -3,7 +3,7 @@ from typing import Iterable, Optional
 
 from pyfzf import FzfPrompt
 
-from core.options import Options
+from .options import Options
 
 __all__ = ["run_fzf_prompt"]
 
