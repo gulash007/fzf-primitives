@@ -20,8 +20,9 @@ class Prompt:
         if self._action_menu_type:
             self.action_menu = self._action_menu_type(self)
             self._options = self._options.expect(self._action_menu_hotkey, *self.action_menu.hotkeyed_actions.keys())
-            # self.action_menu.wrap(self)
-            self.action_menu.wrap(self)
+
+            # HACK: only use singletons
+            type(self).__call__ = self.action_menu.wrap(self._action_menu_hotkey)(type(self).__call__)
 
     def __call__(self) -> Result | Self:
         pass

@@ -33,11 +33,12 @@ def action(hotkey: Optional[str] = None):
 # TODO: Instead of interpreting falsey values as reset, there should be an explicit named exception raised and caught
 # TODO: Sort actions
 # TODO: Show action menu as preview (to see hotkeys without restarting prompt)
+# TODO: Make action_menu_hotkey owned by ActionMenu instead of prompt
 class ActionMenu(Prompt):
     _action_menu_type: None = None
     _action_menu_hotkey = None
 
-    def __init__(self, owner: Prompt) -> None:
+    def __init__(self, owner: Optional[Prompt] = None) -> None:
         super().__init__()
         self.owner = owner
         self.actions: dict[str, Callable[[Result], Any]] = {
@@ -48,25 +49,22 @@ class ActionMenu(Prompt):
         self.hotkeyed_actions = {action.hotkey: action for action in self.actions.values() if hasattr(action, "hotkey")}
         self._options = self._options.expect(*self.hotkeyed_actions.keys())
 
-    def wrap(self, prompt: Prompt):
-        prompt_type = type(prompt)
-        prompt_call_method = prompt_type.__call__
-
-        def decorator(func):
-            def wrapped_prompt_call(slf) -> Result | Prompt:
-                result = func(slf)
+    def wrap(self, action_menu_hotkey: str = HOTKEY.ctrl_y):
+        def decorator(func: Callable):
+            def wrapped_prompt_call(*args, **kwargs) -> Result | Prompt:
+                result = func(*args, **kwargs)
                 if isinstance(result, Prompt):
                     return result
-                if result.hotkey == prompt._action_menu_hotkey:
+                if result.hotkey == action_menu_hotkey:
                     # TODO: distinguish between action that returns None and not choosing an action
-                    return self(result) or wrapped_prompt_call(slf)
+                    return self(result) or wrapped_prompt_call(*args, **kwargs)
                 if result.hotkey and result.hotkey in self.hotkeyed_actions:
-                    return self._interpret_hotkey(result) or wrapped_prompt_call(slf)
+                    return self._interpret_hotkey(result) or wrapped_prompt_call(*args, **kwargs)
                 return result
 
             return wrapped_prompt_call
 
-        prompt_type.__call__ = decorator(prompt_call_method)  # HACK: only use singletons
+        return decorator
 
     def __call__(self, result: Result) -> Any:
         choices = self.actions.keys()
@@ -104,24 +102,31 @@ class ActionMenu(Prompt):
 
 
 if __name__ == "__main__":
+    # class SomePrompt(Prompt):
+    #     _action_menu_type = ActionMenu
+    #     action_menu: ActionMenu
 
-    class SomePrompt(Prompt):
-        _action_menu_type = ActionMenu
-        action_menu: ActionMenu
+    #     def __call__(self) -> Any:
+    #         result = self.get_number()
+    #         if result.hotkey == HOTKEY.enter:
+    #             if "🔄" not in result:
+    #                 self.action_menu.clip_selections(result)
+    #             return self
+    #         return result
 
-        def __call__(self) -> Any:
-            result = self.get_number()
-            if result.hotkey == HOTKEY.enter:
-                if "🔄" not in result:
-                    self.action_menu.clip_selections(result)
-                return self
-            return result
+    #     @Options().multiselect
+    #     def get_number(self, options: Options = Options()):
+    #         return run_fzf_prompt(["alpha", "beta", "gamma", "🔄"], self._options + options)
 
-        @Options().multiselect
-        def get_number(self, options: Options = Options()):
-            return run_fzf_prompt(["alpha", "beta", "gamma", "🔄"], self._options + options)
+    # # pr = SomePrompt()
+    # # print(pr())
+    # bl = BasicLoop(SomePrompt())
+    # print(bl.run())
+    am = ActionMenu()
 
-    # pr = SomePrompt()
-    # print(pr())
-    bl = BasicLoop(SomePrompt())
-    print(bl.run())
+    # TODO: automatically pass hotkeys to --expect option
+    @am.wrap(HOTKEY.ctrl_y)
+    def some_prompt():
+        return run_fzf_prompt([1, 2, 3], fzf_options=Options().expect(*am.hotkeyed_actions.keys()))
+
+    some_prompt()
