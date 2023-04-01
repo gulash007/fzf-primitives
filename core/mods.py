@@ -1,20 +1,19 @@
 import functools
-from typing import Any, Callable, Optional
+from typing import Callable
 
 import clipboard
 from .MyFzfPrompt import Result
 
-from .exceptions import ExitLoop, ExitRound
-from .options import Options, HOTKEY, POSITION
+from .exceptions import ExitRound
+from .options import Options, POSITION
 
-# FUNCTION DECORATOR
-
+# ❗ options have to be passed keyworded
 
 def add_options(added_options: Options):
     def decorator(func):
         @functools.wraps(func)
-        def adding_options(self, options: Options = Options(), *args, **kwargs):
-            return func(self, options + added_options, *args, **kwargs)
+        def adding_options(*args, options: Options = Options(), **kwargs):
+            return func(*args, options=options + added_options, **kwargs)
 
         return adding_options
 
@@ -22,8 +21,8 @@ def add_options(added_options: Options):
 
 
 def exit_round_on_no_selection(func):
-    def exiting_round_on_no_selection(self, options: Options = Options(), *args, **kwargs):
-        if not (result := func(self, options, *args, **kwargs)):
+    def exiting_round_on_no_selection(*args, options: Options = Options(), **kwargs):
+        if not (result := func(*args, options=options, **kwargs)):
             raise ExitRound  # TODO: custom message (decorator factory)
         return result
 
@@ -37,7 +36,6 @@ def preview(
     command: str,
     window_size: int | str = 75,
     window_position: str = POSITION.right,
-    formatter: Optional[Callable[[Any, str], str]] = None,
     live_clip_preview: bool = False,
 ):
     """formatter exists to parametrize the command based on self when wrapping a method"""
@@ -45,16 +43,13 @@ def preview(
 
     def decorator(func):
         @functools.wraps(func)
-        def with_preview(self, options: Options = Options(), *args, **kwargs):
+        def with_preview(*args, options: Options = Options(), **kwargs):
             # print(type(self))
-            cmd = formatter(self, command) if formatter else command
             win_size = f"{window_size}%" if isinstance(window_size, int) else window_size
-            # ❓ for some reason, 'command' can't be reassigned with its transformation as it leads to 'command' being unbound
-            # ❗ since 'cmd' is unwrapped between single quotes, if it contains single quoted stuff, it might break the whole thing (calling out some unexpected token shit)
             return func(
-                self,
-                Options(f"{options} --preview-window={window_position},{win_size} --preview 'echo && {cmd}'") + options,
                 *args,
+                options=Options(f"{options} --preview-window={window_position},{win_size} --preview 'echo && {command}'")
+                + options,
                 **kwargs,
             )
 
@@ -63,48 +58,27 @@ def preview(
     return decorator
 
 
-# TODO: needs decorator factory decorator
-# TODO: consumes the hotkey, but what if I need the hotkey?
-def exit_loop_hotkey(func):
-    def with_exit_loop_hotkey(self, options: Options = Options(), *args, **kwargs):
-        """Should produce a signal (raise an Exception) to end loop"""
-        result: Result = func(self, Options(f"--expect={HOTKEY.ctrl_q}") + options, *args, **kwargs)
-        if result.hotkey == HOTKEY.ctrl_q:
-            raise ExitLoop
-        return result
-
-    return with_exit_loop_hotkey
-
-
-# def hotkey(hotkey: str, action: str):
-#     @decorator
-#     def wrapped(func, self, options: Options, *args, **kwargs):
-#         return func(self, f"{options} --bind={hotkey}:{action}", *args, **kwargs)
-
-#     return wrapped
-
-
 # TODO: What if action needs attributes?
-def hotkey(hotkey: str, action: Callable | str):
+def hotkey(hk: str, action: Callable | str):
     """action shouldn't have single quotes in it"""
 
     def decorator(func):
         @functools.wraps(func)
-        def with_hotkey(self, options: Options = Options(), *args, **kwargs):
+        def with_hotkey(*args, options: Options = Options(), **kwargs):
             # print(options, *args, **kwargs)
             # print(hotkey, action)
-            return func(self, Options(f"--bind={hotkey}:'{action}'") + options, *args, **kwargs)
+            return func(*args, options=Options(f"--bind={hk}:'{action}'") + options, **kwargs)
 
         return with_hotkey
 
     return decorator
 
 
-def hotkey_python(hotkey: str, action: Callable):
+def hotkey_python(hk: str, action: Callable):
     def deco(func):
-        def with_python_hotkey(self, options: Options = Options(), *args, **kwargs):
-            result: Result = func(self, Options().expect(hotkey) + options, *args, **kwargs)
-            return action(self, result) if result.consume(hotkey) else result
+        def with_python_hotkey(*args, options: Options = Options(), **kwargs):
+            result: Result = func(*args, options=Options().expect(hk) + options, **kwargs)
+            return action(result) if result.consume(hk) else result
 
         return with_python_hotkey
 
@@ -113,22 +87,9 @@ def hotkey_python(hotkey: str, action: Callable):
 
 def clip_output(func):
     @functools.wraps(func)
-    def clipping_output(self, options: Options = Options(), *args, **kwargs):
-        result: Result = func(self, options, *args, **kwargs)
+    def clipping_output(*args, options: Options = Options(), **kwargs):
+        result: Result = func(*args, options=options, **kwargs)
         clipboard.copy("\n".join(result))
         return result
 
     return clipping_output
-
-
-# class SomeCl:
-#     # def choose_file(self, )
-
-#     @quit_hotkey
-#     @hotkey("h1", "a1")
-#     def choose_line(self, options: Options = Options(), filename: str = ""):
-#         pass
-
-
-# s = SomeCl()
-# s.choose_line("help", "me")

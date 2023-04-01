@@ -6,11 +6,15 @@ from thingies import shell_command
 from .core import mods
 from .core.exceptions import ExitLoop, ExitRound
 from .core.MyFzfPrompt import Result, run_fzf_prompt
-from .core.options import Options
+from .core.options import Options, HOTKEY
 
 WINDOW_ID_REGEX = re.compile(r"(?<=\[).*(?=\])")
 
 # TODO: hotkey to open clipped link in chosen window
+
+
+def raise_quit(result):
+    raise ExitLoop
 
 
 class WindowIdRegexNoMatch(Exception):
@@ -43,7 +47,7 @@ class ChromeWindowManager:
     )
     # ggrep -Po "(?<=\\.)\\d*" for BroTab IDs (from `brotab windows`) instead of get_chrome_id
     @mods.exit_round_on_no_selection
-    @mods.exit_loop_hotkey
+    @mods.hotkey_python(HOTKEY.ctrl_q, action=raise_quit)
     @Options().defaults
     def select_window(self, options: Options = Options()) -> Result:
         return run_fzf_prompt(

@@ -32,8 +32,8 @@ class Options:
     def __call__(self, func):
         """To use the object as a decorator"""
 
-        def with_options(slf, options: Options = Options(), *args, **kwargs):
-            return func(slf, options + self, *args, **kwargs)
+        def with_options(*args, options: Options = Options(), **kwargs):
+            return func(*args, options=options + self, **kwargs)
 
         return with_options
 

@@ -11,6 +11,10 @@ from .core.previews import PREVIEW
 DEFAULT_REPO_PATH = Path("/Users/honza/Documents/HOLLY")
 
 
+def raise_quit(result):
+    raise ExitLoop
+
+
 class ObsidianBrowser:
     def __init__(self, repo_location: Path = DEFAULT_REPO_PATH) -> None:
         self.repo_location = repo_location
@@ -36,14 +40,14 @@ class ObsidianBrowser:
             #     return
 
     # @mods.clip_output
-    @mods.hotkey(hotkey=HOTKEY.ctrl_c, action="execute(echo {} | clip)")
+    @mods.hotkey(hk=HOTKEY.ctrl_c, action="execute(echo {} | clip)")
     @mods.hotkey(
-        hotkey=HOTKEY.ctrl_o,
+        hk=HOTKEY.ctrl_o,
         action='execute(file_name={} && note_name=${file_name%.md} && note_name=$(echo $note_name | jq -R -r @uri) && open "obsidian://open?vault=HOLLY&file=${note_name%.md}")',
     )
+    @mods.hotkey_python(hk=HOTKEY.ctrl_q, action=raise_quit)
     @Options().defaults.ansi.multiselect
     @mods.preview(PREVIEW.file(directory=DEFAULT_REPO_PATH, theme="Solarized (light)"), window_size=80)
-    @mods.exit_loop_hotkey
     @mods.exit_round_on_no_selection
     def get_files_and_preview_their_content(self, options: Options = Options()):
         # print(options)
@@ -58,7 +62,6 @@ class ObsidianBrowser:
     @mods.preview(
         command='x={} && echo "${x:9}"', window_size="2", window_position=POSITION.up, live_clip_preview=False
     )
-    @mods.exit_loop_hotkey
     @mods.exit_round_on_no_selection
     @Options().defaults.no_sort.multiselect.ansi
     def get_lines_of_file(self, options: Options = Options(), file_name: str = ""):
