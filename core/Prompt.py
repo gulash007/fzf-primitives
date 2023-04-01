@@ -19,7 +19,7 @@ class Prompt:
         self.action_menu = None
         if self._action_menu_type:
             self.action_menu = self._action_menu_type(self)
-            self._options.expect(self._action_menu_hotkey, *self.action_menu.hotkeyed_actions.keys())
+            self._options = self._options.expect(self._action_menu_hotkey, *self.action_menu.hotkeyed_actions.keys())
 
             # HACK: only use singletons
             type(self).__call__ = self.action_menu.wrap(self._action_menu_hotkey)(type(self).__call__)

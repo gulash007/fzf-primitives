@@ -47,7 +47,7 @@ class ActionMenu(Prompt):
             if getattr(method, "is_action", None)
         }
         self.hotkeyed_actions = {action.hotkey: action for action in self.actions.values() if hasattr(action, "hotkey")}
-        self._options.expect(*self.hotkeyed_actions.keys())
+        self._options = self._options.expect(*self.hotkeyed_actions.keys())
 
     def wrap(self, action_menu_hotkey: str = HOTKEY.ctrl_y):
         def decorator(func: Callable):

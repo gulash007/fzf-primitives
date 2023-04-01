@@ -3,7 +3,7 @@ from typing import Iterable, Optional
 
 from pyfzf import FzfPrompt
 
-from .options import EMPTY_OPTS, Options
+from .options import Options
 
 __all__ = ["run_fzf_prompt"]
 
@@ -37,7 +37,7 @@ REQUIRED_OPTS = ["--expect=enter", "--print-query"]
 class MyFzfPrompt(FzfPrompt):
     _required_options = Options(*REQUIRED_OPTS)
 
-    def prompt(self, choices: Iterable = None, fzf_options: Options = EMPTY_OPTS, delimiter="\n") -> Result:
+    def prompt(self, choices: Iterable = None, fzf_options: Options = Options(), delimiter="\n") -> Result:
         return Result(super().prompt(choices, str(self._required_options + fzf_options), delimiter))
 
 

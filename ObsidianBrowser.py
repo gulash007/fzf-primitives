@@ -5,7 +5,7 @@ from thingies import shell_command
 from .core import mods
 from .core.exceptions import ExitLoop, ExitRound
 from .core.MyFzfPrompt import run_fzf_prompt
-from .core.options import EMPTY_OPTS, HOTKEY, POSITION, Options
+from .core.options import HOTKEY, POSITION, Options
 from .core.previews import PREVIEW
 
 DEFAULT_REPO_PATH = Path("/Users/honza/Documents/HOLLY")
@@ -49,7 +49,7 @@ class ObsidianBrowser:
     @Options().defaults.ansi.multiselect
     @mods.preview(PREVIEW.file(directory=DEFAULT_REPO_PATH, theme="Solarized (light)"), window_size=80)
     @mods.exit_round_on_no_selection
-    def get_files_and_preview_their_content(self, options: Options = EMPTY_OPTS):
+    def get_files_and_preview_their_content(self, options: Options = Options()):
         # print(options)
         return run_fzf_prompt(
             choices=shell_command(
@@ -64,7 +64,7 @@ class ObsidianBrowser:
     )
     @mods.exit_round_on_no_selection
     @Options().defaults.no_sort.multiselect.ansi
-    def get_lines_of_file(self, options: Options = EMPTY_OPTS, file_name: str = ""):
+    def get_lines_of_file(self, options: Options = Options(), file_name: str = ""):
         # print(options)
         return run_fzf_prompt(
             choices=shell_command(
