@@ -6,7 +6,7 @@ from thingies import shell_command
 from .core import mods
 from .core.exceptions import ExitLoop, ExitRound
 from .core.MyFzfPrompt import Result, run_fzf_prompt
-from .core.options import Options, HOTKEY
+from .core.options import EMPTY_OPTS, Options, HOTKEY
 
 WINDOW_ID_REGEX = re.compile(r"(?<=\[).*(?=\])")
 
@@ -49,7 +49,7 @@ class ChromeWindowManager:
     @mods.exit_round_on_no_selection
     @mods.hotkey_python(HOTKEY.ctrl_q, action=raise_quit)
     @Options().defaults
-    def select_window(self, options: Options = Options()) -> Result:
+    def select_window(self, options: Options = EMPTY_OPTS) -> Result:
         return run_fzf_prompt(
             choices=sorted(shell_command("chrome-cli list windows").split("\n"), key=lambda x: x.split("]")[1]),
             fzf_options=options,

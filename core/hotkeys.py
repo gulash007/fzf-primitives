@@ -1,6 +1,6 @@
 from typing import Callable
 
-from .options import Options
+from .options import EMPTY_OPTS, Options
 from pyfzf import FzfPrompt
 
 
@@ -9,7 +9,7 @@ class Hotkeys:
         self._hotkey_actions = hotkey_actions
 
     def __call__(self, obj: Callable):
-        def with_hotkeys(slf, options: Options = Options(), *args, **kwargs):
+        def with_hotkeys(slf, options: Options = EMPTY_OPTS, *args, **kwargs):
             hotkey, output = obj(slf, options.expect(*self._hotkey_actions.keys()), *args, **kwargs)
             print(hotkey)
             action = self._hotkey_actions.get(hotkey)
@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     class X:
         @hotkeys
-        def pr(self, options: Options = Options()):
+        def pr(self, options: Options = EMPTY_OPTS):
             choices = [1, 2, 3]
             return FzfPrompt().prompt(choices=choices, fzf_options=str(options))
 

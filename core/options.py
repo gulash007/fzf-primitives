@@ -32,16 +32,17 @@ class Options:
     def __call__(self, func):
         """To use the object as a decorator"""
 
-        def with_options(*args, options: Options = Options(), **kwargs):
+        def with_options(*args, options: Options = EMPTY_OPTS, **kwargs):
             return func(*args, options=options + self, **kwargs)
 
         return with_options
 
     def __init__(self, *fzf_options: str) -> None:
-        self.options: tuple[str, ...] = fzf_options
+        self.options: list[str] = list(fzf_options)
 
     def add(self, *fzf_options: str) -> Self:
-        return type(self)(*self.options, *fzf_options)
+        self.options.extend(fzf_options)
+        return self
 
     def bind(self, hotkey: str, action: str):
         if isinstance(action, str):
@@ -75,6 +76,17 @@ class Options:
 
     def __gt__(self, __other: Self) -> bool:
         return __other < self
+
+
+class ImmutableOptions(Options):
+    def __init__(self, *fzf_options: str) -> None:
+        self.options: tuple[str, ...] = fzf_options
+
+    def add(self, *fzf_options: str) -> Self:
+        return type(self)(*self.options, *fzf_options)
+
+
+EMPTY_OPTS = ImmutableOptions()
 
 
 class LAYOUT:
