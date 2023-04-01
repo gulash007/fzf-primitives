@@ -29,7 +29,7 @@ class ChromeWindowManager:
         # window = self._window_prompt()
         window_id = self.extract_window_id(window)
         self.focus_window(window_id)
-        time.sleep(2)
+        time.sleep(1.2)
 
     def run_in_loop(self):
         while True:
