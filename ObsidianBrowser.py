@@ -16,6 +16,7 @@ DEFAULT_REPO_PATH = Path("/Users/honza/Documents/HOLLY")
 
 class FileSelectionPrompt(Prompt):
     _action_menu_type = ActionMenu
+    _post_processors = [mods.exit_round_on_no_selection]
 
     def __init__(self, dirpath: Path) -> None:
         super().__init__()
@@ -40,6 +41,7 @@ class FileSelectionPrompt(Prompt):
 
 class FileBrowserPrompt(Prompt):
     _action_menu_type = ActionMenu
+    _post_processors = [mods.exit_round_on_no_selection]
 
     def __init__(self, file_path: Path) -> None:
         super().__init__()

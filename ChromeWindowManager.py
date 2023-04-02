@@ -22,6 +22,7 @@ class WindowIdRegexNoMatch(Exception):
 
 class WindowSelectionPrompt(Prompt):
     _action_menu_type = ActionMenu
+    _post_processors = [mods.exit_round_on_no_selection]
 
     @mods.preview(
         "source ~/.zshforchrome 2>/dev/null && echo {} | get_chrome_id | read -r window_id && brotab query -windowId $window_id | brotab_format_better_line",

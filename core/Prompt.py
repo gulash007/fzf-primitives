@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Callable, Optional, Self, Type
 
-from core import mods
 
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import HOTKEY, Options
@@ -21,7 +20,7 @@ class Prompt:
     _options = Options().defaults
     _action_menu_type: Optional[Type[ActionMenu]] = None
     _action_menu_hotkey = HOTKEY.ctrl_y
-    _post_processors: list[Callable[[Callable], Callable]] = [mods.exit_round_on_no_selection]
+    _post_processors: list[Callable[[Callable], Callable]] = []
 
     def __init__(self, choices: list = None, action_menu: Optional[ActionMenu] = None) -> None:
         self.choices = choices or []
