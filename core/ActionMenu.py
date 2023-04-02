@@ -6,7 +6,7 @@ from thingies import shell_command
 
 from .BasicLoop import BasicRecursiveLoop
 from .exceptions import ExitLoop
-from .MyFzfPrompt import run_fzf_prompt, Result
+from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import HOTKEY, Options
 from .Prompt import Prompt
 

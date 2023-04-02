@@ -1,5 +1,10 @@
 from __future__ import annotations
-from typing import Self, Type
+
+import functools
+from typing import Callable, ParamSpec, Self, Type, TypeVar
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 DEFAULT_OPTS = [
     "--layout=reverse",
@@ -30,11 +35,16 @@ class Options:
     multiselect = OptionsAdder("--multi")
     header_first = OptionsAdder("--header-first")
 
-    def __call__(self, func):
+    def __call__(self, func: Callable[P, R]) -> Callable[P, R]:
         """To use the object as a decorator"""
 
-        def with_options(*args, options: Options = Options(), **kwargs):
-            return func(*args, options=options + self, **kwargs)
+        @functools.wraps(func)
+        def with_options(*args: P.args, **kwargs: P.kwargs):
+            options = kwargs["options"]
+            if not isinstance(options, Options):
+                raise TypeError(f"options kw bad type: {type(options)}: {options}")
+            kwargs["options"] = options + self
+            return func(*args, **kwargs)
 
         return with_options
 
