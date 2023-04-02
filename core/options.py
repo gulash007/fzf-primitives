@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Iterable, Self, SupportsIndex, Type
+from typing import Self, Type
 
 DEFAULT_OPTS = [
     "--layout=reverse",
@@ -21,16 +21,13 @@ class OptionsAdder:
         return obj.add(*self._fzf_options)
 
 
-class Options(tuple[str]):
+class Options:
     defaults = OptionsAdder(*DEFAULT_OPTS)
     ansi = OptionsAdder("--ansi")
     no_sort = OptionsAdder("--no-sort")
     cycle = OptionsAdder("--cycle")
     no_mouse = OptionsAdder("--no-mouse")
     multiselect = OptionsAdder("--multi")
-
-    def __new__(cls, *fzf_options: str) -> Self:
-        return super().__new__(cls, fzf_options)
 
     def __call__(self, func):
         """To use the object as a decorator"""
@@ -40,8 +37,11 @@ class Options(tuple[str]):
 
         return with_options
 
+    def __init__(self, *fzf_options: str) -> None:
+        self.options: tuple[str, ...] = fzf_options
+
     def add(self, *fzf_options: str) -> Self:
-        return self + fzf_options
+        return type(self)(*self.options, *fzf_options)
 
     def bind(self, hotkey: str, action: str):
         if isinstance(action, str):
@@ -54,33 +54,24 @@ class Options(tuple[str]):
         return self.add(f"--layout={layout}")
 
     def __str__(self) -> str:
-        return " ".join(self)
+        return " ".join(self.options)
 
-    def __add__(self, __other: Iterable[str]) -> Self:
-        return self.__class__(*self, *__other)
-
-    def __radd__(self, __other: Iterable[str]) -> Self:
-        return self.__class__(*__other, *self)
-
-    def __mul__(self, __value: SupportsIndex) -> Self:
-        return Options(*tuple(self) * __value)
-
-    def __rmul__(self, __value: SupportsIndex) -> Self:
-        return self * __value
-
-    def __getitem__(self, key) -> Self:
-        return self.__class__(*tuple.__getitem__(self, key))
+    def __add__(self, __other: Options) -> Self:
+        return self.add(*__other.options)
 
     # TODO: __sub__ for removing options?
 
+    def __eq__(self, __other: Self) -> bool:
+        return self.options == __other.options
+
     def __le__(self, __other: Self) -> bool:
-        return self == __other[: len(self)]
+        return self.options == __other.options[: len(self.options)]
 
     def __ge__(self, __other: Self) -> bool:
         return __other <= self
 
     def __lt__(self, __other: Self) -> bool:
-        return self <= __other and len(self) < len(__other)
+        return self <= __other and len(self.options) < len(__other.options)
 
     def __gt__(self, __other: Self) -> bool:
         return __other < self
