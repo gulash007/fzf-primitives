@@ -101,7 +101,7 @@ class ActionMenu(Prompt):
     @action(HOTKEY.ctrl_q)
     def quit_app(self, result: Result):
         # shell_command seems faster than pyperclip but not in a loop but that's probably irrelevant
-        raise ExitLoop(f"Exiting from {self} with query: {result.query} and selections: {', '.join(result)}")
+        raise ExitLoop(f"Exiting from {self} with\n\tquery: {result.query}\n\tselections: {', '.join(result)}")
 
 
 if __name__ == "__main__":
