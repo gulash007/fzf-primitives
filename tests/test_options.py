@@ -30,6 +30,8 @@ def test_options_type():
     assert_type_equality(Options().ansi + ("--multi", "--cycle"), Options)
     assert_type_equality(("--multi", "--cycle") + Options().ansi, Options)
     assert_type_equality(Options().defaults[:2], Options)
+    assert_type_equality(2 * Options().ansi, Options)
+    assert_type_equality(Options().ansi * 2, Options)
 
 
 def assert_type_equality(x, t):
