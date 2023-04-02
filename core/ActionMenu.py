@@ -48,6 +48,8 @@ class ActionMenu(Prompt):
         }
         self.hotkeyed_actions = {action.hotkey: action for action in self.actions.values() if hasattr(action, "hotkey")}
         self._options = self._options.expect(*self.hotkeyed_actions.keys())
+        self._options = self._options.header("tip: Press esc to go back")
+        self._options = self._options.header_first
 
     def wrap(self, action_menu_hotkey: str = HOTKEY.ctrl_y):
         def decorator(func: Callable):

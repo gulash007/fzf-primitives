@@ -26,6 +26,8 @@ class Prompt:
         self.action_menu = action_menu or self._action_menu_type(self) if self._action_menu_type else None
         if self.action_menu:
             self._options = self._options.expect(self._action_menu_hotkey, *self.action_menu.hotkeyed_actions.keys())
+            self._options = self._options.header(f"tip: Invoke action menu with {self._action_menu_hotkey}")
+            self._options = self._options.header_first
 
             # HACK: only use singletons
             type(self).__call__ = self.action_menu.wrap(self._action_menu_hotkey)(type(self).__call__)

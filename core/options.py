@@ -28,6 +28,7 @@ class Options:
     cycle = OptionsAdder("--cycle")
     no_mouse = OptionsAdder("--no-mouse")
     multiselect = OptionsAdder("--multi")
+    header_first = OptionsAdder("--header-first")
 
     def __call__(self, func):
         """To use the object as a decorator"""
@@ -56,6 +57,17 @@ class Options:
 
     def layout(self, layout: str):
         return self.add(f"--layout={layout}")
+
+    def prompt(self, prompt: str):
+        return self.add(f"--prompt='{prompt}'")
+
+    def pointer(self, pointer: str):
+        if len(pointer) > 2:
+            raise ValueError(f"Pointer too long (should be max 2 chars): {pointer}")
+        return self.add(f"--pointer='{pointer}'")
+
+    def header(self, header: str):
+        return self.add(f"--header='{header}'")
 
     def __str__(self) -> str:
         return " ".join(self.options)
