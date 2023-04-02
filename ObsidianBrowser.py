@@ -14,7 +14,7 @@ from .core.previews import PREVIEW
 DEFAULT_REPO_PATH = Path("/Users/honza/Documents/HOLLY")
 
 
-class FileSelectionPrompt(Prompt):
+class FolderBrowserPrompt(Prompt):
     _action_menu_type = ActionMenu
     _post_processors = [mods.exit_round_on_no_selection]
 
@@ -63,7 +63,7 @@ class FileBrowserPrompt(Prompt):
 class ObsidianBrowser(BasicLoop):
     def __init__(self, repo_location: Path = DEFAULT_REPO_PATH) -> None:
         self.repo_location = repo_location
-        self.get_files_and_preview_their_content = FileSelectionPrompt(self.repo_location)
+        self.get_files_and_preview_their_content = FolderBrowserPrompt(self.repo_location)
 
     def run(self):
         """Runs one round of the application until end state. Loop should be implemented externally"""
