@@ -28,7 +28,6 @@ class WindowSelectionPrompt(Prompt):
         70,
     )
     # ggrep -Po "(?<=\\.)\\d*" for BroTab IDs (from `brotab windows`) instead of get_chrome_id
-    @mods.exit_round_on_no_selection
     @Options().defaults
     def __call__(self, options: Options = Options()) -> Result:
         return run_fzf_prompt(

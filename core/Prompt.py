@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Self, Type
+from typing import TYPE_CHECKING, Callable, Optional, Self, Type
+
+from core import mods
 
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import HOTKEY, Options
@@ -19,6 +21,7 @@ class Prompt:
     _options = Options().defaults
     _action_menu_type: Optional[Type[ActionMenu]] = None
     _action_menu_hotkey = HOTKEY.ctrl_y
+    _post_processors: list[Callable[[Callable], Callable]] = [mods.exit_round_on_no_selection]
 
     def __init__(self, choices: list = None, action_menu: Optional[ActionMenu] = None) -> None:
         self.choices = choices or []
@@ -31,6 +34,8 @@ class Prompt:
 
             # HACK: only use singletons
             type(self).__call__ = self.action_menu.wrap(self._action_menu_hotkey)(type(self).__call__)
+            for dec in self._post_processors:
+                type(self).__call__ = dec(type(self).__call__)
 
     # TODO: Replace with .run()?
     def __call__(self, *, options: Options = Options()) -> Result | Self:

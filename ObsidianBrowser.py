@@ -28,7 +28,6 @@ class FileSelectionPrompt(Prompt):
     )
     @Options().defaults.ansi.multiselect
     @mods.preview(PREVIEW.file(directory=DEFAULT_REPO_PATH, theme="Solarized (light)"), window_size=80)
-    @mods.exit_round_on_no_selection
     def __call__(self, options: Options = Options()):
         # print(options)
         return run_fzf_prompt(
@@ -50,7 +49,6 @@ class FileBrowserPrompt(Prompt):
     @mods.preview(
         command='x={} && echo "${x:9}"', window_size="2", window_position=POSITION.up, live_clip_preview=False
     )
-    @mods.exit_round_on_no_selection
     @Options().defaults.no_sort.multiselect.ansi
     def __call__(self, options: Options = Options(), file_name: str = ""):
         # print(options)
