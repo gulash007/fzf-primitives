@@ -4,6 +4,7 @@ from .BasicLoop import BasicLoop
 
 from thingies import shell_command
 
+from .BasicLoop import BasicRecursiveLoop
 from .exceptions import ExitLoop
 from .MyFzfPrompt import run_fzf_prompt, Result
 from .options import HOTKEY, Options
@@ -122,7 +123,7 @@ if __name__ == "__main__":
 
     # # pr = SomePrompt()
     # # print(pr())
-    # bl = BasicLoop(SomePrompt())
+    # bl = BasicRecursiveLoop(SomePrompt())
     # print(bl.run())
     am = ActionMenu()
 

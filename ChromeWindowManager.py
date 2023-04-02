@@ -4,10 +4,11 @@ import time
 from thingies import shell_command
 
 from .core import mods
-from .core.Prompt import Prompt
-from .core.ActionMenu import ActionMenu
 from .core.exceptions import ExitLoop, ExitRound
 from .core.MyFzfPrompt import Result, run_fzf_prompt
+from .core.Prompt import Prompt
+from .core.ActionMenu import ActionMenu
+from .core.BasicLoop import BasicLoop
 from .core.options import Options, HOTKEY
 
 WINDOW_ID_REGEX = re.compile(r"(?<=\[).*(?=\])")
@@ -36,27 +37,17 @@ class WindowSelectionPrompt(Prompt):
         )
 
 
-class ChromeWindowManager:
+class ChromeWindowManager(BasicLoop):
     def __init__(self) -> None:
         self.select_window = WindowSelectionPrompt()
 
-    def run(self, options: Options = Options()):
+    def run(self):
         """Runs one round of the application until end state. Loop should be implemented externally"""
         # TODO: maybe there's no need to have options
         window = self.select_window()[0]
         # window = self._window_prompt()
         window_id = self.extract_window_id(window)
         self.focus_window(window_id)
-
-    def run_in_loop(self):
-        while True:
-            try:
-                self.run()
-            except ExitRound:
-                continue
-            except ExitLoop:
-                print("Exiting loop")
-                return
 
     def extract_window_id(self, line: str) -> str:
         if match := WINDOW_ID_REGEX.search(line):

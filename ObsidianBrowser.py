@@ -7,6 +7,7 @@ from .core.exceptions import ExitLoop, ExitRound
 from .core.MyFzfPrompt import run_fzf_prompt
 from .core.Prompt import Prompt
 from .core.ActionMenu import ActionMenu
+from .core.BasicLoop import BasicLoop
 from .core.options import HOTKEY, POSITION, Options
 from .core.previews import PREVIEW
 
@@ -59,9 +60,8 @@ class FileBrowserPrompt(Prompt):
         )
 
 
-class ObsidianBrowser:
+class ObsidianBrowser(BasicLoop):
     def __init__(self, repo_location: Path = DEFAULT_REPO_PATH) -> None:
-        super().__init__()
         self.repo_location = repo_location
         self.get_files_and_preview_their_content = FileSelectionPrompt(self.repo_location)
 
@@ -72,19 +72,6 @@ class ObsidianBrowser:
         file_path = self.repo_location.joinpath(file_name)
         lines = FileBrowserPrompt(file_path)()
         print("\n".join(lines))
-
-    def run_in_loop(self):
-        while True:
-            try:
-                self.run()
-            except ExitRound:
-                continue
-            except ExitLoop:
-                print("Exiting loop")
-                return
-            # except Exception as e:
-            #     print(f"{type(e).__name__}: {e}")
-            #     return
 
 
 if __name__ == "__main__":
