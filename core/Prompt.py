@@ -33,6 +33,7 @@ class Prompt:
             self._options = self._options.header_first
 
             # HACK: only use singletons
+            # FIXME: Ensure only one dynamic class modification per program and not per instance
             type(self).__call__ = self.action_menu.wrap(self._action_menu_hotkey)(type(self).__call__)
             for dec in self._post_processors:
                 type(self).__call__ = dec(type(self).__call__)

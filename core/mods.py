@@ -2,12 +2,13 @@ import functools
 from typing import Callable
 
 import clipboard
-from .MyFzfPrompt import Result
 
 from .exceptions import ExitRound
-from .options import Options, POSITION
+from .MyFzfPrompt import Result
+from .options import POSITION, Options
 
 # ❗ options have to be passed keyworded
+
 
 def add_options(added_options: Options):
     def decorator(func):
@@ -48,7 +49,9 @@ def preview(
             win_size = f"{window_size}%" if isinstance(window_size, int) else window_size
             return func(
                 *args,
-                options=Options(f"{options} --preview-window={window_position},{win_size} --preview 'echo && {command}'")
+                options=Options(
+                    f"{options} --preview-window={window_position},{win_size} --preview 'echo && {command}'"
+                )
                 + options,
                 **kwargs,
             )

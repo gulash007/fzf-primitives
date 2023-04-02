@@ -4,7 +4,7 @@ from thingies import shell_command
 
 from .core import mods
 from .core.exceptions import ExitLoop, ExitRound
-from .core.MyFzfPrompt import run_fzf_prompt
+from .core.MyFzfPrompt import Result, run_fzf_prompt
 from .core.Prompt import Prompt
 from .core.ActionMenu import ActionMenu
 from .core.BasicLoop import BasicLoop

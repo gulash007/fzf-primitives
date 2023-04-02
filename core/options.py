@@ -26,6 +26,7 @@ class OptionsAdder:
         return obj.add(*self._fzf_options)
 
 
+# TODO: tips formatter
 class Options:
     defaults = OptionsAdder(*DEFAULT_OPTS)
     ansi = OptionsAdder("--ansi")
@@ -56,7 +57,7 @@ class Options:
         return self.__options
 
     def add(self, *fzf_options: str) -> Self:
-        return type(self)(*self.options, *fzf_options)
+        return self.__class__(*self.options, *fzf_options)
 
     def bind(self, hotkey: str, action: str):
         if isinstance(action, str):
@@ -93,6 +94,7 @@ class Options:
     def __le__(self, __other: Self) -> bool:
         return self.options == __other.options[: len(self.options)]
 
+    # Could've used functools.total_ordering here
     def __ge__(self, __other: Self) -> bool:
         return __other <= self
 
@@ -123,6 +125,7 @@ class BORDER:
     none = "none"
 
 
+# TODO: fluent interface
 class HOTKEY:
     ctrl_a = "ctrl-a"
     ctrl_b = "ctrl-b"
