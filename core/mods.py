@@ -78,7 +78,7 @@ def hotkey_python(hk: str, action: Callable):
     def deco(func):
         def with_python_hotkey(*args, options: Options = Options(), **kwargs):
             result: Result = func(*args, options=Options().expect(hk) + options, **kwargs)
-            return action(result) if result.consume(hk) else result
+            return action(result) if result.hotkey == hk else result
 
         return with_python_hotkey
 

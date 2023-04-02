@@ -21,12 +21,6 @@ class Result(list):
             self.query = fzf_result[0]
         super().__init__(fzf_result[2:])
 
-    def consume(self, hotkey: str):
-        if self.hotkey == hotkey:
-            self.hotkey = None
-            return True
-        return False
-
     def __str__(self) -> str:
         return json.dumps({"hotkey": self.hotkey, "query": self.query, "values": self})
 
