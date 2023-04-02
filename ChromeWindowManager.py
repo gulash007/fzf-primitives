@@ -29,7 +29,6 @@ class ChromeWindowManager:
         # window = self._window_prompt()
         window_id = self.extract_window_id(window)
         self.focus_window(window_id)
-        time.sleep(1.2)
 
     def run_in_loop(self):
         while True:
@@ -64,6 +63,7 @@ class ChromeWindowManager:
     def focus_window(self, window_id: str):
         active_tab_id = shell_command(f"brotab active | grep {window_id} | awk '{{ print $1 }}'")
         shell_command(f'open -a "Google Chrome" && brotab activate {active_tab_id} --focused')
+        time.sleep(1.2)
 
 
 if __name__ == "__main__":
