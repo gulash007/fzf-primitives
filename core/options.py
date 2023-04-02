@@ -38,7 +38,11 @@ class Options:
         return with_options
 
     def __init__(self, *fzf_options: str) -> None:
-        self.options: tuple[str, ...] = fzf_options
+        self.__options: tuple[str, ...] = fzf_options
+
+    @property
+    def options(self) -> tuple[str, ...]:
+        return self.__options
 
     def add(self, *fzf_options: str) -> Self:
         return type(self)(*self.options, *fzf_options)

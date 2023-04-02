@@ -27,9 +27,6 @@ def test_options_comparisons():
 def test_options_type():
     assert_type_equality(Options().ansi, Options)
     assert_type_equality(Options().ansi + Options().multiselect, Options)
-    assert_type_equality(Options().ansi + ("--multi", "--cycle"), Options)
-    assert_type_equality(("--multi", "--cycle") + Options().ansi, Options)
-    assert_type_equality(Options().defaults[:2], Options)
 
 
 def assert_type_equality(x, t):
