@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 from typing import Iterable, Optional
 
@@ -5,13 +6,21 @@ from pyfzf import FzfPrompt
 
 from .options import Options
 
-__all__ = ["run_fzf_prompt"]
+
+REQUIRED_OPTS = Options("--expect=enter", "--print-query")  # Result needs these in order to work
+
+
+def run_fzf_prompt(
+    choices: Iterable = None, options: Options = Options(), delimiter="\n", *, executable_path=None
+) -> Result:
+    return Result(FzfPrompt(executable_path).prompt(choices, str(REQUIRED_OPTS + options), delimiter))
 
 
 class Result(list):
-    """Expects at least one --expect=hotkey so that it can interpret the first element in fzf_result as hotkey.
-    This is implemented in default options for convenience.
-    Also expects --print-query"""
+    """Expects --print-query so it can interpret the first element as query.
+    Also expects at least one --expect=hotkey so that it can interpret the first element in fzf_result as hotkey.
+    This is implemented in required options for convenience.
+    """
 
     def __init__(self, fzf_result: list[str]) -> None:
         self.hotkey: Optional[str] = None
@@ -25,15 +34,5 @@ class Result(list):
         return json.dumps({"hotkey": self.hotkey, "query": self.query, "values": self})
 
 
-REQUIRED_OPTS = ["--expect=enter", "--print-query"]
-
-
-class MyFzfPrompt(FzfPrompt):
-    _required_options = Options(*REQUIRED_OPTS)
-
-    def prompt(self, choices: Iterable = None, fzf_options: Options = Options(), delimiter="\n") -> Result:
-        return Result(super().prompt(choices, str(self._required_options + fzf_options), delimiter))
-
-
-DEFAULT_FZF_PROMPT = MyFzfPrompt()
-run_fzf_prompt = DEFAULT_FZF_PROMPT.prompt
+if __name__ == "__main__":
+    pass
