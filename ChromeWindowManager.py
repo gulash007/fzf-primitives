@@ -4,56 +4,60 @@ import time
 from thingies import shell_command
 
 from .core import mods
-from .core.exceptions import ExitLoop, ExitRound
-from .core.MyFzfPrompt import Result, run_fzf_prompt
-from .core.Prompt import Prompt
 from .core.ActionMenu import ActionMenu
 from .core.BasicLoop import BasicLoop
-from .core.options import Options, HOTKEY
+from .core.DefaultPrompt import DefaultPrompt
+from .core.MyFzfPrompt import Result
+from .core.options import Options
+from .core.Prompt import Prompt
 
 WINDOW_ID_REGEX = re.compile(r"(?<=\[).*(?=\])")
 
 # TODO: hotkey to open clipped link in chosen window
+
+action_menu = ActionMenu()
 
 
 class WindowIdRegexNoMatch(Exception):
     pass
 
 
-class WindowSelectionPrompt(Prompt):
-    _action_menu_type = ActionMenu
-    _post_processors = [mods.exit_round_on_no_selection]
+class WindowSelectionPrompt(DefaultPrompt):
+    _instance_created = False
 
     @mods.preview(
         "source ~/.zshforchrome 2>/dev/null && echo {} | get_chrome_id | read -r window_id && brotab query -windowId $window_id | brotab_format_better_line",
         70,
     )
     # ggrep -Po "(?<=\\.)\\d*" for BroTab IDs (from `brotab windows`) instead of get_chrome_id
-    @Options().defaults
-    def __call__(self, options: Options = Options()) -> Result:
-        return run_fzf_prompt(
+    def run(self, options: Options = Options()) -> Result:
+        result = super().run(
             choices=sorted(shell_command("chrome-cli list windows").split("\n"), key=lambda x: x.split("]")[1]),
-            fzf_options=self._options + options,
+            options=options,
         )
+        if isinstance(result, Prompt):
+            raise TypeError(f"{result} should be of type Result")
+        return result
+
+
+window_selection_prompt = WindowSelectionPrompt()
 
 
 class ChromeWindowManager(BasicLoop):
     def __init__(self) -> None:
-        self.select_window = WindowSelectionPrompt()
+        pass
 
     def run(self):
         """Runs one round of the application until end state. Loop should be implemented externally"""
-        # TODO: maybe there's no need to have options
-        window = self.select_window()[0]
+        window = window_selection_prompt.run()[0]
         # window = self._window_prompt()
         window_id = self.extract_window_id(window)
         self.focus_window(window_id)
 
     def extract_window_id(self, line: str) -> str:
-        if match := WINDOW_ID_REGEX.search(line):
-            return match[0]
-        else:
+        if not (match := WINDOW_ID_REGEX.search(line)):
             raise WindowIdRegexNoMatch(f"No match for '{line}'")
+        return match[0]
 
     def focus_window(self, window_id: str):
         active_tab_id = shell_command(f"brotab active | grep {window_id} | awk '{{ print $1 }}'")

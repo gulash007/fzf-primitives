@@ -1,22 +1,23 @@
 from typing import Any, Callable
+
+from .Prompt import Prompt
 from .exceptions import ExitLoop, ExitRound
 from .MyFzfPrompt import Result
-from .Prompt import Prompt
 from thingies import color
 
 
 class UnexpectedResultType(Exception):
     pass
 
-
+# TODO: Remove Loops and make run_in_loop and run_in_recursive_loop methods of Prompt
 class BasicLoop:
     def __init__(self, prompt: Prompt) -> None:
         self._prompt = prompt
 
     def run(self):
-        return self._prompt()
+        return self._prompt.run()
 
-    def run_in_loop(self, result_processor: Callable[[Result], Any] = lambda x: None):
+    def run_in_loop(self, result_processor: Callable[[Result | Prompt], Any] = lambda x: None):
         while True:
             try:
                 result_processor(self.run())
@@ -38,7 +39,7 @@ class BasicRecursiveLoop:
         prompt = self.starting_prompt
         while True:
             try:
-                result = prompt()
+                result = prompt.run()
             except ExitLoop as e:
                 print(f"{color('Exiting loop').red.bold}: {e}")
                 exit(0)

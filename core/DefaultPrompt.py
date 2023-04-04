@@ -1,15 +1,18 @@
 from __future__ import annotations
-import sys
 
-from typing import Iterable, Self, final
+from typing import Iterable, Self
+
 import typer
 
-
+from . import mods
+from .ActionMenu import ActionMenu
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import Options
+from .previews import PREVIEW
+from .Prompt import Prompt
 
 app = typer.Typer()
-
+action_menu = ActionMenu()
 
 # TODO: add support for piping into it
 # TODO: add support for processing clipboard
@@ -19,33 +22,24 @@ app = typer.Typer()
 # TODO: add support for outputting from all available info (including preview)
 
 
-class Prompt:
-    _instance_created = False  # each subclass needs to define own _instance_created = False
-    _options = Options().defaults  # define those in subclass if you want to override, otherwise they're inherited
+class DefaultPrompt(Prompt):
+    _instance_created = False
 
-    @final
-    def __init__(self):
-        if self.__class__._instance_created:
-            raise RuntimeError("Instance already created")
-        self.__class__._instance_created = True
-
-    # subclasses should use super(Prompt).run in their overridden .run methods to run pyfzf prompt
+    @mods.preview(PREVIEW.basic)
+    @mods.exit_round_on_no_selection
+    @action_menu
     def run(self, *, choices: Iterable = None, options: Options = Options()) -> Result | Self:
         choices = choices or []
         return run_fzf_prompt(choices=choices, options=self._options + options)
 
-    # TODO: cache read choices for multiple rounds of selection
-    def read(self):
-        choices = [] if sys.stdin.isatty() else sys.stdin.read().splitlines()
-        return self.run(choices=choices)
 
-
-prompt = Prompt()
+default_prompt = DefaultPrompt()
+action_menu.attach(default_prompt)
 
 
 @app.command()
 def main():
-    output = prompt.read()
+    output = default_prompt.read()
     typer.echo(output, color=True)
 
 
