@@ -5,7 +5,7 @@ import clipboard
 
 from .exceptions import ExitRound
 from .MyFzfPrompt import Result
-from .options import POSITION, Options
+from .options import HOTKEY, POSITION, Options
 
 # ❗ options have to be passed keyworded
 
@@ -21,13 +21,16 @@ def add_options(added_options: Options):
     return decorator
 
 
-def exit_round_on_no_selection(func):
-    def exiting_round_on_no_selection(*args, options: Options = Options(), **kwargs):
-        if not (result := func(*args, options=options, **kwargs)):
-            raise ExitRound  # TODO: custom message (decorator factory)
-        return result
+def exit_round_on_no_selection(func=None, /, *, hk: str = HOTKEY.esc, message: str = ""):
+    def decorator(func):
+        def exiting_round_on_no_selection(*args, options: Options = Options(), **kwargs):
+            if not (result := func(*args, options=options.expect(HOTKEY.esc), **kwargs)) and result.hotkey == hk:
+                raise ExitRound(message)
+            return result
 
-    return exiting_round_on_no_selection
+        return exiting_round_on_no_selection
+
+    return decorator if func is None else decorator(func)
 
 
 # TODO: make it somehow compatible with multi or throw it away

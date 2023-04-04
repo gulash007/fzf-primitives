@@ -180,6 +180,7 @@ class HOTKEY:
     ctrl_alt_y = "ctrl-alt-y"
     ctrl_alt_z = "ctrl-alt-z"
     enter = "enter"
+    esc = "esc"  # usually reserved for exiting with no selection
     f1 = "f1"
     f2 = "f2"
     f3 = "f3"
