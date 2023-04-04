@@ -41,7 +41,7 @@ class Options:
 
         @functools.wraps(func)
         def with_options(*args: P.args, **kwargs: P.kwargs):
-            options = kwargs["options"]
+            options = kwargs.get("options", Options())
             if not isinstance(options, Options):
                 raise TypeError(f"options kw bad type: {type(options)}: {options}")
             kwargs["options"] = options + self
