@@ -5,14 +5,14 @@ from typing import Iterable, Self
 import typer
 
 from . import mods
-from .ActionMenu import ActionMenu
+from .DefaultActionMenu import DefaultActionMenu
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import Options
 from .previews import PREVIEW
 from .Prompt import Prompt
 
 app = typer.Typer()
-action_menu = ActionMenu()
+action_menu = DefaultActionMenu()
 
 # TODO: add support for piping into it
 # TODO: add support for processing clipboard

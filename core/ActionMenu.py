@@ -4,9 +4,6 @@ import functools
 import inspect
 from typing import Any, Callable, Optional, ParamSpec, TypeVar
 
-from thingies import shell_command
-
-from .exceptions import ExitLoop
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import HOTKEY, Options
 from .Prompt import Prompt
@@ -16,14 +13,6 @@ R = TypeVar("R")
 
 
 # TODO: Hotkeys class for customizing and checking for hotkey conflicts
-def action(hotkey: Optional[str] = None):
-    def decorator(func: Callable[[ActionMenu, Result], Any]):
-        func.is_action = True
-        if hotkey:
-            func.hotkey = hotkey
-        return func
-
-    return decorator
 
 
 # TODO: return to previous selection
@@ -94,20 +83,18 @@ class ActionMenu:
         action_id = action_selection[0]
         return self.actions[action_id](result)
 
-    # EXAMPLE
-    @action(HOTKEY.enter)
-    def select(self, result: Result):
-        return result
 
-    @action(HOTKEY.ctrl_c)
-    def clip_selections(self, result: Result):
-        # shell_command seems faster than pyperclip but not in a loop but that's probably irrelevant
-        shell_command("clip", input="\n".join(result))
+AnyActionMenu = TypeVar("AnyActionMenu", bound=ActionMenu)
 
-    @action(HOTKEY.ctrl_q)
-    def quit_app(self, result: Result):
-        # shell_command seems faster than pyperclip but not in a loop but that's probably irrelevant
-        raise ExitLoop(f"Exiting from {self} with\n\tquery: {result.query}\n\tselections: {', '.join(result)}")
+
+def action(hotkey: Optional[str] = None):
+    def decorator(func: Callable[[AnyActionMenu, Result], Any]):
+        func.is_action = True
+        if hotkey:
+            func.hotkey = hotkey
+        return func
+
+    return decorator
 
 
 if __name__ == "__main__":
