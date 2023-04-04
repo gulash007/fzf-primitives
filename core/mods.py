@@ -21,10 +21,10 @@ def add_options(added_options: Options):
     return decorator
 
 
-def exit_round_on_no_selection(hk: str = HOTKEY.esc, message: str = ""):
+def exit_round_on_no_selection(message: str = ""):
     def decorator(func):
         def exiting_round_on_no_selection(*args, options: Options = Options(), **kwargs):
-            if not (result := func(*args, options=options.expect(HOTKEY.esc), **kwargs)) and result.hotkey == hk:
+            if not (result := func(*args, options=options, **kwargs)) and not result.hotkey:
                 raise ExitRound(message)
             return result
 
