@@ -26,7 +26,7 @@ class DefaultPrompt(Prompt):
     _instance_created = False
 
     @mods.preview(PREVIEW.basic)
-    @mods.exit_round_on_no_selection
+    @mods.exit_round_on_no_selection()
     @action_menu
     def run(self, *, choices: Iterable = None, options: Options = Options()) -> Result | Self:
         choices = choices or []
