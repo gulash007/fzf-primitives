@@ -29,7 +29,7 @@ class Prompt:
             raise RuntimeError("Instance already created")
         self.__class__._instance_created = True
 
-    # subclasses should use super(Prompt).run in their overridden .run methods to run pyfzf prompt
+    # subclasses should use Prompt(self).run in their overridden .run methods to run pyfzf prompt
     def run(self, *, choices: Iterable = None, options: Options = Options()) -> Result | Self:
         choices = choices or []
         return run_fzf_prompt(choices=choices, options=self._options + options)
