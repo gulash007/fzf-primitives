@@ -40,7 +40,7 @@ def action(hotkey: Optional[str] = None):
 # TODO: Will subclasses need more than just define actions? Maybe some more options can be overridden?
 # TODO: Preview of result
 class ActionMenu:
-    def __init__(self, hotkey: str = HOTKEY.ctrl_y) -> None:
+    def __init__(self, hotkey: str = HOTKEY.ctrl_h) -> None:
         self._hotkey = hotkey
         self.actions: dict[str, Callable[[Result], Any]] = {
             f"{method_name}\t({getattr(method, 'hotkey', '')})": method
