@@ -1,10 +1,10 @@
 from __future__ import annotations
-import sys
+import pyperclip
 
 from typing import Iterable, Self, final
 import typer
 
-
+from thingies import read_from_pipe
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import Options
 
@@ -36,7 +36,10 @@ class Prompt:
 
     # TODO: cache read choices for multiple rounds of selection
     def read(self):
-        choices = [] if sys.stdin.isatty() else sys.stdin.read().splitlines()
+        try:
+            choices = read_from_pipe().splitlines()
+        except OSError:
+            choices = pyperclip.paste().splitlines()
         return self.run(choices=choices)
 
 
