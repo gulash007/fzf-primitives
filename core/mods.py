@@ -1,20 +1,20 @@
-import functools
 from typing import Callable
 
 import clipboard
 
 from .exceptions import ExitRound
+from .helpers.type_hints import ModdableMethod, P, R
 from .MyFzfPrompt import Result
 from .options import HOTKEY, POSITION, Options
+from .Prompt import Prompt
 
 # ❗ options have to be passed keyworded
 
 
 def add_options(added_options: Options):
-    def decorator(func):
-        @functools.wraps(func)
-        def adding_options(*args, options: Options = Options(), **kwargs):
-            return func(*args, options=options + added_options, **kwargs)
+    def decorator(func: ModdableMethod[P, R]) -> ModdableMethod[P, R]:
+        def adding_options(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
+            return func(self, options=options + added_options, *args, **kwargs)
 
         return adding_options
 
@@ -22,9 +22,11 @@ def add_options(added_options: Options):
 
 
 def exit_round_on_no_selection(message: str = ""):
-    def decorator(func):
-        def exiting_round_on_no_selection(*args, options: Options = Options(), **kwargs):
-            if not (result := func(*args, options=options, **kwargs)) and not result.hotkey:
+    def decorator(func: ModdableMethod[P, Result]) -> ModdableMethod[P, Result]:
+        def exiting_round_on_no_selection(
+            self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs
+        ):
+            if not (result := func(self, options, *args, **kwargs)) and not result.hotkey:
                 raise ExitRound(message)
             return result
 
@@ -45,17 +47,17 @@ def preview(
     """formatter exists to parametrize the command based on self when wrapping a method"""
     command = f"{command} | tee >(clip)" if live_clip_preview else command
 
-    def decorator(func):
-        @functools.wraps(func)
-        def with_preview(*args, options: Options = Options(), **kwargs):
+    def decorator(func: ModdableMethod[P, R]) -> ModdableMethod[P, R]:
+        def with_preview(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
             # print(type(self))
             win_size = f"{window_size}%" if isinstance(window_size, int) else window_size
             return func(
-                *args,
+                self,
                 options=Options(
                     f"{options} --preview-window={window_position},{win_size} --preview 'echo && {command}'"
                 )
                 + options,
+                *args,
                 **kwargs,
             )
 
@@ -68,12 +70,9 @@ def preview(
 def hotkey(hk: str, action: Callable | str):
     """action shouldn't have single quotes in it"""
 
-    def decorator(func):
-        @functools.wraps(func)
-        def with_hotkey(*args, options: Options = Options(), **kwargs):
-            # print(options, *args, **kwargs)
-            # print(hotkey, action)
-            return func(*args, options=Options(f"--bind={hk}:'{action}'") + options, **kwargs)
+    def decorator(func: ModdableMethod[P, R]) -> ModdableMethod[P, R]:
+        def with_hotkey(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
+            return func(self, options=Options(f"--bind={hk}:'{action}'") + options, *args, **kwargs)
 
         return with_hotkey
 
@@ -81,9 +80,9 @@ def hotkey(hk: str, action: Callable | str):
 
 
 def hotkey_python(hk: str, action: Callable):
-    def deco(func):
-        def with_python_hotkey(*args, options: Options = Options(), **kwargs):
-            result: Result = func(*args, options=Options().expect(hk) + options, **kwargs)
+    def deco(func: ModdableMethod[P, Result]) -> ModdableMethod[P, Result]:
+        def with_python_hotkey(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
+            result = func(self, options=Options().expect(hk) + options, *args, **kwargs)
             return action(result) if result.hotkey == hk else result
 
         return with_python_hotkey
@@ -91,10 +90,9 @@ def hotkey_python(hk: str, action: Callable):
     return deco
 
 
-def clip_output(func):
-    @functools.wraps(func)
-    def clipping_output(*args, options: Options = Options(), **kwargs):
-        result: Result = func(*args, options=options, **kwargs)
+def clip_output(func: ModdableMethod[P, Result]) -> ModdableMethod[P, Result]:
+    def clipping_output(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
+        result = func(self, options=options, *args, **kwargs)
         clipboard.copy("\n".join(result))
         return result
 
