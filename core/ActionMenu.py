@@ -1,20 +1,16 @@
 from __future__ import annotations
 
-import functools
 import inspect
-from typing import Any, Callable, Optional, ParamSpec, TypeVar
+from typing import Any, Callable, TypeVar
+
+from .helpers.type_hints import ModdableMethod
 
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import HOTKEY, Options
 from .Prompt import Prompt
 
-P = ParamSpec("P")
-R = TypeVar("R")
-
 
 # TODO: Hotkeys class for customizing and checking for hotkey conflicts
-
-
 # TODO: return to previous selection
 # TODO: return with previous query
 # TODO: Allow multiselect (multioutput)?
@@ -47,27 +43,22 @@ class ActionMenu:
         self.prompt = prompt
 
     # TODO: type hints
-    def __call__(self, func: Callable[P, Result | Prompt]) -> Callable[P, Result | Prompt]:
-        @functools.wraps(func)
-        def wrapped_prompt_call(*args: P.args, **kwargs: P.kwargs) -> Result | Prompt:
-            options = kwargs.get("options", Options())
-            if not isinstance(options, Options):
-                raise TypeError(f"options kw bad type: {type(options)}: {options}")
-            options = options.expect(self._hotkey, *self.hotkeyed_actions.keys())
-            options = options.header(f"tip: Invoke action menu with {self._hotkey}")
+    def __call__(self_, func: ModdableMethod[P, R]) -> ModdableMethod[P, R]:
+        def wrapped_prompt_run(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs) -> R:
+            options = options.expect(self_._hotkey, *self_.hotkeyed_actions.keys())
+            options = options.header(f"tip: Invoke action menu with {self_._hotkey}")
             options = options.header_first
-            kwargs["options"] = options
-            result = func(*args, **kwargs)
+            result = func(self, options, *args, **kwargs)
             if isinstance(result, Prompt):
                 return result
-            if result.hotkey == self._hotkey:
+            if result.hotkey == self_._hotkey:
                 # TODO: distinguish between action that returns None and not choosing an action
-                return self.run(result) or wrapped_prompt_call(*args, **kwargs)
-            if result.hotkey and result.hotkey in self.hotkeyed_actions:
-                return self.hotkeyed_actions[result.hotkey](result) or wrapped_prompt_call(*args, **kwargs)
+                return self_.run(result) or wrapped_prompt_run(*args, **kwargs)
+            if result.hotkey and result.hotkey in self_.hotkeyed_actions:
+                return self_.hotkeyed_actions[result.hotkey](result) or wrapped_prompt_run(*args, **kwargs)
             return result
 
-        return wrapped_prompt_call
+        return wrapped_prompt_run
 
     def run(self, result: Result) -> Any:
         choices = self.actions.keys()
