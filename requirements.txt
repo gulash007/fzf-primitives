@@ -5,3 +5,4 @@ string-color
 loguru
 dill
 typer
+pydantic
