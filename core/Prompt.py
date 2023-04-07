@@ -1,15 +1,16 @@
 from __future__ import annotations
 import pyperclip
 
-from typing import Iterable, Self, final
+from typing import Iterable, final
 import typer
 
 from thingies import read_from_pipe
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import Options
 
-app = typer.Typer()
+__all__ = ["prompt", "Prompt"]
 
+app = typer.Typer()
 
 # TODO: add support for piping into it
 # TODO: add support for processing clipboard
@@ -30,7 +31,7 @@ class Prompt:
         self.__class__._instance_created = True
 
     # subclasses should use Prompt(self).run in their overridden .run methods to run pyfzf prompt
-    def run(self, *, choices: Iterable = None, options: Options = Options()) -> Result | Self:
+    def run(self, *, choices: Iterable | None = None, options: Options = Options()) -> Result:
         choices = choices or []
         return run_fzf_prompt(choices=choices, options=self._options + options)
 
@@ -40,7 +41,7 @@ class Prompt:
             choices = read_from_pipe().splitlines()
         except OSError:
             choices = pyperclip.paste().splitlines()
-        return self.run(choices=choices)
+        return choices
 
 
 prompt = Prompt()
