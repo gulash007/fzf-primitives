@@ -6,7 +6,7 @@ from thingies import shell_command
 from .core import mods
 from .core.ActionMenu import ActionMenu
 from .core.BasicLoop import BasicLoop
-from .core.DefaultPrompt import DefaultPrompt
+from .core import DefaultPrompt as default_prompt
 from .core.MyFzfPrompt import Result
 from .core.options import Options
 from .core.Prompt import Prompt
@@ -22,25 +22,19 @@ class WindowIdRegexNoMatch(Exception):
     pass
 
 
-class WindowSelectionPrompt(DefaultPrompt):
-    _instance_created = False
-
-    @mods.preview(
-        "source ~/.zshforchrome 2>/dev/null && echo {} | get_chrome_id | read -r window_id && brotab query -windowId $window_id | brotab_format_better_line",
-        70,
+@mods.preview(
+    "source ~/.zshforchrome 2>/dev/null && echo {} | get_chrome_id | read -r window_id && brotab query -windowId $window_id | brotab_format_better_line",
+    70,
+)
+# ggrep -Po "(?<=\\.)\\d*" for BroTab IDs (from `brotab windows`) instead of get_chrome_id
+def run_window_selection_prompt(options: Options = Options()) -> Result:
+    result = default_prompt.run(
+        choices=sorted(shell_command("chrome-cli list windows").split("\n"), key=lambda x: x.split("]")[1]),
+        options=options,
     )
-    # ggrep -Po "(?<=\\.)\\d*" for BroTab IDs (from `brotab windows`) instead of get_chrome_id
-    def run(self, options: Options = Options()) -> Result:
-        result = super().run(
-            choices=sorted(shell_command("chrome-cli list windows").split("\n"), key=lambda x: x.split("]")[1]),
-            options=options,
-        )
-        if isinstance(result, Prompt):
-            raise TypeError(f"{result} should be of type Result")
-        return result
-
-
-window_selection_prompt = WindowSelectionPrompt()
+    if isinstance(result, Prompt):
+        raise TypeError(f"{result} should be of type Result")
+    return result
 
 
 class ChromeWindowManager(BasicLoop):
@@ -49,7 +43,7 @@ class ChromeWindowManager(BasicLoop):
 
     def run(self):
         """Runs one round of the application until end state. Loop should be implemented externally"""
-        window = window_selection_prompt.run()[0]
+        window = run_window_selection_prompt()[0]
         # window = self._window_prompt()
         window_id = self.extract_window_id(window)
         self.focus_window(window_id)
