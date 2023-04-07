@@ -59,7 +59,7 @@ class Options:
 
     def bind(self, hotkey: str, action: str):
         if isinstance(action, str):
-            return self.add(f"--bind {hotkey}:{action}")
+            return self.add(f"--bind {hotkey}:'{action}'")
 
     def expect(self, *hotkeys: str):
         return self.add(f"--expect={','.join(hotkeys)}")
