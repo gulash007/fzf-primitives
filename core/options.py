@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-import functools
-from typing import Callable, ParamSpec, Self, Type, TypeVar
+from typing import ParamSpec, Self, TypeVar, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .helpers.type_hints import Moddable, P
+
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -22,7 +25,7 @@ class OptionsAdder:
     def __init__(self, *fzf_options: str):
         self._fzf_options = fzf_options
 
-    def __get__(self, obj: Options, objtype: Type[Options] = None) -> Options:
+    def __get__(self, obj: Options, objtype: type[Options] = None) -> Options:
         return obj.add(*self._fzf_options)
 
 
@@ -36,16 +39,11 @@ class Options:
     multiselect = OptionsAdder("--multi")
     header_first = OptionsAdder("--header-first")
 
-    def __call__(self, func: Callable[P, R]) -> Callable[P, R]:
+    def __call__(self, func: Moddable[P]) -> Moddable[P]:
         """To use the object as a decorator"""
 
-        @functools.wraps(func)
-        def with_options(*args: P.args, **kwargs: P.kwargs):
-            options = kwargs.get("options", Options())
-            if not isinstance(options, Options):
-                raise TypeError(f"options kw bad type: {type(options)}: {options}")
-            kwargs["options"] = options + self
-            return func(*args, **kwargs)
+        def with_options(options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
+            return func(options + self, *args, **kwargs)
 
         return with_options
 
