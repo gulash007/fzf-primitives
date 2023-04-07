@@ -1,14 +1,29 @@
-from typing import Protocol, TypeVar, Generic, ParamSpec
+from __future__ import annotations
 
-from ..options import Options
-from ..Prompt import Prompt
+from typing import Generic, ParamSpec, Protocol, TypeVar
+
+from ..ActionMenu import ActionMenu
+from ..DefaultPrompt import DefaultPrompt
 from ..MyFzfPrompt import Result
+from ..options import Options
 
 P = ParamSpec("P")
-R = TypeVar("R", bound=Result | Prompt, covariant=True)
+AnyPrompt = TypeVar("AnyPrompt", bound="Prompt")
 
 
-class ModdableMethod(Protocol, Generic[P, R]):
+class Prompt(Protocol):
+    run: ModdableMethod
+
+
+class ModdableMethod(Protocol, Generic[P]):
     @staticmethod
-    def __call__(self: Prompt, options: Options, *args: P.args, **kwargs: P.kwargs) -> R:
+    def __call__(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs) -> Result:
         ...
+
+
+am = ActionMenu()
+
+
+@am
+def run(self: DefaultPrompt, options: Options = Options(), name: str = "bot"):
+    return Result([])
