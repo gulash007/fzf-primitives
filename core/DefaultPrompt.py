@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from typing import Iterable, Self
 
 import typer
 
 from . import mods
 from .DefaultActionMenu import DefaultActionMenu
-from .MyFzfPrompt import Result, run_fzf_prompt
+from .MyFzfPrompt import Result
 from .options import Options
 from .previews import PREVIEW
-from .Prompt import Prompt
+from .Prompt import prompt
 
 app = typer.Typer()
 action_menu = DefaultActionMenu()
@@ -22,24 +21,17 @@ action_menu = DefaultActionMenu()
 # TODO: add support for outputting from all available info (including preview)
 
 
-class DefaultPrompt(Prompt):
-    _instance_created = False
-
-    @mods.preview(PREVIEW.basic)
-    @mods.exit_round_on_no_selection()
-    @action_menu
-    def run(self, *, choices: Iterable = None, options: Options = Options()) -> Result | Self:
-        choices = choices or []
-        return run_fzf_prompt(choices=choices, options=self._options + options)
-
-
-default_prompt = DefaultPrompt()
-action_menu.attach(default_prompt)
+@mods.preview(PREVIEW.basic)
+@mods.exit_round_on_no_selection()
+@action_menu
+def run(options: Options = Options(), choices=None) -> Result:
+    choices = choices or []
+    return prompt.run(choices=choices, options=options)
 
 
 @app.command()
 def main():
-    output = default_prompt.read()
+    output = run(choices=prompt.read())
     typer.echo(output, color=True)
 
 
