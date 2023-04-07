@@ -37,28 +37,25 @@ def run_window_selection_prompt(options: Options = Options()) -> Result:
     return result
 
 
-class ChromeWindowManager(BasicLoop):
-    def __init__(self) -> None:
-        pass
+def run_window_manager():
+    """Runs one round of the application until end state. Loop should be implemented externally"""
+    window = run_window_selection_prompt()[0]
+    # window = self._window_prompt()
+    window_id = extract_window_id(window)
+    focus_window(window_id)
 
-    def run(self):
-        """Runs one round of the application until end state. Loop should be implemented externally"""
-        window = run_window_selection_prompt()[0]
-        # window = self._window_prompt()
-        window_id = self.extract_window_id(window)
-        self.focus_window(window_id)
 
-    def extract_window_id(self, line: str) -> str:
-        if not (match := WINDOW_ID_REGEX.search(line)):
-            raise WindowIdRegexNoMatch(f"No match for '{line}'")
-        return match[0]
+def extract_window_id(line: str) -> str:
+    if not (match := WINDOW_ID_REGEX.search(line)):
+        raise WindowIdRegexNoMatch(f"No match for '{line}'")
+    return match[0]
 
-    def focus_window(self, window_id: str):
-        active_tab_id = shell_command(f"brotab active | grep {window_id} | awk '{{ print $1 }}'")
-        shell_command(f'open -a "Google Chrome" && brotab activate {active_tab_id} --focused')
-        time.sleep(1.2)
+
+def focus_window(window_id: str):
+    active_tab_id = shell_command(f"brotab active | grep {window_id} | awk '{{ print $1 }}'")
+    shell_command(f'open -a "Google Chrome" && brotab activate {active_tab_id} --focused')
+    time.sleep(1.2)
 
 
 if __name__ == "__main__":
-    cwm = ChromeWindowManager()
-    cwm.run_in_loop()
+    BasicLoop(run_window_manager).run_in_loop()
