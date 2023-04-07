@@ -3,11 +3,11 @@ from __future__ import annotations
 import inspect
 from typing import Any, Callable, TypeVar
 
-from .helpers.type_hints import ModdableMethod
+from .helpers.type_hints import Moddable, P
 
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import HOTKEY, Options
-from .Prompt import Prompt
+from .Prompt import prompt
 
 
 # TODO: Hotkeys class for customizing and checking for hotkey conflicts
@@ -36,26 +36,18 @@ class ActionMenu:
         self._options = Options().expect(*self.hotkeyed_actions.keys())
         self._options = self._options.header("tip: Press esc to go back")
         self._options = self._options.header_first
-        self.prompt: Prompt
 
-    def attach(self, prompt: Prompt):
-        """In case actions being parametrized with attributes of prompt"""
-        self.prompt = prompt
-
-    # TODO: type hints
-    def __call__(self_, func: ModdableMethod[P, R]) -> ModdableMethod[P, R]:
-        def wrapped_prompt_run(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs) -> R:
-            options = options.expect(self_._hotkey, *self_.hotkeyed_actions.keys())
-            options = options.header(f"tip: Invoke action menu with {self_._hotkey}")
+    def __call__(self, func: Moddable[P]) -> Moddable[P]:
+        def wrapped_prompt_run(options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
+            options = options.expect(self._hotkey, *self.hotkeyed_actions.keys())
+            options = options.header(f"tip: Invoke action menu with {self._hotkey}")
             options = options.header_first
-            result = func(self, options, *args, **kwargs)
-            if isinstance(result, Prompt):
-                return result
-            if result.hotkey == self_._hotkey:
+            result = func(options, *args, **kwargs)
+            if result.hotkey == self._hotkey:
                 # TODO: distinguish between action that returns None and not choosing an action
-                return self_.run(result) or wrapped_prompt_run(*args, **kwargs)
-            if result.hotkey and result.hotkey in self_.hotkeyed_actions:
-                return self_.hotkeyed_actions[result.hotkey](result) or wrapped_prompt_run(*args, **kwargs)
+                return self.run(result) or wrapped_prompt_run(*args, **kwargs)
+            if result.hotkey and result.hotkey in self.hotkeyed_actions:
+                return self.hotkeyed_actions[result.hotkey](result) or wrapped_prompt_run(*args, **kwargs)
             return result
 
         return wrapped_prompt_run
@@ -78,7 +70,7 @@ class ActionMenu:
 AnyActionMenu = TypeVar("AnyActionMenu", bound=ActionMenu)
 
 
-def action(hotkey: Optional[str] = None):
+def action(hotkey: str | None = None):
     def decorator(func: Callable[[AnyActionMenu, Result], Any]):
         func.is_action = True
         if hotkey:
@@ -94,6 +86,6 @@ if __name__ == "__main__":
     @Options().multiselect
     @action_menu
     def some_prompt(options: Options = Options()):
-        return run_fzf_prompt(choices=[1, 2, 3], options=options)
+        return prompt.run(choices=[1, 2, 3], options=options)
 
     print(some_prompt())
