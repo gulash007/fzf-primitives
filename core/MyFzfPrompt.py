@@ -16,7 +16,7 @@ def run_fzf_prompt(
     return Result(FzfPrompt(executable_path).prompt(choices, str(REQUIRED_OPTS + options), delimiter))
 
 
-class Result(list):
+class Result(list[str]):
     """Expects --print-query so it can interpret the first element as query.
     Also expects at least one --expect=hotkey so that it can interpret the first element in fzf_result as hotkey.
     This is implemented in required options for convenience.
