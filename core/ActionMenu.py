@@ -3,11 +3,11 @@ from __future__ import annotations
 import inspect
 from typing import Any, Callable, TypeVar
 
-from .helpers.type_hints import ModdableMethod
+from .helpers.type_hints import Moddable, P
 
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import HOTKEY, Options
-from .Prompt import Prompt
+from .Prompt import Prompt as Pr
 
 
 # TODO: Hotkeys class for customizing and checking for hotkey conflicts
@@ -43,14 +43,12 @@ class ActionMenu:
         self.prompt = prompt
 
     # TODO: type hints
-    def __call__(self_, func: ModdableMethod[P, R]) -> ModdableMethod[P, R]:
-        def wrapped_prompt_run(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs) -> R:
+    def __call__(self_, func: Moddable[P]) -> Moddable[P]:
+        def wrapped_prompt_run(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
             options = options.expect(self_._hotkey, *self_.hotkeyed_actions.keys())
             options = options.header(f"tip: Invoke action menu with {self_._hotkey}")
             options = options.header_first
             result = func(self, options, *args, **kwargs)
-            if isinstance(result, Prompt):
-                return result
             if result.hotkey == self_._hotkey:
                 # TODO: distinguish between action that returns None and not choosing an action
                 return self_.run(result) or wrapped_prompt_run(*args, **kwargs)
@@ -78,7 +76,7 @@ class ActionMenu:
 AnyActionMenu = TypeVar("AnyActionMenu", bound=ActionMenu)
 
 
-def action(hotkey: Optional[str] = None):
+def as_action(hotkey: str | None = None):
     def decorator(func: Callable[[AnyActionMenu, Result], Any]):
         func.is_action = True
         if hotkey:
@@ -93,7 +91,7 @@ if __name__ == "__main__":
 
     @Options().multiselect
     @action_menu
-    def some_prompt(options: Options = Options()):
+    def some_prompt(self, options: Options = Options(), name: str = ""):
         return run_fzf_prompt(choices=[1, 2, 3], options=options)
 
-    print(some_prompt())
+    print(some_prompt)

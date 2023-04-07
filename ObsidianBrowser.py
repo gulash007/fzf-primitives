@@ -1,17 +1,30 @@
 from pathlib import Path
 
-from thingies import shell_command
+from thingies import shell_command, url_encode
+
+if __name__ == "__main__":
+    __package__ = "fzf_primitives.experimental"
 
 from .core import mods
+from .core.ActionMenu import as_action
 from .core.BasicLoop import BasicLoop
+from .core.DefaultActionMenu import DefaultActionMenu
+from .core.Prompt import Prompt
 from .core.DefaultPrompt import DefaultPrompt
+from .core.MyFzfPrompt import Result, run_fzf_prompt
 from .core.options import HOTKEY, POSITION, Options
 from .core.previews import PREVIEW
 
 DEFAULT_REPO_PATH = Path("/Users/honza/Documents/HOLLY")
 
 
-class FolderBrowserPrompt(DefaultPrompt):
+class FolderBrowserActionMenu(DefaultActionMenu):
+    @as_action(HOTKEY.ctrl_o)
+    def open(self, result: Result):
+        shell_command(f'open "obsidian://open?vault=HOLLY&file={url_encode(result[0].removesuffix(".md"))}"')
+
+
+class FolderBrowserPrompt(Prompt):
     _instance_created = False
 
     # @mods.clip_output
@@ -21,6 +34,8 @@ class FolderBrowserPrompt(DefaultPrompt):
     )
     @Options().ansi.multiselect
     @mods.preview(PREVIEW.file(directory=DEFAULT_REPO_PATH, theme="Solarized (light)"), window_size=80)
+    @mods.exit_round_on_no_selection()
+    @DefaultActionMenu()
     def run(self, options: Options = Options(), dirpath: Path = DEFAULT_REPO_PATH):
         # print(options)
         return super().run(
@@ -56,8 +71,8 @@ class ObsidianBrowser(BasicLoop):
 
     def run(self):
         """Runs one round of the application until end state. Loop should be implemented externally"""
-        # TODO: maybe there's no need to have options
-        file_name = folder_browser_prompt.run(dirpath=self.repo_location)[0]
+        result = folder_browser_prompt.run(dirpath=self.repo_location)
+        file_name = result[0]
         file_path = self.repo_location.joinpath(file_name)
         lines = file_browser_prompt.run(file_path)
         print("\n".join(lines))

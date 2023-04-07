@@ -4,5 +4,6 @@ clipboard
 string-color
 loguru
 dill
-typer
+typer[all]
 pydantic
+GitPython

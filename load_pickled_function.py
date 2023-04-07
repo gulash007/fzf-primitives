@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pyfzf import FzfPrompt
 
-FUNCTION_STORAGE = Path("/Users/honza/Documents/Projects/PythonPackages/fzf-primitives/composite_functions/")
+FUNCTION_STORAGE = Path("/Users/honza/Documents/Projects/PythonPackages/fzf_primitives/composite_functions/")
 mapping = {p.stem: p for p in FUNCTION_STORAGE.iterdir()}
 path = mapping[FzfPrompt().prompt(choices=mapping.keys())[0]]
 with open(path, "rb") as f:

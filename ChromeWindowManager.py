@@ -3,6 +3,9 @@ import time
 
 from thingies import shell_command
 
+if __name__ == "__main__":
+    __package__ = "fzf_primitives.experimental"
+
 from .core import mods
 from .core.ActionMenu import ActionMenu
 from .core.BasicLoop import BasicLoop

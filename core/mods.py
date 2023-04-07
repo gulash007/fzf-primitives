@@ -3,16 +3,17 @@ from typing import Callable
 import clipboard
 
 from .exceptions import ExitRound
-from .helpers.type_hints import ModdableMethod, P, R
-from .MyFzfPrompt import Result
+from .helpers.type_hints import Moddable, P
 from .options import HOTKEY, POSITION, Options
 from .Prompt import Prompt
 
 # ❗ options have to be passed keyworded
 
+# TODO: output preview
+
 
 def add_options(added_options: Options):
-    def decorator(func: ModdableMethod[P, R]) -> ModdableMethod[P, R]:
+    def decorator(func: Moddable[P]) -> Moddable[P]:
         def adding_options(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
             return func(self, options=options + added_options, *args, **kwargs)
 
@@ -22,7 +23,7 @@ def add_options(added_options: Options):
 
 
 def exit_round_on_no_selection(message: str = ""):
-    def decorator(func: ModdableMethod[P, Result]) -> ModdableMethod[P, Result]:
+    def decorator(func: Moddable[P]) -> Moddable[P]:
         def exiting_round_on_no_selection(
             self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs
         ):
@@ -35,28 +36,24 @@ def exit_round_on_no_selection(message: str = ""):
     return decorator
 
 
+class WindowSpec:
+    pass
+
+
+DEFAULT_WINDOW_SPEC = WindowSpec()
+
+
 # TODO: make it somehow compatible with multi or throw it away
 # TODO: decorator factory type hinting
 # TODO: command is can use Prompt attributes
-def preview(
-    command: str,
-    window_size: int | str = 75,
-    window_position: str = POSITION.right,
-    live_clip_preview: bool = False,
-):
+def preview(command: str, window_spec: WindowSpec = DEFAULT_WINDOW_SPEC):
     """formatter exists to parametrize the command based on self when wrapping a method"""
-    command = f"{command} | tee >(clip)" if live_clip_preview else command
 
-    def decorator(func: ModdableMethod[P, R]) -> ModdableMethod[P, R]:
+    def decorator(func: Moddable[P]) -> Moddable[P]:
         def with_preview(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
-            # print(type(self))
-            win_size = f"{window_size}%" if isinstance(window_size, int) else window_size
             return func(
                 self,
-                options=Options(
-                    f"{options} --preview-window={window_position},{win_size} --preview 'echo && {command}'"
-                )
-                + options,
+                options=Options(f"{options} --preview-window={window_spec} --preview 'echo && {command}'") + options,
                 *args,
                 **kwargs,
             )
@@ -67,10 +64,10 @@ def preview(
 
 
 # TODO: What if action needs attributes?
-def hotkey(hk: str, action: Callable | str):
+def hotkey(hk: str, action: str):
     """action shouldn't have single quotes in it"""
 
-    def decorator(func: ModdableMethod[P, R]) -> ModdableMethod[P, R]:
+    def decorator(func: Moddable[P]) -> Moddable[P]:
         def with_hotkey(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
             return func(self, options=Options(f"--bind={hk}:'{action}'") + options, *args, **kwargs)
 
@@ -80,7 +77,7 @@ def hotkey(hk: str, action: Callable | str):
 
 
 def hotkey_python(hk: str, action: Callable):
-    def deco(func: ModdableMethod[P, Result]) -> ModdableMethod[P, Result]:
+    def deco(func: Moddable[P]) -> Moddable[P]:
         def with_python_hotkey(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
             result = func(self, options=Options().expect(hk) + options, *args, **kwargs)
             return action(result) if result.hotkey == hk else result
@@ -90,7 +87,7 @@ def hotkey_python(hk: str, action: Callable):
     return deco
 
 
-def clip_output(func: ModdableMethod[P, Result]) -> ModdableMethod[P, Result]:
+def clip_output(func: Moddable[P]) -> Moddable[P]:
     def clipping_output(self: Prompt, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
         result = func(self, options=options, *args, **kwargs)
         clipboard.copy("\n".join(result))

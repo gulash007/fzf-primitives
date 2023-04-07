@@ -22,13 +22,13 @@ action_menu = DefaultActionMenu()
 # TODO: add support for outputting from all available info (including preview)
 
 
-class DefaultPrompt(Prompt):
+class DefaultPrompt:
     _instance_created = False
 
-    @mods.preview(PREVIEW.basic)
-    @mods.exit_round_on_no_selection()
+    # @mods.preview(PREVIEW.basic)
+    # @mods.exit_round_on_no_selection()
     @action_menu
-    def run(self, *, choices: Iterable = None, options: Options = Options()) -> Result | Self:
+    def run(self, options: Options = Options(), choices=None) -> Result:
         choices = choices or []
         return run_fzf_prompt(choices=choices, options=self._options + options)
 

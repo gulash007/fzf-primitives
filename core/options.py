@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import functools
-from typing import Callable, ParamSpec, Self, Type, TypeVar
+from typing import Callable, ParamSpec, Self, TypeVar, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .helpers.type_hints import Moddable, AnyModdable
+
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -22,7 +26,7 @@ class OptionsAdder:
     def __init__(self, *fzf_options: str):
         self._fzf_options = fzf_options
 
-    def __get__(self, obj: Options, objtype: Type[Options] = None) -> Options:
+    def __get__(self, obj: Options, objtype: type[Options] = None) -> Options:
         return obj.add(*self._fzf_options)
 
 
@@ -36,11 +40,11 @@ class Options:
     multiselect = OptionsAdder("--multi")
     header_first = OptionsAdder("--header-first")
 
-    def __call__(self, func: Callable[P, R]) -> Callable[P, R]:
+    def __call__(self, func: AnyModdable) -> AnyModdable:
         """To use the object as a decorator"""
 
         @functools.wraps(func)
-        def with_options(*args: P.args, **kwargs: P.kwargs):
+        def with_options(*args, **kwargs):
             options = kwargs.get("options", Options())
             if not isinstance(options, Options):
                 raise TypeError(f"options kw bad type: {type(options)}: {options}")
@@ -61,7 +65,7 @@ class Options:
 
     def bind(self, hotkey: str, action: str):
         if isinstance(action, str):
-            return self.add(f"--bind {hotkey}:{action}")
+            return self.add(f"--bind {hotkey}:'{action}'")
 
     def expect(self, *hotkeys: str):
         return self.add(f"--expect={','.join(hotkeys)}")
