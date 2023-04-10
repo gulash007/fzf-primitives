@@ -37,11 +37,9 @@ class Prompt:
 
     # TODO: cache read choices for multiple rounds of selection
     def read_choices(self):
-        try:
-            choices = read_from_pipe().splitlines()
-        except OSError:
-            choices = pyperclip.paste().splitlines()
-        return choices
+        if (choices := read_from_pipe()) is None:
+            choices = pyperclip.paste()
+        return choices.splitlines()
 
 
 prompt = Prompt()
