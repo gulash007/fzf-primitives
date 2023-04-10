@@ -31,7 +31,7 @@ def run(options: Options = Options(), choices=None) -> Result:
 
 @app.command()
 def main():
-    output = run(choices=prompt.read())
+    output = run(choices=prompt.read_choices())
     typer.echo(output, color=True)
 
 

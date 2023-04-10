@@ -36,7 +36,7 @@ class Prompt:
         return run_fzf_prompt(choices=choices, options=self._options + options)
 
     # TODO: cache read choices for multiple rounds of selection
-    def read(self):
+    def read_choices(self):
         try:
             choices = read_from_pipe().splitlines()
         except OSError:
@@ -49,7 +49,7 @@ prompt = Prompt()
 
 @app.command()
 def main():
-    output = prompt.read()
+    output = prompt.read_choices()
     typer.echo(output, color=True)
 
 
