@@ -45,9 +45,9 @@ class ActionMenu:
             result = func(options, *args, **kwargs)
             if result.hotkey == self._hotkey:
                 # TODO: distinguish between action that returns None and not choosing an action
-                return self.run(result) or wrapped_prompt_run(*args, **kwargs)
+                return self.run(result) or wrapped_prompt_run(options, *args, **kwargs)
             if result.hotkey and result.hotkey in self.hotkeyed_actions:
-                return self.hotkeyed_actions[result.hotkey](result) or wrapped_prompt_run(*args, **kwargs)
+                return self.hotkeyed_actions[result.hotkey](result) or wrapped_prompt_run(options, *args, **kwargs)
             return result
 
         return wrapped_prompt_run
