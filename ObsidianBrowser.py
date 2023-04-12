@@ -26,7 +26,9 @@ repo_path = Path(sys.argv[1]) if len(sys.argv) == 2 and __name__ == "__main__" e
 @DefaultActionMenu()
 def run_folder_browser_prompt(options: Options = Options(), dirpath: Path = DEFAULT_REPO_PATH):
     return default_prompt.run(
-        choices=shell_command(f"cd {dirpath} && find * -name '*.md' -not -path 'ALFRED/Personal/*'").split("\n"),
+        choices=shell_command(
+            f"cd {dirpath} && find . -name '*.md' -not -path 'ALFRED/Personal/*' | sed 's#^\\./##'"
+        ).split("\n"),
         options=options,
     )  # better file-listing cmd
 
