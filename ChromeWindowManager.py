@@ -37,7 +37,7 @@ def run_window_selection_prompt(options: Options = Options()) -> Result:
     return result
 
 
-def run_window_manager():
+def run():
     """Runs one round of the application until end state. Loop should be implemented externally"""
     window = run_window_selection_prompt()[0]
     # window = self._window_prompt()
@@ -58,4 +58,4 @@ def focus_window(window_id: str):
 
 
 if __name__ == "__main__":
-    BasicLoop(run_window_manager).run_in_loop()
+    BasicLoop(run).run_in_loop()

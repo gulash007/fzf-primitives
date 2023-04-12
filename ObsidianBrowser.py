@@ -41,7 +41,7 @@ def run_file_browser_prompt(options: Options = Options(), file_path: Path = DEFA
     )
 
 
-def run_obsidian_browser(repo_location: Path = DEFAULT_REPO_PATH):
+def run(repo_location: Path = DEFAULT_REPO_PATH):
     """Runs one round of the application until end state. Loop should be implemented externally"""
     result = run_folder_browser_prompt(dirpath=repo_location)
     file_name = result[0]
@@ -51,4 +51,4 @@ def run_obsidian_browser(repo_location: Path = DEFAULT_REPO_PATH):
 
 
 if __name__ == "__main__":
-    BasicLoop(functools.partial(run_obsidian_browser, repo_path)).run_in_loop()
+    BasicLoop(functools.partial(run, repo_path)).run_in_loop()
