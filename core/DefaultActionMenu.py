@@ -14,7 +14,7 @@ class DefaultActionMenu(ActionMenu):
     @action(HOTKEY.ctrl_c)
     def clip_selections(self, result: Result):
         # shell_command seems faster than pyperclip but not in a loop but that's probably irrelevant
-        shell_command("clip", input="\n".join(result))
+        shell_command("clip", input_="\n".join(result))
 
     @action(HOTKEY.ctrl_q)
     def quit_app(self, result: Result):
