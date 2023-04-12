@@ -21,9 +21,9 @@ action_menu = DefaultActionMenu()
 # TODO: add support for outputting from all available info (including preview)
 
 
+@action_menu
 @mods.preview(PREVIEW.basic)
 @mods.exit_round_on_no_selection()
-@action_menu
 def run(options: Options = Options(), choices=None) -> Result:
     choices = choices or []
     return prompt.run(choices=choices, options=options)
