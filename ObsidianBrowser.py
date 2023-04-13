@@ -4,7 +4,7 @@ import sys
 
 from thingies import shell_command
 
-from .core import DefaultPrompt as default_prompt
+from .core import DefaultPrompt
 from .core import mods
 from .core.BasicLoop import BasicLoop
 from .core.DefaultActionMenu import DefaultActionMenu
@@ -23,9 +23,8 @@ repo_path = Path(sys.argv[1]) if len(sys.argv) == 2 and __name__ == "__main__" e
 @Options().ansi.multiselect
 @mods.preview(PREVIEW.file(directory=repo_path, theme="Solarized (light)"), window_size=80)
 @mods.exit_round_on_no_selection()
-@DefaultActionMenu()
 def run_folder_browser_prompt(options: Options = Options(), dirpath: Path = DEFAULT_REPO_PATH):
-    return default_prompt.run(
+    return DefaultPrompt.run(
         choices=shell_command(
             f"cd {dirpath} && find . -name '*.md' -not -path 'ALFRED/Personal/*' | sed 's#^\\./##'"
         ).split("\n"),
@@ -37,7 +36,7 @@ def run_folder_browser_prompt(options: Options = Options(), dirpath: Path = DEFA
 @mods.preview(command='x={} && echo "${x:9}"', window_size="2", window_position=POSITION.up, live_clip_preview=False)
 @Options().no_sort.multiselect.ansi
 def run_file_browser_prompt(options: Options = Options(), file_path: Path = DEFAULT_REPO_PATH):
-    return default_prompt.run(
+    return DefaultPrompt.run(
         choices=shell_command(f'bat "{file_path}" --color=always --theme "Solarized (light)"').split("\n"),
         options=options,
     )

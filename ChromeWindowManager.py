@@ -6,7 +6,7 @@ from thingies import shell_command
 from .core import mods
 from .core.ActionMenu import ActionMenu
 from .core.BasicLoop import BasicLoop
-from .core import DefaultPrompt as default_prompt
+from .core import DefaultPrompt
 from .core.MyFzfPrompt import Result
 from .core.options import Options
 
@@ -27,7 +27,7 @@ class WindowIdRegexNoMatch(Exception):
 )
 # ggrep -Po "(?<=\\.)\\d*" for BroTab IDs (from `brotab windows`) instead of get_chrome_id
 def run_window_selection_prompt(options: Options = Options()) -> Result:
-    result = default_prompt.run(
+    result = DefaultPrompt.run(
         choices=sorted(shell_command("chrome-cli list windows").split("\n"), key=lambda x: x.split("]")[1]),
         options=options,
     )
