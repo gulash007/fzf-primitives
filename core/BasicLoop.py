@@ -11,13 +11,10 @@ class UnexpectedResultType(Exception):
 
 # TODO: Remove Loops and make run_in_loop and run_in_recursive_loop methods of Prompt
 class BasicLoop:
-    def __init__(self, prompt: Prompt) -> None:
-        self._prompt = prompt
+    def __init__(self, run: Callable) -> None:
+        self.run = run
 
-    def run(self):
-        return self._prompt.run()
-
-    def run_in_loop(self, result_processor: Callable[[Result | Prompt], Any] = lambda x: None):
+    def run_in_loop(self, result_processor: Callable[[Result], Any] = lambda x: None):
         while True:
             try:
                 result_processor(self.run())
@@ -31,22 +28,22 @@ class BasicLoop:
             #     return
 
 
-class BasicRecursiveLoop:
-    def __init__(self, starting_prompt: Prompt) -> None:
-        self.starting_prompt = starting_prompt
+# class BasicRecursiveLoop:
+#     def __init__(self, starting_prompt: Prompt) -> None:
+#         self.starting_prompt = starting_prompt
 
-    def run(self) -> Result:
-        prompt = self.starting_prompt
-        while True:
-            try:
-                result = prompt.run()
-            except ExitLoop as e:
-                print(f"{color('Exiting loop').red.bold}: {e}")
-                exit(0)
-            if isinstance(result, Result):
-                return result
-            elif isinstance(result, Prompt):
-                prompt = result
-                continue
-            else:
-                raise UnexpectedResultType(f"{type(result)}")
+#     def run(self) -> Result:
+#         prompt = self.starting_prompt
+#         while True:
+#             try:
+#                 result = prompt.run()
+#             except ExitLoop as e:
+#                 print(f"{color('Exiting loop').red.bold}: {e}")
+#                 exit(0)
+#             if isinstance(result, Result):
+#                 return result
+#             elif isinstance(result, Prompt):
+#                 prompt = result
+#                 continue
+#             else:
+#                 raise UnexpectedResultType(f"{type(result)}")
