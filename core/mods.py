@@ -64,7 +64,7 @@ def hotkey(hk: str, action: str):
 
     def decorator(func: Moddable[P]) -> Moddable[P]:
         def with_hotkey(options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
-            return func(options=Options(f"--bind={hk}:'{action}'") + options, *args, **kwargs)
+            return func(options=Options().bind(hk, action) + options, *args, **kwargs)
 
         return with_hotkey
 
