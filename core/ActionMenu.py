@@ -7,7 +7,7 @@ from .helpers.type_hints import Moddable, P
 
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import HOTKEY, Options
-from .Prompt import prompt
+from . import Prompt
 
 
 # TODO: Hotkeys class for customizing and checking for hotkey conflicts
@@ -86,6 +86,6 @@ if __name__ == "__main__":
     @Options().multiselect
     @action_menu
     def some_prompt(options: Options = Options()):
-        return prompt.run(choices=[1, 2, 3], options=options)
+        return Prompt.run(choices=[1, 2, 3], options=options)
 
     print(some_prompt())

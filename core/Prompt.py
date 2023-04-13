@@ -1,14 +1,12 @@
-from __future__ import annotations
 import pyperclip
 
-from typing import Iterable, final
+from typing import Iterable
 import typer
 
 from thingies import read_from_pipe
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import Options
 
-__all__ = ["prompt", "Prompt"]
 
 app = typer.Typer()
 
@@ -20,34 +18,21 @@ app = typer.Typer()
 # TODO: add support for outputting from all available info (including preview)
 
 
-class Prompt:
-    _instance_created = False  # each subclass needs to define own _instance_created = False
-    _options = Options().defaults  # define those in subclass if you want to override, otherwise they're inherited
-
-    @final
-    def __init__(self):
-        if self.__class__._instance_created:
-            raise RuntimeError("Instance already created")
-        self.__class__._instance_created = True
-
-    # subclasses should use Prompt(self).run in their overridden .run methods to run pyfzf prompt
-    def run(self, *, choices: Iterable | None = None, options: Options = Options()) -> Result:
-        choices = choices or []
-        return run_fzf_prompt(choices=choices, options=self._options + options)
-
-    # TODO: cache read choices for multiple rounds of selection
-    def read_choices(self):
-        if (choices := read_from_pipe()) is None:
-            choices = pyperclip.paste()
-        return choices.splitlines()
+def run(choices: Iterable | None = None, options: Options = Options()) -> Result:
+    choices = choices or []
+    return run_fzf_prompt(choices=choices, options=Options().defaults + options)
 
 
-prompt = Prompt()
+# TODO: cache read choices for multiple rounds of selection
+def read_choices():
+    if (choices := read_from_pipe()) is None:
+        choices = pyperclip.paste()
+    return choices.splitlines()
 
 
 @app.command()
 def main(options: list[str] = typer.Argument(None, help="fzf options passed as string. Pass them after --")):
-    output = prompt.run(choices=prompt.read_choices(), options=Options(*options))
+    output = run(choices=read_choices(), options=Options(*options))
     typer.echo(output, color=True)
 
 

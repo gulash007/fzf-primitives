@@ -9,7 +9,6 @@ from .core.BasicLoop import BasicLoop
 from .core import DefaultPrompt as default_prompt
 from .core.MyFzfPrompt import Result
 from .core.options import Options
-from .core.Prompt import Prompt
 
 WINDOW_ID_REGEX = re.compile(r"(?<=\[).*(?=\])")
 
@@ -32,8 +31,6 @@ def run_window_selection_prompt(options: Options = Options()) -> Result:
         choices=sorted(shell_command("chrome-cli list windows").split("\n"), key=lambda x: x.split("]")[1]),
         options=options,
     )
-    if isinstance(result, Prompt):
-        raise TypeError(f"{result} should be of type Result")
     return result
 
 

@@ -1,6 +1,5 @@
 from typing import Any, Callable
 
-from .Prompt import Prompt
 from .exceptions import ExitLoop, ExitRound
 from .MyFzfPrompt import Result
 from thingies import color
@@ -8,6 +7,7 @@ from thingies import color
 
 class UnexpectedResultType(Exception):
     pass
+
 
 # TODO: Remove Loops and make run_in_loop and run_in_recursive_loop methods of Prompt
 class BasicLoop:
