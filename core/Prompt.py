@@ -46,8 +46,8 @@ prompt = Prompt()
 
 
 @app.command()
-def main():
-    output = prompt.read_choices()
+def main(options: list[str] = typer.Argument(None, help="fzf options passed as string. Pass them after --")):
+    output = prompt.run(choices=prompt.read_choices(), options=Options(*options))
     typer.echo(output, color=True)
 
 

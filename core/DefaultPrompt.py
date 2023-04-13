@@ -30,8 +30,8 @@ def run(options: Options = Options(), choices=None) -> Result:
 
 
 @app.command()
-def main():
-    output = run(choices=prompt.read_choices())
+def main(options: list[str] = typer.Argument(None, help="fzf options passed as string. Pass them after --")):
+    output = run(choices=prompt.read_choices(), options=Options(*options))
     typer.echo(output, color=True)
 
 
