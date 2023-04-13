@@ -47,9 +47,7 @@ def preview(
             # print(type(self))
             win_size = f"{window_size}%" if isinstance(window_size, int) else window_size
             return func(
-                options=Options(
-                    f"{options} --preview-window={window_position},{win_size} --preview 'echo && {command}'"
-                )
+                options=Options(f"--preview-window={window_position},{win_size} --preview 'echo && {command}'")
                 + options,
                 *args,
                 **kwargs,
