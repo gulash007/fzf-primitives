@@ -10,18 +10,19 @@ from .options import Options
 REQUIRED_OPTS = Options("--expect=enter", "--print-query")  # Result needs these in order to work
 
 
+# ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable specified in vscode-insiders://file/Users/honza/.dotfiles/.zshforfzf:4
 def run_fzf_prompt(
-    choices: Iterable = None, options: Options = Options(), delimiter="\n", *, executable_path=None
+    choices: Iterable | None = None, options: Options = Options(), delimiter="\n", *, executable_path=None
 ) -> Result:
+    choices = choices or []
+    # TODO: log options here: logger.info(f"Running fzf prompt with options: {options}")
     return Result(FzfPrompt(executable_path).prompt(choices, str(REQUIRED_OPTS + options), delimiter))
 
 
+# Expects --print-query so it can interpret the first element as query.
+# Also expects at least one --expect=hotkey so that it can interpret the first element in fzf_result as hotkey.
+# This is implemented in required options for convenience.
 class Result(list[str]):
-    """Expects --print-query so it can interpret the first element as query.
-    Also expects at least one --expect=hotkey so that it can interpret the first element in fzf_result as hotkey.
-    This is implemented in required options for convenience.
-    """
-
     def __init__(self, fzf_result: list[str]) -> None:
         self.hotkey: Optional[str] = None
         self.query = ""
