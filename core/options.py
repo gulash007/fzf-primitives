@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import ParamSpec, Self, TypeVar, TYPE_CHECKING
+import shlex
+from typing import TYPE_CHECKING, ParamSpec, Self, TypeVar
 
 if TYPE_CHECKING:
     from .helpers.type_hints import Moddable, P
@@ -25,7 +26,7 @@ class OptionsAdder:
     def __init__(self, *fzf_options: str):
         self._fzf_options = fzf_options
 
-    def __get__(self, obj: Options, objtype: type[Options] = None) -> Options:
+    def __get__(self, obj: Options, objtype: type[Options] | None = None) -> Options:
         return obj.add(*self._fzf_options)
 
 
@@ -58,28 +59,27 @@ class Options:
         return self.__class__(*self.options, *fzf_options)
 
     def bind(self, hotkey: str, action: str):
-        if isinstance(action, str):
-            return self.add(f"--bind {hotkey}:'{action}'")
+        return self.add("--bind", f"{hotkey}:{action}")
 
     def expect(self, *hotkeys: str):
-        return self.add(f"--expect={','.join(hotkeys)}")
+        return self.add("--expect", f"{','.join(hotkeys)}")
 
     def layout(self, layout: str):
-        return self.add(f"--layout={layout}")
+        return self.add("--layout", layout)
 
     def prompt(self, prompt: str):
-        return self.add(f"--prompt='{prompt}'")
+        return self.add("--prompt", prompt)
 
     def pointer(self, pointer: str):
         if len(pointer) > 2:
             raise ValueError(f"Pointer too long (should be max 2 chars): {pointer}")
-        return self.add(f"--pointer='{pointer}'")
+        return self.add("--pointer", pointer)
 
     def header(self, header: str):
-        return self.add(f"--header='{header}'")
+        return self.add("--header", header)
 
     def __str__(self) -> str:
-        return " ".join(self.options)
+        return shlex.join(self.options)
 
     def __add__(self, __other: Options) -> Self:
         return self.add(*__other.options)
