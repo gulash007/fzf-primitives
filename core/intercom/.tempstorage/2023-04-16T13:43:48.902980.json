@@ -1,0 +1,12 @@
+{
+  "id": "2023-04-16T13:43:48.902980",
+  "previews": {
+    "basic": {
+      "id": "basic",
+      "output": null
+    }
+  },
+  "choices": ["Honza", "Milan"],
+  "query": "Hon",
+  "selections": ["Honza"]
+}
