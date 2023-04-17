@@ -79,7 +79,7 @@ class Options:
         return self.add("--header", header)
 
     def __str__(self) -> str:
-        return shlex.join(self.options)
+        return " ".join(self.options)
 
     def __add__(self, __other: Options) -> Self:
         return self.add(*__other.options)

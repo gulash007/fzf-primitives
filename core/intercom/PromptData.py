@@ -1,12 +1,13 @@
-from typing import Self, Protocol
-from pydantic import BaseModel, parse_raw_as
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Protocol, Self
+
+from pydantic import BaseModel, Field, parse_raw_as
 
 from ..actions.preview_basic import preview_basic
-
 from ..options import Options
 from .constants import STORAGE_PATH
-from pathlib import Path
-from dataclasses import dataclass
 
 
 class PreviewFunction(Protocol):
@@ -15,20 +16,21 @@ class PreviewFunction(Protocol):
         ...
 
 
-FUNCTIONS = {"basic": preview_basic}
+PREVIEW_FUNCTIONS = {"basic": preview_basic}
 
 
 class Preview(BaseModel):
     id: str
+    command: str
     output: str | None = None
     # function: PreviewFunction | None = None
     # command: str | None = None
 
     def run_function(self, query, selections):
-        return FUNCTIONS[self.id](query, selections)
+        return PREVIEW_FUNCTIONS[self.id](query, selections)
 
     def update(self, query, selections):
-        self.output = FUNCTIONS[self.id](query, selections)
+        self.output = PREVIEW_FUNCTIONS[self.id](query, selections)
 
 
 # TODO: socket solution
@@ -37,8 +39,8 @@ class PromptData(BaseModel):
     be able to deserialize it and access it"""
 
     id: str
-    previews: dict[str, Preview]
-    choices: list[str]
+    choices: list[str] = []
+    previews: dict[str, Preview] = {}
     # options: Options  # TODO: how to serialize and deserialize
     query: str = ""  # TODO: Preset query (--query option)
     selections: list[str] = []  # TODO: preset selections?

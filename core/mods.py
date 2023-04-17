@@ -1,10 +1,13 @@
+import shlex
 from typing import Callable
 
 import clipboard
 
 from .exceptions import ExitRound
 from .helpers.type_hints import Moddable, P
-from .options import Options, POSITION
+from .intercom.PromptData import PromptData, Preview
+from .options import POSITION, Options
+from .previews import PREVIEW
 
 
 # TODO: output preview
@@ -33,22 +36,23 @@ def exit_round_on_no_selection(message: str = ""):
 # TODO: make it somehow compatible with multi or throw it away
 # TODO: decorator factory type hinting
 # TODO: command is can use Prompt attributes
+# TODO: preview label
 def preview(
-    command: str,
+    preview_: Preview,
     window_size: int | str = 75,
     window_position: str = POSITION.right,
-    live_clip_preview: bool = False,
 ):
     """formatter exists to parametrize the command based on self when wrapping a method"""
-    command = f"{command} | tee >(clip)" if live_clip_preview else command
 
     def decorator(func: Moddable[P]) -> Moddable[P]:
-        def with_preview(options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
-            # print(type(self))
+        def with_preview(prompt_data: PromptData, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
             win_size = f"{window_size}%" if isinstance(window_size, int) else window_size
+            print(preview_.command)
+            preview_.command = preview_.command % prompt_data.id
+            prompt_data.previews[preview_.id] = preview_
             return func(
-                options=Options(f"--preview-window={window_position},{win_size} --preview 'echo && {command}'")
-                + options,
+                prompt_data,
+                options=Options(f"--preview-window {window_position},{win_size}") + options,
                 *args,
                 **kwargs,
             )

@@ -1,12 +1,15 @@
-import pyperclip
-
+import shlex
 from typing import Iterable
-import typer
 
-from thingies import read_from_pipe
+from datetime import datetime
+import pyperclip
+import typer
+from .intercom.PromptData import PromptData
+from thingies import read_from_pipe, color
+
+from .exceptions import ExitLoop
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import Options
-
 
 app = typer.Typer()
 
@@ -18,9 +21,17 @@ app = typer.Typer()
 # TODO: add support for outputting from all available info (including preview)
 
 
-def run(choices: Iterable | None = None, options: Options = Options()) -> Result:
+def run(choices: Iterable | None = None, prompt_data: PromptData | None = None, options: Options = Options()) -> Result:
+    prompt_data = prompt_data or PromptData(id=datetime.now().isoformat())
     choices = choices or []
-    return run_fzf_prompt(choices=choices, options=Options().defaults + options)
+    prompt_data.choices.extend(choices)
+    for preview in prompt_data.previews.values():
+        options = options.add(shlex.join(shlex.split(f"--preview '{preview.command}'")))
+    options = Options().defaults + options
+
+    prompt_data.save()
+
+    return run_fzf_prompt(choices=choices, options=options)
 
 
 # TODO: cache read choices for multiple rounds of selection
