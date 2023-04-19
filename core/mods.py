@@ -1,20 +1,28 @@
 import shlex
-from typing import Callable
+from typing import Callable, Generic, ParamSpec, Protocol
 
 import clipboard
 
 from .exceptions import ExitRound
-from .helpers.type_hints import Moddable, P
-from .intercom.PromptData import PromptData, Preview
+from .intercom.PromptData import Preview, PromptData
+from .MyFzfPrompt import Result
 from .options import POSITION, Options
 from .previews import PREVIEW
+from .helpers.type_hints import Moddable
+
+
+P = ParamSpec("P")
+
+
+# TODO: compatibility with Typer? Or maybe modify Typer to accept it and ignore 'options'
 
 
 # TODO: output preview
 def add_options(added_options: Options):
     def decorator(func: Moddable[P]) -> Moddable[P]:
-        def adding_options(options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
-            return func(options=options + added_options, *args, **kwargs)
+        def adding_options(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+            prompt_data.options = prompt_data.options + added_options
+            return func(prompt_data, *args, **kwargs)
 
         return adding_options
 
@@ -23,8 +31,8 @@ def add_options(added_options: Options):
 
 def exit_round_on_no_selection(message: str = ""):
     def decorator(func: Moddable[P]) -> Moddable[P]:
-        def exiting_round_on_no_selection(options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
-            if not (result := func(options, *args, **kwargs)) and not result.hotkey:
+        def exiting_round_on_no_selection(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+            if not (result := func(prompt_data, *args, **kwargs)) and not result.hotkey:
                 raise ExitRound(message)
             return result
 
@@ -45,14 +53,14 @@ def preview(
     """formatter exists to parametrize the command based on self when wrapping a method"""
 
     def decorator(func: Moddable[P]) -> Moddable[P]:
-        def with_preview(prompt_data: PromptData, options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
+        def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
             win_size = f"{window_size}%" if isinstance(window_size, int) else window_size
             print(preview_.command)
             preview_.command = preview_.command % prompt_data.id
             prompt_data.previews[preview_.id] = preview_
+            prompt_data.options = Options(f"--preview-window {window_position},{win_size}") + prompt_data.options
             return func(
                 prompt_data,
-                options=Options(f"--preview-window {window_position},{win_size}") + options,
                 *args,
                 **kwargs,
             )
@@ -67,8 +75,9 @@ def hotkey(hk: str, action: str):
     """action shouldn't have single quotes in it"""
 
     def decorator(func: Moddable[P]) -> Moddable[P]:
-        def with_hotkey(options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
-            return func(options=Options().bind(hk, action) + options, *args, **kwargs)
+        def with_hotkey(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+            prompt_data.options = Options().bind(hk, action) + prompt_data.options
+            return func(prompt_data, *args, **kwargs)
 
         return with_hotkey
 
@@ -77,8 +86,9 @@ def hotkey(hk: str, action: str):
 
 def hotkey_python(hk: str, action: Callable):
     def deco(func: Moddable[P]) -> Moddable[P]:
-        def with_python_hotkey(options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
-            result = func(options=Options().expect(hk) + options, *args, **kwargs)
+        def with_python_hotkey(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+            prompt_data.options = Options().expect(hk) + prompt_data.options
+            result = func(prompt_data, *args, **kwargs)
             return action(result) if result.hotkey == hk else result
 
         return with_python_hotkey
@@ -87,8 +97,8 @@ def hotkey_python(hk: str, action: Callable):
 
 
 def clip_output(func: Moddable[P]) -> Moddable[P]:
-    def clipping_output(options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
-        result = func(options=options, *args, **kwargs)
+    def clipping_output(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+        result = func(prompt_data, *args, **kwargs)
         clipboard.copy("\n".join(result))
         return result
 

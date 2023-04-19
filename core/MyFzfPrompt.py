@@ -4,6 +4,8 @@ from typing import Iterable, Optional
 
 from pyfzf import FzfPrompt
 
+from .intercom.PromptData import PromptData
+
 from .options import Options
 
 
@@ -11,12 +13,14 @@ REQUIRED_OPTS = Options("--expect=enter", "--print-query")  # Result needs these
 
 
 # ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable specified in vscode-insiders://file/Users/honza/.dotfiles/.zshforfzf:4
-def run_fzf_prompt(
-    choices: Iterable | None = None, options: Options = Options(), delimiter="\n", *, executable_path=None
-) -> Result:
-    choices = choices or []
+def run_fzf_prompt(prompt_data: PromptData, delimiter="\n", *, executable_path=None) -> Result:
+    # print("MyFzfPrompt:")
+    # print("\n".join(prompt_data.options.options))
+    print(prompt_data.options)
     # TODO: log options here: logger.info(f"Running fzf prompt with options: {options}")
-    return Result(FzfPrompt(executable_path).prompt(choices, str(REQUIRED_OPTS + options), delimiter))
+    return Result(
+        FzfPrompt(executable_path).prompt(prompt_data.choices, str(REQUIRED_OPTS + prompt_data.options), delimiter)
+    )
 
 
 # Expects --print-query so it can interpret the first element as query.

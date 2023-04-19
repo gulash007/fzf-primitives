@@ -3,11 +3,13 @@ from __future__ import annotations
 import inspect
 from typing import Any, Callable, TypeVar
 
-from .helpers.type_hints import Moddable, P
+from ..core.intercom.PromptData import PromptData
 
+from ..core import mods
+from . import Prompt
+from .helpers.type_hints import Moddable, P
 from .MyFzfPrompt import Result, run_fzf_prompt
 from .options import HOTKEY, Options
-from . import Prompt
 
 
 # TODO: Hotkeys class for customizing and checking for hotkey conflicts
@@ -24,6 +26,7 @@ from . import Prompt
 # TODO: Make action_menu_hotkey owned by ActionMenu instead of prompt
 # TODO: Will subclasses need more than just define actions? Maybe some more options can be overridden?
 # TODO: Preview of result
+# TODO: ❗ Remake as an hotkey:execute(action_menu_prompt <prompt id (port #)>)
 class ActionMenu:
     def __init__(self, hotkey: str = HOTKEY.ctrl_h) -> None:
         self._hotkey = hotkey
@@ -38,23 +41,25 @@ class ActionMenu:
         self._options = self._options.header_first
 
     def __call__(self, func: Moddable[P]) -> Moddable[P]:
-        def wrapped_prompt_run(options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
-            options = options.expect(self._hotkey, *self.hotkeyed_actions.keys())
-            options = options.header(f"tip: Invoke action menu with {self._hotkey}")
-            options = options.header_first
-            result = func(options, *args, **kwargs)
+        def wrapped_prompt_run(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+            prompt_data.options = prompt_data.options.expect(self._hotkey, *self.hotkeyed_actions.keys())
+            prompt_data.options = prompt_data.options.header(f"tip: Invoke action menu with {self._hotkey}")
+            prompt_data.options = prompt_data.options.header_first
+            result = func(prompt_data, *args, **kwargs)
             if result.hotkey == self._hotkey:
                 # TODO: distinguish between action that returns None and not choosing an action
-                return self.run(result) or wrapped_prompt_run(options, *args, **kwargs)
+                return self.run(result) or wrapped_prompt_run(prompt_data, *args, **kwargs)
             if result.hotkey and result.hotkey in self.hotkeyed_actions:
-                return self.hotkeyed_actions[result.hotkey](result) or wrapped_prompt_run(options, *args, **kwargs)
+                return self.hotkeyed_actions[result.hotkey](result) or wrapped_prompt_run(prompt_data, *args, **kwargs)
             return result
 
         return wrapped_prompt_run
 
     def run(self, result: Result) -> Any:
-        choices = self.actions.keys()
-        action_selection = run_fzf_prompt(choices, self._options)  # TODO: extract decorated function get_action
+        choices = list(self.actions.keys())
+        action_selection = run_fzf_prompt(
+            PromptData(choices=choices, options=self._options)
+        )  # TODO: extract decorated function get_action
         if not action_selection and not action_selection.hotkey:
             return
         if (
@@ -83,9 +88,10 @@ def action(hotkey: str | None = None):
 if __name__ == "__main__":
     action_menu = ActionMenu()
 
-    @Options().multiselect
+    @mods.add_options(Options().multiselect)
+    @mods.add_options(Options("--bind 'change:execute-silent(nc localhost 34566)'"))
     @action_menu
-    def some_prompt(options: Options = Options()):
-        return Prompt.run(choices=[1, 2, 3], options=options)
+    def some_prompt(prompt_data: PromptData):
+        return Prompt.run(prompt_data)
 
-    print(some_prompt())
+    print(some_prompt(PromptData(choices=[1, 2, 3])))

@@ -1,14 +1,8 @@
 from __future__ import annotations
 
 import shlex
-from typing import TYPE_CHECKING, ParamSpec, Self, TypeVar
+from typing import Self
 
-if TYPE_CHECKING:
-    from .helpers.type_hints import Moddable, P
-
-
-P = ParamSpec("P")
-R = TypeVar("R")
 
 DEFAULT_OPTS = [
     "--layout=reverse",
@@ -40,13 +34,9 @@ class Options:
     multiselect = OptionsAdder("--multi")
     header_first = OptionsAdder("--header-first")
 
-    def __call__(self, func: Moddable[P]) -> Moddable[P]:
-        """To use the object as a decorator"""
-
-        def with_options(options: Options = Options(), *args: P.args, **kwargs: P.kwargs):
-            return func(options + self, *args, **kwargs)
-
-        return with_options
+    @classmethod
+    def __get_validators__(cls):
+        return ()
 
     def __init__(self, *fzf_options: str) -> None:
         self.__options: tuple[str, ...] = fzf_options
@@ -58,25 +48,25 @@ class Options:
     def add(self, *fzf_options: str) -> Self:
         return self.__class__(*self.options, *fzf_options)
 
-    def bind(self, hotkey: str, action: str):
-        return self.add("--bind", f"{hotkey}:{action}")
+    def bind(self, hotkey: str, action: str) -> Self:
+        return self.add(shlex.join(["--bind", f"{hotkey}:{action}"]))
 
-    def expect(self, *hotkeys: str):
-        return self.add("--expect", f"{','.join(hotkeys)}")
+    def expect(self, *hotkeys: str) -> Self:
+        return self.add(shlex.join(["--expect", f"{','.join(hotkeys)}"]))
 
-    def layout(self, layout: str):
-        return self.add("--layout", layout)
+    def layout(self, layout: str) -> Self:
+        return self.add(shlex.join(["--layout", layout]))
 
-    def prompt(self, prompt: str):
-        return self.add("--prompt", prompt)
+    def prompt(self, prompt: str) -> Self:
+        return self.add(shlex.join(["--prompt", prompt]))
 
-    def pointer(self, pointer: str):
+    def pointer(self, pointer: str) -> Self:
         if len(pointer) > 2:
             raise ValueError(f"Pointer too long (should be max 2 chars): {pointer}")
-        return self.add("--pointer", pointer)
+        return self.add(shlex.join(["--pointer", pointer]))
 
-    def header(self, header: str):
-        return self.add("--header", header)
+    def header(self, header: str) -> Self:
+        return self.add(shlex.join(["--header", header]))
 
     def __str__(self) -> str:
         return " ".join(self.options)
@@ -151,6 +141,34 @@ class HOTKEY:
     ctrl_x = "ctrl-x"
     ctrl_y = "ctrl-y"
     ctrl_z = "ctrl-z"
+    alt_a = "alt-a"
+    alt_b = "alt-b"
+    alt_c = "alt-c"
+    alt_d = "alt-d"
+    alt_e = "alt-e"
+    alt_f = "alt-f"
+    alt_g = "alt-g"
+    alt_h = "alt-h"
+    alt_i = "alt-i"
+    alt_j = "alt-j"
+    alt_k = "alt-k"
+    alt_l = "alt-l"
+    alt_m = "alt-m"
+    alt_n = "alt-n"
+    alt_o = "alt-o"
+    alt_p = "alt-p"
+    alt_q = "alt-q"
+    alt_r = "alt-r"
+    alt_s = "alt-s"
+    alt_t = "alt-t"
+    alt_u = "alt-u"
+    alt_v = "alt-v"
+    alt_w = "alt-w"
+    alt_x = "alt-x"
+    alt_y = "alt-y"
+    alt_z = "alt-z"
+    alt_up = "alt-up"
+    alt_down = "alt-down"
     ctrl_alt_a = "ctrl-alt-a"
     ctrl_alt_b = "ctrl-alt-b"
     ctrl_alt_c = "ctrl-alt-c"
@@ -201,4 +219,4 @@ class POSITION:
 
 
 if __name__ == "__main__":
-    pass
+    print(Options("fzf").bind("ctrl-q", "execute(echo && echo hello)"))
