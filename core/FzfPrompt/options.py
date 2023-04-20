@@ -40,17 +40,21 @@ class Options:
         return ()
 
     def __init__(self, *fzf_options: str) -> None:
-        self.__options: tuple[str, ...] = fzf_options
+        self.__options: list[str] = list(fzf_options)
 
     @property
-    def options(self) -> tuple[str, ...]:
+    def options(self) -> list[str]:
         return self.__options
 
     def add(self, *fzf_options: str) -> Self:
-        return self.__class__(*self.options, *fzf_options)
+        self.options.extend(fzf_options)
+        return self
 
     def bind(self, hotkey: Hotkey, action: str) -> Self:
         return self.add(shlex.join(["--bind", f"{hotkey}:{action}"]))
+
+    def on_event(self, event: Event, action: str) -> Self:
+        return self.add(shlex.join(["--bind", f"{event}:{action}"]))
 
     def expect(self, *hotkeys: Hotkey) -> Self:
         return self.add(shlex.join(["--expect", f"{','.join(hotkeys)}"]))
@@ -118,6 +122,7 @@ Position = Literal[
     "left",
     "right",
 ]
+Event = Literal["change", "focus"]
 Hotkey = Literal[
     "ctrl-a",
     "ctrl-b",
