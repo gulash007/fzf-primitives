@@ -1,4 +1,4 @@
-from .intercom.PromptData import Preview
+from .PromptData import Preview
 
 # TODO: Move it as presets to mods.preview?
 

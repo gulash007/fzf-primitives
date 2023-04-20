@@ -1,12 +1,12 @@
 import pyperclip
 import typer
 
-from .intercom.PromptData import PromptData
 from thingies import read_from_pipe, color
 
+from .FzfPrompt.PromptData import PromptData
 from .exceptions import ExitLoop
-from .MyFzfPrompt import Result, run_fzf_prompt
-from .options import Options
+from .FzfPrompt.Prompt import Result, run_fzf_prompt
+from .FzfPrompt.options import Options
 
 app = typer.Typer()
 

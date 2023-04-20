@@ -1,7 +1,7 @@
 from typing import Any, Callable
 
 from .exceptions import ExitLoop, ExitRound
-from .MyFzfPrompt import Result
+from .FzfPrompt.Prompt import Result
 from thingies import color
 
 

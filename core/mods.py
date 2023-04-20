@@ -1,17 +1,25 @@
+# Syntax sugar layer
+
 import shlex
 from typing import Callable, Generic, ParamSpec, Protocol
 
 import clipboard
 
 from .exceptions import ExitRound
-from .intercom.PromptData import Preview, PromptData
-from .MyFzfPrompt import Result
-from .options import POSITION, Options
-from .previews import PREVIEW
-from .helpers.type_hints import Moddable
+from .FzfPrompt.PromptData import Preview, PromptData
+from .FzfPrompt.Prompt import Result
+from .FzfPrompt.options import Position, Hotkey, Options
+from .FzfPrompt.previews import PREVIEW
 
 
 P = ParamSpec("P")
+
+
+# TODO: compatibility with Typer? Or maybe modify Typer to accept it and ignore 'options'
+class Moddable(Protocol, Generic[P]):
+    @staticmethod
+    def __call__(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs) -> Result:
+        ...
 
 
 # TODO: compatibility with Typer? Or maybe modify Typer to accept it and ignore 'options'
@@ -45,11 +53,7 @@ def exit_round_on_no_selection(message: str = ""):
 # TODO: decorator factory type hinting
 # TODO: command is can use Prompt attributes
 # TODO: preview label
-def preview(
-    preview_: Preview,
-    window_size: int | str = 75,
-    window_position: str = POSITION.right,
-):
+def preview(preview_: Preview, window_size: int | str = 75, window_position: Position = "right"):
     """formatter exists to parametrize the command based on self when wrapping a method"""
 
     def decorator(func: Moddable[P]) -> Moddable[P]:
@@ -71,7 +75,7 @@ def preview(
 
 
 # TODO: What if action needs attributes?
-def hotkey(hk: str, action: str):
+def hotkey(hk: Hotkey, action: str):
     """action shouldn't have single quotes in it"""
 
     def decorator(func: Moddable[P]) -> Moddable[P]:
@@ -84,7 +88,7 @@ def hotkey(hk: str, action: str):
     return decorator
 
 
-def hotkey_python(hk: str, action: Callable):
+def hotkey_python(hk: Hotkey, action: Callable):
     def deco(func: Moddable[P]) -> Moddable[P]:
         def with_python_hotkey(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
             prompt_data.options = Options().expect(hk) + prompt_data.options

@@ -3,14 +3,11 @@ from __future__ import annotations
 import inspect
 from typing import Any, Callable, TypeVar
 
-from ..core.intercom.PromptData import PromptData
-
-from ..core import mods
-from . import Prompt
-from .helpers.type_hints import Moddable, P
-from .MyFzfPrompt import Result, run_fzf_prompt
-from .options import HOTKEY, Options
-
+from . import BasePrompt, FzfPrompt, mods
+from .FzfPrompt.options import HOTKEY, Hotkey, Options
+from .FzfPrompt.Prompt import Result, run_fzf_prompt
+from .FzfPrompt.PromptData import PromptData
+from .mods import Moddable, P
 
 # TODO: Hotkeys class for customizing and checking for hotkey conflicts
 # TODO: return to previous selection
@@ -27,9 +24,12 @@ from .options import HOTKEY, Options
 # TODO: Will subclasses need more than just define actions? Maybe some more options can be overridden?
 # TODO: Preview of result
 # TODO: ❗ Remake as an hotkey:execute(action_menu_prompt <prompt id (port #)>)
+# TODO: - How to invoke it through --bind and recreate the action back in the owner prompt?
+
+
 class ActionMenu:
-    def __init__(self, hotkey: str = HOTKEY.ctrl_h) -> None:
-        self._hotkey = hotkey
+    def __init__(self, hotkey: Hotkey = "ctrl-h") -> None:
+        self._hotkey: Hotkey = hotkey
         self.actions: dict[str, Callable[[Result], Any]] = {
             f"{method_name}\t({getattr(method, 'hotkey', '')})": method
             for method_name, method in inspect.getmembers(self, predicate=inspect.ismethod)
@@ -75,7 +75,7 @@ class ActionMenu:
 AnyActionMenu = TypeVar("AnyActionMenu", bound=ActionMenu)
 
 
-def action(hotkey: str | None = None):
+def action(hotkey: Hotkey | None = None):
     def decorator(func: Callable[[AnyActionMenu, Result], Any]):
         func.is_action = True
         if hotkey:
@@ -92,6 +92,6 @@ if __name__ == "__main__":
     @mods.add_options(Options("--bind 'change:execute-silent(nc localhost 34566)'"))
     @action_menu
     def some_prompt(prompt_data: PromptData):
-        return Prompt.run(prompt_data)
+        return BasePrompt.run(prompt_data)
 
     print(some_prompt(PromptData(choices=[1, 2, 3])))
