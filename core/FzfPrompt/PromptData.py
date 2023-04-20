@@ -30,7 +30,9 @@ class Preview(BaseModel):
     # command: str | None = None
 
     def run_function(self, query, selections):
-        return PREVIEW_FUNCTIONS[self.id](query, selections)
+        output = PREVIEW_FUNCTIONS[self.id](query, selections)
+        self.output = output
+        return output
 
     def update(self, query, selections):
         self.output = PREVIEW_FUNCTIONS[self.id](query, selections)
@@ -52,8 +54,6 @@ class PromptData(BaseModel):
     def update(self, query, selections):
         self.query = query
         self.selections = selections
-        if self.current_preview:
-            self.previews[self.current_preview].update(query, selections)
 
     def add_preview(self, preview_name: PreviewName, window_size: int | str, window_position: Position = "right"):
         self.previews[preview_name] = Preview(id=preview_name)
@@ -70,7 +70,7 @@ class PromptData(BaseModel):
     def get_preview_output(self, preview_id: PreviewName) -> str:
         preview = self.previews[preview_id]
         self.current_preview = preview_id
-        return preview.output or preview.run_function(self.query, self.selections)
+        return self.previews[self.current_preview].run_function(self.query, self.selections)
 
 
 # TODO: Ability to output preview in Result (or anything else)
