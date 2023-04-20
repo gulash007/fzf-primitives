@@ -6,7 +6,8 @@ from typing import Literal
 from pyfzf import FzfPrompt
 
 from .PromptData import PromptData
-
+from . import Server
+import threading
 from .options import Hotkey, Options
 
 
@@ -18,10 +19,15 @@ def run_fzf_prompt(prompt_data: PromptData, delimiter="\n", *, executable_path=N
     # print("MyFzfPrompt:")
     # print("\n".join(prompt_data.options.options))
     print(prompt_data.options)
+    worker = threading.Thread(target=Server.start_server, args=(prompt_data,))
+    worker.start()
+
     # TODO: log options here: logger.info(f"Running fzf prompt with options: {options}")
-    return Result(
+    result = Result(
         FzfPrompt(executable_path).prompt(prompt_data.choices, str(REQUIRED_OPTS + prompt_data.options), delimiter)
     )
+    worker.join()
+    return result
 
 
 # Expects --print-query so it can interpret the first element as query.
