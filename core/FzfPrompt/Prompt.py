@@ -19,17 +19,15 @@ def run_fzf_prompt(prompt_data: PromptData, delimiter="\n", *, executable_path=N
     # print("MyFzfPrompt:")
     # print("\n".join(prompt_data.options.options))
     prompt_data_finished_contextualizing = threading.Event()
-    worker = threading.Thread(target=Server.start_server, args=(prompt_data, prompt_data_finished_contextualizing))
+    worker = threading.Thread(
+        target=Server.start_server, args=(prompt_data, prompt_data_finished_contextualizing), daemon=True
+    )
     worker.start()
 
     prompt_data_finished_contextualizing.wait()
-    # print(prompt_data.options)
-    # TODO: log options here: logger.info(f"Running fzf prompt with options: {options}")
-    result = Result(
+    return Result(
         FzfPrompt(executable_path).prompt(prompt_data.choices, str(REQUIRED_OPTS + prompt_data.options), delimiter)
     )
-    worker.join()
-    return result
 
 
 # Expects --print-query so it can interpret the first element as query.
