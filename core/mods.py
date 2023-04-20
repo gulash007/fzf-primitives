@@ -6,7 +6,7 @@ from typing import Callable, Generic, ParamSpec, Protocol
 import clipboard
 
 from .exceptions import ExitRound
-from .FzfPrompt.PromptData import Preview, PromptData
+from .FzfPrompt.PromptData import PreviewName, PromptData
 from .FzfPrompt.Prompt import Result
 from .FzfPrompt.options import Position, Hotkey, Options
 from .FzfPrompt.previews import PREVIEW
@@ -53,16 +53,12 @@ def exit_round_on_no_selection(message: str = ""):
 # TODO: decorator factory type hinting
 # TODO: command is can use Prompt attributes
 # TODO: preview label
-def preview(preview_: Preview, window_size: int | str = 75, window_position: Position = "right"):
+def preview(preview_name: PreviewName, window_size: int | str = "50%", window_position: Position = "right"):
     """formatter exists to parametrize the command based on self when wrapping a method"""
 
     def decorator(func: Moddable[P]) -> Moddable[P]:
         def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-            win_size = f"{window_size}%" if isinstance(window_size, int) else window_size
-            print(preview_.command)
-            preview_.command = preview_.command % prompt_data.id
-            prompt_data.previews[preview_.id] = preview_
-            prompt_data.options = Options(f"--preview-window {window_position},{win_size}") + prompt_data.options
+            prompt_data.add_preview(preview_name, window_size, window_position)
             return func(
                 prompt_data,
                 *args,

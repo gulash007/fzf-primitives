@@ -35,6 +35,8 @@ class Options:
     multiselect = OptionsAdder("--multi")
     header_first = OptionsAdder("--header-first")
 
+    # TODO: Make it a dict
+
     @classmethod
     def __get_validators__(cls):
         return ()
@@ -49,6 +51,9 @@ class Options:
     def add(self, *fzf_options: str) -> Self:
         self.options.extend(fzf_options)
         return self
+
+    def preview(self, command: str) -> Self:
+        return self.add(shlex.join(["--preview", f"{command}"]))
 
     def bind(self, hotkey: Hotkey, action: str) -> Self:
         return self.add(shlex.join(["--bind", f"{hotkey}:{action}"]))

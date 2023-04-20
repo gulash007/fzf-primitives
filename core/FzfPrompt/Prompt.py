@@ -18,10 +18,12 @@ REQUIRED_OPTS = Options("--expect=enter", "--print-query")  # Result needs these
 def run_fzf_prompt(prompt_data: PromptData, delimiter="\n", *, executable_path=None) -> Result:
     # print("MyFzfPrompt:")
     # print("\n".join(prompt_data.options.options))
-    print(prompt_data.options)
-    worker = threading.Thread(target=Server.start_server, args=(prompt_data,))
+    prompt_data_finished_contextualizing = threading.Event()
+    worker = threading.Thread(target=Server.start_server, args=(prompt_data, prompt_data_finished_contextualizing))
     worker.start()
 
+    prompt_data_finished_contextualizing.wait()
+    # print(prompt_data.options)
     # TODO: log options here: logger.info(f"Running fzf prompt with options: {options}")
     result = Result(
         FzfPrompt(executable_path).prompt(prompt_data.choices, str(REQUIRED_OPTS + prompt_data.options), delimiter)
