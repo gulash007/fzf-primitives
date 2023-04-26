@@ -1,33 +1,34 @@
 # Black magic layer
 from __future__ import annotations
+
 import json
+import threading
 from typing import Literal
 
 from pyfzf import FzfPrompt
 
-from .PromptData import PromptData
-from . import Server
-import threading
+from ..monitoring.Logger import get_logger
+# from . import Server
 from .options import Hotkey, Options
+from .PromptData import PromptData
 
-
+logger = get_logger()
 REQUIRED_OPTS = Options("--expect=enter", "--print-query")  # Result needs these in order to work
 
 
 # ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable specified in vscode-insiders://file/Users/honza/.dotfiles/.zshforfzf:4
 def run_fzf_prompt(prompt_data: PromptData, delimiter="\n", *, executable_path=None) -> Result:
-    # print("MyFzfPrompt:")
-    # print("\n".join(prompt_data.options.options))
-    prompt_data_finished_contextualizing = threading.Event()
-    worker = threading.Thread(
-        target=Server.start_server, args=(prompt_data, prompt_data_finished_contextualizing), daemon=True
-    )
-    worker.start()
+    # prompt_data_finished_contextualizing = threading.Event()
+    # threading.Thread(
+    #     target=Server.start_server, args=(prompt_data, prompt_data_finished_contextualizing), daemon=True
+    # ).start()
 
-    prompt_data_finished_contextualizing.wait()
-    return Result(
-        FzfPrompt(executable_path).prompt(prompt_data.choices, str(REQUIRED_OPTS + prompt_data.options), delimiter)
-    )
+    # prompt_data_finished_contextualizing.wait()
+    prompt_data.options += REQUIRED_OPTS
+    options = prompt_data.resolve_options()
+    logger.debug("\n".join(options.options))
+
+    return Result(FzfPrompt(executable_path).prompt(prompt_data.choices, str(options), delimiter))
 
 
 # Expects --print-query so it can interpret the first element as query.

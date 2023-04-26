@@ -1,16 +1,19 @@
 # Syntax sugar layer
 
+import functools
 import shlex
 from typing import Callable, Generic, ParamSpec, Protocol
+from enum import Enum
 
 import clipboard
 
 from .exceptions import ExitRound
-from .FzfPrompt.PromptData import PreviewName, PromptData
-from .FzfPrompt.Prompt import Result
-from .FzfPrompt.options import Position, Hotkey, Options
+from .FzfPrompt.options import Hotkey, Options, Position
+from .FzfPrompt.Previewer import Preview
 from .FzfPrompt.previews import PREVIEW
-
+from .FzfPrompt.Prompt import Result
+from .FzfPrompt.PromptData import PromptData
+from .FzfPrompt.descriptors import preset
 
 P = ParamSpec("P")
 
@@ -37,6 +40,11 @@ def add_options(added_options: Options):
     return decorator
 
 
+multiselect = add_options(Options().multiselect)
+ansi = add_options(Options().ansi)
+no_sort = add_options(Options().no_sort)
+
+
 def exit_round_on_no_selection(message: str = ""):
     def decorator(func: Moddable[P]) -> Moddable[P]:
         def exiting_round_on_no_selection(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
@@ -53,21 +61,11 @@ def exit_round_on_no_selection(message: str = ""):
 # TODO: decorator factory type hinting
 # TODO: command is can use Prompt attributes
 # TODO: preview label
-def preview(preview_name: PreviewName, window_size: int | str = "50%", window_position: Position = "right"):
-    """formatter exists to parametrize the command based on self when wrapping a method"""
 
-    def decorator(func: Moddable[P]) -> Moddable[P]:
-        def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-            prompt_data.add_preview(preview_name, window_size, window_position)
-            return func(
-                prompt_data,
-                *args,
-                **kwargs,
-            )
 
-        return with_preview
-
-    return decorator
+class preview:
+    basic = preset(Preview)("basic")
+    custom = Preview
 
 
 # TODO: What if action needs attributes?

@@ -27,7 +27,7 @@ app = typer.Typer()
 
 
 # @mods.hotkey(HOTKEY.ctrl_alt_c, ACTION.clip_preview)
-@mods.preview("basic")
+@mods.preview.custom("basic")
 @mods.exit_round_on_no_selection()
 @DefaultActionMenu()
 def run(prompt_data: PromptData) -> Result:

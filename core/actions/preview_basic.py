@@ -5,8 +5,8 @@ app = typer.Typer()
 
 
 @app.command()
-def main(query: str, selections: list[str]):
-    typer.echo(preview_basic(query, selections))
+def main(query: str, selection: str, selections: list[str]):
+    typer.echo(preview_basic(query, selection, selections))
 
 
 if __name__ == "__main__":
