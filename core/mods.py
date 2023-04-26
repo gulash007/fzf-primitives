@@ -8,6 +8,7 @@ from enum import Enum
 import clipboard
 
 from .exceptions import ExitRound
+from .monitoring.Logger import get_logger
 from .FzfPrompt.options import Hotkey, Options, Position
 from .FzfPrompt.Previewer import Preview
 from .FzfPrompt.previews import PREVIEW
@@ -16,6 +17,7 @@ from .FzfPrompt.PromptData import PromptData
 from .FzfPrompt.descriptors import preset
 
 P = ParamSpec("P")
+logger = get_logger()
 
 
 # TODO: compatibility with Typer? Or maybe modify Typer to accept it and ignore 'options'
@@ -49,6 +51,7 @@ def exit_round_on_no_selection(message: str = ""):
     def decorator(func: Moddable[P]) -> Moddable[P]:
         def exiting_round_on_no_selection(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
             if not (result := func(prompt_data, *args, **kwargs)) and not result.hotkey:
+                logger.info(message)
                 raise ExitRound(message)
             return result
 
