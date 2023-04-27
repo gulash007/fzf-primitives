@@ -16,7 +16,13 @@ HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
 
 # @mods.preview.basic("ctrl-g") # TODO
 # @mods.hotkey("ctrl-g", "become(echo hello)") # TODO
-@mods.preview.basic
+# @mods.preview.basic
+@mods.preview.basic("ctrl-b")  # TODO
+@mods.preview.custom(
+    id="basic2",
+    hotkey="ctrl-g",
+    command='echo {q} && echo {} && arr=({+}) && for line in "${arr[@]}"; do print "\\t$line"; done',
+)
 @mods.multiselect
 # @DefaultActionMenu() # TODO
 # @mods.exit_round_on_no_selection("No selection!") # TODO

@@ -2,19 +2,19 @@
 
 import functools
 import shlex
-from typing import Callable, Generic, ParamSpec, Protocol
 from enum import Enum
+from typing import Callable, Generic, ParamSpec, Protocol
 
 import clipboard
 
 from .exceptions import ExitRound
-from .monitoring.Logger import get_logger
+from .FzfPrompt.decorators import constructor
 from .FzfPrompt.options import Hotkey, Options, Position
 from .FzfPrompt.Previewer import Preview
 from .FzfPrompt.previews import PREVIEW
 from .FzfPrompt.Prompt import Result
 from .FzfPrompt.PromptData import PromptData
-from .FzfPrompt.descriptors import preset
+from .monitoring.Logger import get_logger
 
 P = ParamSpec("P")
 logger = get_logger()
@@ -66,9 +66,12 @@ def exit_round_on_no_selection(message: str = ""):
 # TODO: preview label
 
 
+get_preview = constructor(Preview)
+
+
 class preview:
-    basic = preset(Preview)("basic")
-    custom = Preview
+    basic = functools.partial(get_preview, "basic")
+    custom = staticmethod(get_preview)  # without staticmethod decorator get_preview is treated like instance method
 
 
 # TODO: What if action needs attributes?

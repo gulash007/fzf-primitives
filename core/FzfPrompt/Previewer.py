@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass, field
 
 from typing import TYPE_CHECKING, Callable, Generic, Literal, Protocol, Self, Type, TypeVar
 
@@ -6,7 +7,6 @@ if TYPE_CHECKING:
     from .PromptData import PromptData
     from ..mods import Moddable, P
 
-from pydantic import BaseModel
 
 from ..actions.functions import preview_basic
 from .options import Hotkey, Options, Position
@@ -21,24 +21,18 @@ class PreviewFunction(Protocol):
 PREVIEW_FUNCTIONS = {"no preview": lambda *args, **kwargs: None, "basic": preview_basic}
 
 
+@dataclass
 class Preview:
-    def __init__(
-        self,
-        id_: str,
-        command: str | None = None,
-        output: str | None = None,
-        window_size: int | str = "50%",
-        window_position: Position = "right",
-    ) -> None:
-        self.id = id_
-        self.command = command
-        # hotkey: Hotkey
-        self.output = output  # TODO: Use it to do actions on it (clip, lightspeed highlight)
-        self.window_size = window_size
-        self.window_position = window_position
+    id: str
+    hotkey: Hotkey
+    command: str | None = None
+    window_size: int | str = "50%"
+    window_position: Position = "right"
 
+    # TODO: Use it to do actions on it (clip, lightspeed highlight)
+    output: str | None = field(init=False, default=None)
+    
     # function: PreviewFunction | None = None
-    # command: str | None = None
 
     def __call__(self, func: Moddable[P]) -> Moddable[P]:
         def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
