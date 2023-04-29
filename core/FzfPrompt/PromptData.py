@@ -5,6 +5,7 @@ from datetime import datetime
 
 from ..FzfPrompt.options import Options, Position
 from .Previewer import PREVIEW_COMMAND, Preview, Previewer
+from .ActionMenu import Action, ActionMenu
 
 
 # TODO: socket solution
@@ -15,6 +16,7 @@ class PromptData:
     id: str = field(init=False, default_factory=lambda: datetime.now().isoformat())
     choices: list = field(default_factory=list)
     previewer: Previewer = field(default_factory=Previewer)
+    action_menu: ActionMenu = field(default_factory=ActionMenu)
     options: Options = field(default_factory=Options)
     query: str = ""  # TODO: Preset query (--query option)
     selections: list[str] = field(init=False, default_factory=list)
@@ -25,11 +27,13 @@ class PromptData:
 
     def add_preview(self, preview: Preview):
         self.previewer.add_preview(preview)
+        self.action_menu.add(Action.change_preview(preview))
         # self.options.add( )
         # Actually adding the preview to options is done when socket number is known
 
     def resolve_options(self) -> Options:
-        return self.options + self.previewer.resolve_options()
+        # self.previewer.add_preview(self.action_menu.as_preview())
+        return self.options + self.previewer.resolve_options() + self.action_menu.resolve_options()
 
 
 # TODO: Ability to output preview in Result (or anything else)

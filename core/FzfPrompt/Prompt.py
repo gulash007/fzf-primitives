@@ -27,8 +27,8 @@ def run_fzf_prompt(prompt_data: PromptData, delimiter="\n", *, executable_path=N
     prompt_data.options += REQUIRED_OPTS
     options = prompt_data.resolve_options()
     logger.debug("\n".join(options.options))
-
-    return Result(FzfPrompt(executable_path).prompt(prompt_data.choices, str(options), delimiter))
+    result = Result(FzfPrompt(executable_path).prompt(prompt_data.choices, str(options), delimiter))
+    return prompt_data.action_menu.process_result(result)
 
 
 # Expects --print-query so it can interpret the first element as query.

@@ -20,19 +20,27 @@ class PreviewFunction(Protocol):
 
 PREVIEW_FUNCTIONS = {"no preview": lambda *args, **kwargs: None, "basic": preview_basic}
 
+PRESET_PREVIEWS = {
+    "basic": "/Users/honza/Documents/Projects/PythonPackages/fzf_primitives/.env/bin/python3.11 -m fzf_primitives.experimental.core.actions.preview_basic {q} {} {+}"
+}
+
 
 @dataclass
 class Preview:
     id: str
+    command: str | None
     hotkey: Hotkey
-    command: str | None = None
     window_size: int | str = "50%"
     window_position: Position = "right"
 
     # TODO: Use it to do actions on it (clip, lightspeed highlight)
     output: str | None = field(init=False, default=None)
-    
+
     # function: PreviewFunction | None = None
+
+    def __post_init__(self):
+        if self.command is None:
+            self.command = PRESET_PREVIEWS.get(self.id)
 
     def __call__(self, func: Moddable[P]) -> Moddable[P]:
         def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
@@ -59,10 +67,6 @@ PREVIEW_COMMAND = (
     ' && echo "{\\"function_name\\":\\"%s\\",\\"args\\":$args}" | nc localhost %i'
 )
 
-PRESET_PREVIEWS = {
-    "basic": "/Users/honza/Documents/Projects/PythonPackages/fzf_primitives/.env/bin/python3.11 -m fzf_primitives.experimental.core.actions.preview_basic {q} {} {+}"
-}
-
 
 class Previewer:
     """Handles passing right preview options"""
@@ -79,12 +83,11 @@ class Previewer:
     def resolve_options(self) -> Options:  # TODO: socket number
         if self.main_preview is None:
             return Options()
-        preview_command = PRESET_PREVIEWS.get(self.main_preview.id) or self.main_preview.command
-        if preview_command is None:
+        if self.main_preview.command is None:
             raise RuntimeError("Preview has no command")
         options = (
             Options()
-            .preview(preview_command)
+            .preview(self.main_preview.command)
             .add(f"--preview-window={self.main_preview.window_position},{self.main_preview.window_size}")
         )
 

@@ -70,7 +70,7 @@ get_preview = constructor(Preview)
 
 
 class preview:
-    basic = functools.partial(get_preview, "basic")
+    basic = functools.partial(get_preview, "basic", None)
     custom = staticmethod(get_preview)  # without staticmethod decorator get_preview is treated like instance method
 
 
