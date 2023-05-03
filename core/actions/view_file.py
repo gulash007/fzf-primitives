@@ -1,6 +1,6 @@
 from thingies import shell_command
 
-from .helpers import CommandCreator
+from .helpers import EMPTY_SELECTION, CommandCreator
 
 app = CommandCreator()
 
@@ -12,6 +12,8 @@ def view_file(
     language: str = "",
     theme: str = "",
 ):
+    if selections == EMPTY_SELECTION:
+        selections = []
     command = ["bat", "--color=always"]
     if language:
         command.extend(("--language", language))

@@ -22,7 +22,7 @@ app = typer.Typer()
 @mods.action.custom(name="Obsidian: Open file", command=ACTION.obsidian_open_files, hotkey="ctrl-o")
 @mods.ansi
 @mods.multiselect
-# @mods.preview(PREVIEW.file(theme="Solarized (light)"), window_size=80)
+@mods.preview.file(language="markdown")("ctrl-y", window_size="80%")
 def run_folder_browser_prompt(prompt_data: PromptData, dirpath: Path = DEFAULT_VAULT_PATH):
     prompt_data.choices = shell_command(
         f"cd {dirpath} && find . -name '*.md' -not -path 'ALFRED/Personal/*' | sed 's#^\\./##'"

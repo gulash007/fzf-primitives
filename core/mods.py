@@ -66,6 +66,16 @@ class preview:
     basic = functools.partial(get_preview, "basic", None)
     custom = staticmethod(get_preview)  # without staticmethod decorator get_preview is treated like instance method
 
+    @staticmethod
+    def file(language: str = "python", theme: str = "Solarized (light)"):
+        language_arg = f"--language {language}" if language else ""
+        theme_arg = f'--theme "{theme}"' if theme else ""
+        return functools.partial(
+            get_preview,
+            "View File",
+            f"python3.11 -m fzf_primitives.core.actions.view_file {{q}} {{+}} {language_arg} {theme_arg}",
+        )
+
 
 class action:
     clip = functools.partial(get_action, "clip selections", "execute(arr=({+}); printf '%s\n' \"${arr[@]}\" | clip)")

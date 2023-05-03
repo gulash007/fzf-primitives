@@ -1,7 +1,7 @@
 import functools
 import typer
 from typing import Any, Optional, Protocol
-from ..helpers.decorators import output_to_stdin_and_return
+from ..FzfPrompt.decorators import output_to_stdin_and_return
 
 
 class Action(Protocol):
