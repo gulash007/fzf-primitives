@@ -69,6 +69,7 @@ class preview:
 
 class action:
     clip = functools.partial(get_action, "clip selections", "execute(arr=({+}); printf '%s\n' \"${arr[@]}\" | clip)")
+    select_all = functools.partial(get_action, "select all", "select-all")
     custom = staticmethod(get_action)
 
 

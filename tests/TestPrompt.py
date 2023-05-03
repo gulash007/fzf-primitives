@@ -17,6 +17,7 @@ HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
 
 # @mods.hotkey("ctrl-g", "become(echo hello)") # TODO
 # @mods.preview.basic
+@mods.action.select_all("ctrl-a")
 @mods.action.clip("ctrl-c")
 @mods.preview.basic("ctrl-h")  # TODO
 @mods.preview.custom(id="basic2", hotkey="ctrl-y", command="echo hello", window_size="10%", window_position="up")
