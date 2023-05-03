@@ -9,10 +9,13 @@ from pydantic import BaseModel, parse_file_as
 
 from thingies import shell_command
 
-from ..core import BasePrompt, mods
+from ..core import DefaultPrompt, mods
 from ..core.BasicLoop import BasicLoop
 from ..core.FzfPrompt.Prompt import Result
 from ..core.FzfPrompt.PromptData import PromptData
+from ..core.monitoring.Logger import get_logger
+
+logger = get_logger()
 
 
 # TODO: hotkey to open clipped link in chosen window
@@ -47,7 +50,6 @@ class Window(BaseModel):
 class Windows(BaseModel):
     windows: dict[str, Window]
 
-    # TODO: handle file not existing or being corrupted
     @classmethod
     def get_saved_windows(cls) -> Self:
         try:
@@ -87,14 +89,13 @@ def focus_window(window_id: str):
     time.sleep(0.3)
 
 
-@mods.exit_round_on_no_selection()
 @mods.preview.custom(
     "List tabs",
     "source ~/.zshforchrome 2>/dev/null && echo {} | awk '{ print $1 }' | read -r window_id && brotab query -windowId ${window_id:2} | brotab_format_better_line",
     "ctrl-y",
 )
 def run_window_selection_prompt(prompt_data: PromptData) -> Result:
-    return BasePrompt.run(prompt_data=prompt_data)
+    return DefaultPrompt.run(prompt_data=prompt_data)
 
 
 def run():

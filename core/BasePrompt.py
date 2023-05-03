@@ -5,17 +5,11 @@ from thingies import read_from_pipe, color
 
 from .FzfPrompt.PromptData import PromptData
 from .exceptions import ExitLoop
-from .FzfPrompt.Prompt import Result, run_fzf_prompt
+from .FzfPrompt.Prompt import run_fzf_prompt
 from .FzfPrompt.options import Options
 
 app = typer.Typer()
 
-# TODO: add support for piping into it
-# TODO: add support for processing clipboard
-# TODO: add support for running it with custom choices (passed as argument)
-# TODO: add support for running it with custom options (passed as argument)
-# TODO: add support for accessing attributes of python objects in preview command (using dill?)
-# TODO: add support for outputting from all available info (including preview)
 
 __all__ = ["run", "read_choices"]
 

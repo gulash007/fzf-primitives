@@ -32,7 +32,6 @@ class PromptData:
         # Actually adding the preview to options is done when socket number is known
 
     def resolve_options(self) -> Options:
-        # self.previewer.add_preview(self.action_menu.as_preview())
         return self.options + self.previewer.resolve_options() + self.action_menu.resolve_options()
 
 

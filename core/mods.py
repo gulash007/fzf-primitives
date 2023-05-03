@@ -1,17 +1,15 @@
 # Syntax sugar layer
 
 import functools
-import shlex
-from enum import Enum
-from typing import Callable, Generic, ParamSpec, Protocol
+from typing import Any, Callable, Generic, ParamSpec, Protocol
 
 import clipboard
 
 from .exceptions import ExitRound
+from .FzfPrompt.ActionMenu import Action
 from .FzfPrompt.decorators import constructor
-from .FzfPrompt.options import Hotkey, Options, Position
+from .FzfPrompt.options import Hotkey, Options
 from .FzfPrompt.Previewer import Preview
-from .FzfPrompt.previews import PREVIEW
 from .FzfPrompt.Prompt import Result
 from .FzfPrompt.PromptData import PromptData
 from .monitoring.Logger import get_logger
@@ -20,17 +18,12 @@ P = ParamSpec("P")
 logger = get_logger()
 
 
-# TODO: compatibility with Typer? Or maybe modify Typer to accept it and ignore 'options'
 class Moddable(Protocol, Generic[P]):
     @staticmethod
     def __call__(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs) -> Result:
         ...
 
 
-# TODO: compatibility with Typer? Or maybe modify Typer to accept it and ignore 'options'
-
-
-# TODO: output preview
 def add_options(added_options: Options):
     def decorator(func: Moddable[P]) -> Moddable[P]:
         def adding_options(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
@@ -88,12 +81,13 @@ def hotkey(hk: Hotkey, action: str):
     return decorator
 
 
-def hotkey_python(hk: Hotkey, action: Callable):
+def hotkey_python(hk: Hotkey, result_processor: Callable[[Result], Any]):
     def deco(func: Moddable[P]) -> Moddable[P]:
         def with_python_hotkey(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-            prompt_data.options = Options().expect(hk) + prompt_data.options
+            prompt_data.options.expect(hk)
+            prompt_data.action_menu.add(Action(result_processor.__name__, "accept", hk))
             result = func(prompt_data, *args, **kwargs)
-            return action(result) if result.hotkey == hk else result
+            return result_processor(result) if result.hotkey == hk else result
 
         return with_python_hotkey
 

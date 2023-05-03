@@ -17,8 +17,8 @@ HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
 
 # @mods.hotkey("ctrl-g", "become(echo hello)") # TODO
 # @mods.preview.basic
-@mods.preview.basic("ctrl-b")  # TODO
-@mods.preview.custom(id="basic2", hotkey="ctrl-y", command="echo hello")
+@mods.preview.basic("ctrl-h")  # TODO
+@mods.preview.custom(id="basic2", hotkey="ctrl-y", command="echo hello", window_size="10%", window_position="up")
 @mods.multiselect
 @mods.exit_round_on_no_selection("No selection!")
 def run(prompt_data: PromptData):

@@ -9,7 +9,7 @@ from .Previewer import Preview
 if TYPE_CHECKING:
     from .Prompt import Result
 
-# TODO: Hotkeys class for customizing and checking for hotkey conflicts
+# TODO: ❗ hotkey conflicts
 # TODO: return to previous selection
 # TODO: return with previous query
 # TODO: Allow multiselect (multioutput)?
@@ -30,39 +30,30 @@ if TYPE_CHECKING:
 @dataclass
 class Action:
     name: str
-    hotkey: Hotkey
     command: str
+    hotkey: Hotkey
 
     @classmethod
     def change_preview(cls, preview: Preview) -> Self:
-        assert preview.command
         return cls(
             f"Change preview to '{preview.id}'",
+            f"change-preview({preview.command})+change-preview-window({preview.window_size},{preview.window_position})+refresh-preview",
             preview.hotkey,
-            f"change-preview({preview.command})+change-preview-window({preview.window_size},{preview.window_position})",
         )
-        # FIXME: changing preview doesn't update preview output immediately
 
 
 class ActionMenu:
-    def __init__(self, hotkey: Hotkey = "ctrl-h") -> None:
-        # self.hotkey_manager: HotkeyManager # TODO
-        # self.action: dict[str, Action] # TODO: class Action?
-        self._hotkey: Hotkey = hotkey
+    def __init__(self) -> None:
+        self._options = Options()
         self.actions: list[Action] = []
-        self._options = Options().header(f"tip: Invoke action menu with {self._hotkey}").header_first
-        # TODO: add hotkey to run action menu or just show hotkeys as preview
 
     def add(self, action: Action):
         self.actions.append(action)
         self._options.bind(action.hotkey, action.command)
 
     def resolve_options(self) -> Options:
-        return self._options
+        header_help = "\n".join(f"{action.hotkey}\t{action.name}" for action in self.actions)
+        return self._options.header(header_help).header_first
 
     def process_result(self, result: Result):
         return result
-
-    # TODO
-    def as_preview(self) -> Preview:
-        return Preview()
