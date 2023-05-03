@@ -9,9 +9,8 @@ from thingies import shell_command
 from .core import DefaultPrompt, mods
 from .core.actions.actions import ACTION
 from .core.BasicLoop import BasicLoop
-from .core.DefaultActionMenu import DefaultActionMenu
-from .core.options import HOTKEY, POSITION, Options
-from .core.previews import PREVIEW
+from .core.FzfPrompt.options import Options
+from .core.FzfPrompt.PromptData import PromptData
 
 DEFAULT_VAULT_PATH = Path("/Users/honza/Documents/HOLLY")
 
@@ -20,35 +19,34 @@ app = typer.Typer()
 
 
 # @mods.clip_output
-@mods.hotkey(hk=HOTKEY.ctrl_o, action=ACTION.obsidian_open_files)
-@Options().ansi.multiselect
-@mods.preview(PREVIEW.file(theme="Solarized (light)"), window_size=80)
-@mods.exit_round_on_no_selection()
-def run_folder_browser_prompt(options: Options = Options(), dirpath: Path = DEFAULT_VAULT_PATH):
-    return DefaultPrompt.run(
-        choices=shell_command(
-            f"cd {dirpath} && find . -name '*.md' -not -path 'ALFRED/Personal/*' | sed 's#^\\./##'"
-        ).split("\n"),
-        options=options,
-    )  # better file-listing cmd
+@mods.action.custom(name="Obsidian: Open file", command=ACTION.obsidian_open_files, hotkey="ctrl-o")
+@mods.ansi
+@mods.multiselect
+# @mods.preview(PREVIEW.file(theme="Solarized (light)"), window_size=80)
+def run_folder_browser_prompt(prompt_data: PromptData, dirpath: Path = DEFAULT_VAULT_PATH):
+    prompt_data.choices = shell_command(
+        f"cd {dirpath} && find . -name '*.md' -not -path 'ALFRED/Personal/*' | sed 's#^\\./##'"
+    ).split("\n")
+    return DefaultPrompt.run(prompt_data)  # better file-listing cmd
 
 
-@mods.clip_output
-@mods.preview(command='x={} && echo "${x:9}"', window_size="2", window_position=POSITION.up, live_clip_preview=False)
-@Options().no_sort.multiselect.ansi
-def run_file_browser_prompt(options: Options = Options(), file_path: Path = DEFAULT_VAULT_PATH):
-    return DefaultPrompt.run(
-        choices=shell_command(f'bat "{file_path}" --color=always --theme "Solarized (light)"').split("\n"),
-        options=options,
+# TODO: extraction actions (like commands, links,…)
+# @mods.clip_output
+# @mods.preview(command='x=({+}); for line in "${x[@]}"; do echo "$line"; done', window_size=35, window_position="down")
+@mods.add_options(Options().no_sort.multiselect.ansi)
+def run_file_browser_prompt(prompt_data: PromptData, file_path: Path = DEFAULT_VAULT_PATH):
+    prompt_data.choices = shell_command(f'bat "{file_path}" --plain --color=always --theme "Solarized (light)"').split(
+        "\n"
     )
+    return DefaultPrompt.run(prompt_data)
 
 
 def run(vault_path: Path = DEFAULT_VAULT_PATH):
     """Runs one round of the application until end state. Loop should be implemented externally"""
-    result = run_folder_browser_prompt(dirpath=vault_path)
+    result = run_folder_browser_prompt(PromptData(), dirpath=vault_path)
     file_name = result[0]
     file_path = vault_path.joinpath(file_name)
-    lines = run_file_browser_prompt(file_path=file_path)
+    lines = run_file_browser_prompt(PromptData(), file_path=file_path)
     print("\n".join(lines))
 
 
