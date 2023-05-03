@@ -17,7 +17,8 @@ def quit_app(result: Result):
     raise ExitLoop
 
 
-@mods.hotkey_python("ctrl-q", quit_app)
+@mods.action.clip("ctrl-c")
+@mods.action_python("ctrl-q", quit_app)
 @mods.exit_round_on_no_selection()
 def run(prompt_data: PromptData) -> Result:
     return BasePrompt.run(prompt_data=prompt_data)

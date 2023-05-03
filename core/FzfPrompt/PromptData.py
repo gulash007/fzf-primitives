@@ -25,10 +25,12 @@ class PromptData:
         self.query = query
         self.selections = selections
 
+    def add_action(self, action: Action):
+        self.action_menu.add(action)
+
     def add_preview(self, preview: Preview):
         self.previewer.add_preview(preview)
-        self.action_menu.add(Action.change_preview(preview))
-        # self.options.add( )
+        self.add_action(Action.change_preview(preview))
         # Actually adding the preview to options is done when socket number is known
 
     def resolve_options(self) -> Options:

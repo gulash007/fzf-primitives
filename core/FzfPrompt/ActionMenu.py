@@ -8,6 +8,8 @@ from .Previewer import Preview
 
 if TYPE_CHECKING:
     from .Prompt import Result
+    from ..mods import Moddable, P
+    from .PromptData import PromptData
 
 # TODO: ❗ hotkey conflicts
 # TODO: return to previous selection
@@ -40,6 +42,13 @@ class Action:
             f"change-preview({preview.command})+change-preview-window({preview.window_size},{preview.window_position})+refresh-preview",
             preview.hotkey,
         )
+
+    def __call__(self, func: Moddable[P]) -> Moddable[P]:
+        def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+            prompt_data.add_action(self)
+            return func(prompt_data, *args, **kwargs)
+
+        return with_preview
 
 
 class ActionMenu:

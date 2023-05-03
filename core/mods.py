@@ -55,11 +55,11 @@ def exit_round_on_no_selection(message: str = ""):
 
 # TODO: make it somehow compatible with multi or throw it away
 # TODO: decorator factory type hinting
-# TODO: command is can use Prompt attributes
 # TODO: preview label
 
 
 get_preview = constructor(Preview)
+get_action = constructor(Action)
 
 
 class preview:
@@ -67,21 +67,12 @@ class preview:
     custom = staticmethod(get_preview)  # without staticmethod decorator get_preview is treated like instance method
 
 
-# TODO: What if action needs attributes?
-def hotkey(hk: Hotkey, action: str):
-    """action shouldn't have single quotes in it"""
-
-    def decorator(func: Moddable[P]) -> Moddable[P]:
-        def with_hotkey(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-            prompt_data.options = Options().bind(hk, action) + prompt_data.options
-            return func(prompt_data, *args, **kwargs)
-
-        return with_hotkey
-
-    return decorator
+class action:
+    clip = functools.partial(get_action, "clip selections", "execute(arr=({+}); printf '%s\n' \"${arr[@]}\" | clip)")
+    custom = staticmethod(get_action)
 
 
-def hotkey_python(hk: Hotkey, result_processor: Callable[[Result], Any]):
+def action_python(hk: Hotkey, result_processor: Callable[[Result], Any]):
     def deco(func: Moddable[P]) -> Moddable[P]:
         def with_python_hotkey(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
             prompt_data.options.expect(hk)

@@ -17,6 +17,7 @@ HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
 
 # @mods.hotkey("ctrl-g", "become(echo hello)") # TODO
 # @mods.preview.basic
+@mods.action.clip("ctrl-c")
 @mods.preview.basic("ctrl-h")  # TODO
 @mods.preview.custom(id="basic2", hotkey="ctrl-y", command="echo hello", window_size="10%", window_position="up")
 @mods.multiselect
@@ -29,9 +30,4 @@ if __name__ == "__main__":
     logger = get_logger()
     logger.enable("")
     logger.info("TestPrompt running…")
-    run(
-        PromptData(
-            choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10],
-            # action_menu=DefaultActionMenu() # TODO
-        )
-    )
+    run(PromptData(choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10]))
