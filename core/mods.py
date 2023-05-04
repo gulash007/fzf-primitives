@@ -90,7 +90,8 @@ def action_python(result_processor: Callable[[Result], Any], hk: Hotkey):
 
 
 def quit_app(result: Result):
-    raise ExitLoop
+    sep = "\n\t"
+    raise ExitLoop(f"Exiting app with\nquery: {result.query}\nselections:{sep}{sep.join(result)}")
 
 
 get_action = constructor(Action)
