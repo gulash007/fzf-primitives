@@ -44,11 +44,11 @@ class Action:
         )
 
     def __call__(self, func: Moddable[P]) -> Moddable[P]:
-        def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+        def with_action(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
             prompt_data.add_action(self)
             return func(prompt_data, *args, **kwargs)
 
-        return with_preview
+        return with_action
 
 
 class ActionMenu:
