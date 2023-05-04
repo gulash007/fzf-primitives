@@ -13,13 +13,11 @@ app = typer.Typer()
 
 
 # TODO: add support for outputting from all available info (including preview)
-def quit_app(result: Result):
-    raise ExitLoop
 
 
-@mods.action.toggle_all("ctrl-a")
+@mods.action.toggle_all("ctrl-a")  # Doesn't have any use without multiselect
 @mods.action.clip("ctrl-c")
-@mods.action_python("ctrl-q", quit_app)
+@mods.action.quit("ctrl-q")
 @mods.exit_round_on_no_selection()
 def run(prompt_data: PromptData) -> Result:
     return BasePrompt.run(prompt_data=prompt_data)

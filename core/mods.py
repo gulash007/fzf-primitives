@@ -5,7 +5,7 @@ from typing import Any, Callable, Generic, ParamSpec, Protocol
 
 import clipboard
 
-from .exceptions import ExitRound
+from .exceptions import ExitLoop, ExitRound
 from .FzfPrompt.ActionMenu import Action
 from .FzfPrompt.decorators import constructor
 from .FzfPrompt.options import Hotkey, Options
@@ -59,7 +59,6 @@ def exit_round_on_no_selection(message: str = ""):
 
 
 get_preview = constructor(Preview)
-get_action = constructor(Action)
 
 
 class preview:
@@ -77,14 +76,7 @@ class preview:
         )
 
 
-class action:
-    clip = functools.partial(get_action, "clip selections", "execute(arr=({+}); printf '%s\n' \"${arr[@]}\" | clip)")
-    select_all = functools.partial(get_action, "select all", "select-all")
-    toggle_all = functools.partial(get_action, "toggle all", "toggle-all")
-    custom = staticmethod(get_action)
-
-
-def action_python(hk: Hotkey, result_processor: Callable[[Result], Any]):
+def action_python(result_processor: Callable[[Result], Any], hk: Hotkey):
     def deco(func: Moddable[P]) -> Moddable[P]:
         def with_python_hotkey(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
             prompt_data.options.expect(hk)
@@ -95,6 +87,21 @@ def action_python(hk: Hotkey, result_processor: Callable[[Result], Any]):
         return with_python_hotkey
 
     return deco
+
+
+def quit_app(result: Result):
+    raise ExitLoop
+
+
+get_action = constructor(Action)
+
+
+class action:
+    clip = functools.partial(get_action, "clip selections", "execute(arr=({+}); printf '%s\n' \"${arr[@]}\" | clip)")
+    select_all = functools.partial(get_action, "select all", "select-all")
+    toggle_all = functools.partial(get_action, "toggle all", "toggle-all")
+    custom = staticmethod(get_action)
+    quit = functools.partial(action_python, quit_app)
 
 
 def clip_output(func: Moddable[P]) -> Moddable[P]:

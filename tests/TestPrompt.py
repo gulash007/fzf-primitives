@@ -19,6 +19,7 @@ HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
 # @mods.preview.basic
 @mods.action.toggle_all("ctrl-a")
 @mods.action.clip("ctrl-c")
+@mods.action.quit("ctrl-q")
 @mods.preview.basic("ctrl-h")  # TODO
 @mods.preview.custom(id="basic2", hotkey="ctrl-y", command="echo hello", window_size="10%", window_position="up")
 @mods.multiselect
