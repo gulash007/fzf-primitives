@@ -17,7 +17,7 @@ def quit_app(result: Result):
     raise ExitLoop
 
 
-@mods.action.select_all("ctrl-a")
+@mods.action.toggle_all("ctrl-a")
 @mods.action.clip("ctrl-c")
 @mods.action_python("ctrl-q", quit_app)
 @mods.exit_round_on_no_selection()
