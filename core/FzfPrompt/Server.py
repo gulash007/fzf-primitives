@@ -1,100 +1,141 @@
 # Black magic layer
+from __future__ import annotations
+
+import inspect
 import socket
 import traceback
-from threading import Event
-from typing import Callable, Literal
+from dataclasses import dataclass
+from string import Template
+from threading import Event, Thread
+from typing import TYPE_CHECKING, Any, Callable, Literal, Protocol, Self
 
 import pydantic
 
-from .PromptData import Preview, PreviewName, PromptData
+from ..actions.functions import preview_basic
+from .ActionMenu import Action
+from .commands.fzf_placeholders import PLACEHOLDERS
+from .options import Hotkey
+
+if TYPE_CHECKING:
+    from ..mods import Moddable, P
+    from .Previewer import Preview
+    from .PromptData import PromptData
 
 
-def update_prompt_data(prompt_data: PromptData, query: str, *selections: str):
-    prompt_data.update(query, selections)
-    # print("Updated to:", prompt_data)
-    return f"Updated prompt data: {prompt_data}"
+# class ServerFunction(Protocol):
+#     @staticmethod
+#     def __call__(prompt_data: PromptData) -> str:
+#         ...
 
 
-def get_prompt_data(prompt_data: PromptData):
-    return str(prompt_data)
+# def update_prompt_data(prompt_data: PromptData, query: str, *selections: str):
+#     prompt_data.update(query, selections)
+#     # print("Updated to:", prompt_data)
+#     return f"Updated prompt data: {prompt_data}"
 
 
-def get_preview(prompt_data: PromptData, preview_id: PreviewName):
-    return prompt_data.get_preview_output(preview_id)
+# def get_prompt_data(prompt_data: PromptData):
+#     return str(prompt_data)
 
 
-FunctionName = Literal["update_prompt_data", "get_prompt_data", "get_preview"]
+# def get_preview(prompt_data: PromptData, preview_id: str, *args, **kwargs):
+#     return prompt_data.get_preview_output(preview_id, *args, **kwargs)
 
-FUNCTIONS: dict[FunctionName, Callable] = {
-    "update_prompt_data": update_prompt_data,
-    "get_prompt_data": get_prompt_data,
-    "get_preview": get_preview,
-}
+
+# FUNCTIONS = {
+#     "update_prompt_data": update_prompt_data,
+#     "get_prompt_data": get_prompt_data,
+#     "preview_basic": preview_basic,
+# }
+
+
+REQUEST_COMMAND = (
+    "args=$(jq --compact-output --null-input '$ARGS.positional' --args -- $placeholders)"
+    ' && echo "{\\"server_call_name\\":\\"$server_call_name\\",\\"args\\":$args}" | nc localhost $socket_number'
+)
 
 
 class Request(pydantic.BaseModel):
-    function_name: FunctionName
+    server_call_name: str
     args: list = []
     kwargs: dict = {}
 
 
-def handle_request(client_socket: socket.socket, prompt_data: PromptData):
-    # print(client_socket)
-    if r := client_socket.recv(1024):
-        # print(r)
-        payload = r.decode("utf-8")
-        try:
-            request = pydantic.parse_raw_as(Request, payload.strip())
-            response = FUNCTIONS[request.function_name](prompt_data, *request.args, **request.kwargs)
-        except Exception:
-            response = traceback.format_exc()
-            # print(response)
-        if response:
-            client_socket.sendall(response.encode("utf-8"))
-    client_socket.close()
+@dataclass
+class ServerCall:
+    name: str
+    function: Callable
+    hotkey: Hotkey
+
+    # TODO: generate properly set-up Action
+    def __post_init__(self):
+        self.unformatted_command = self.get_template_from_function()
+
+    def action(self, socket_number: int) -> Action:  # TODO: resolve last
+        command = self.unformatted_command.safe_substitute({"socket_number": socket_number})
+        return Action(self.name, f"execute-silent({command})", self.hotkey)
+
+    def __call__(self, func: Moddable[P]) -> Moddable[P]:
+        def with_server_call(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+            prompt_data.add_server_call(self)
+            return func(prompt_data, *args, **kwargs)
+
+        return with_server_call
+
+    def get_template_from_function(self) -> Template:
+        signature = inspect.signature(self.function)
+        parameters = list(signature.parameters.keys())[1:]  # excludes prompt_data
+        placeholders = [PLACEHOLDERS[param] for param in parameters]
+        return Template(
+            Template(REQUEST_COMMAND).safe_substitute(
+                {"server_call_name": self.name, "placeholders": " ".join(placeholders)}
+            )
+        )
 
 
-REQUEST_COMMAND = (
-    "args=$(jq --compact-output --null-input '$ARGS.positional' --args -- {q} {+})"
-    ' && echo "{\\"function_name\\":\\"%s\\",\\"args\\":$args}" | nc localhost %i'
-)
-
-
-class RequestCall:
-    def __init__(self, function_name: FunctionName | None, socket_number: int | None) -> None:
-        self.function_name = function_name
-        self.socket_number = socket_number
-
-    def __str__(self) -> str:
-        if self.function_name is None or self.socket_number is None:
-            raise ValueError(f"RequestCall not completely formatted: {self.__dict__}")
-        return REQUEST_COMMAND % (self.function_name, self.socket_number)
-
-
+# TODO: Add support for index {n} and indices {+n}
 # TODO: Will logging slow it down too much?
-def start_server(prompt_data: PromptData, prompt_data_finished_contextualizing: Event | None = None):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-        server_socket.bind(("localhost", 0))
-        socket_specs = server_socket.getsockname()
-        socket_number = socket_specs[1]
-        print(socket_number)
-        update_call = RequestCall("update_prompt_data", socket_number)
-        update_action = f"execute-silent({update_call})"
-        # print(update_action)
-        prompt_data.options.on_event("change", update_action)
-        prompt_data.options.on_event("focus", update_action)
-        prompt_data.resolve_previews(socket_number)
-        if prompt_data_finished_contextualizing is not None:
-            prompt_data_finished_contextualizing.set()
-        # print(prompt_data.options)
-        server_socket.listen()
-        # print(f"Server listening on {socket_specs}...")
 
-        while True:
-            client_socket, addr = server_socket.accept()
-            # print(f"Connection from {addr}")
-            handle_request(client_socket, prompt_data)
+
+class Server(Thread):
+    def __init__(self, prompt_data: PromptData, server_setup_finished: Event, *, daemon: bool | None = None) -> None:
+        super().__init__(daemon=daemon)
+        self.prompt_data = prompt_data
+        self.server_setup_finished = server_setup_finished
+
+    def run(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+            server_socket.bind(("localhost", 0))
+            socket_specs = server_socket.getsockname()
+            socket_number = socket_specs[1]
+            self.prompt_data.resolve_server_calls(socket_number)
+            server_socket.listen()
+            # print(f"Server listening on {socket_specs}...")
+
+            if self.server_setup_finished is not None:
+                self.server_setup_finished.set()
+            while True:
+                client_socket, addr = server_socket.accept()
+                # print(f"Connection from {addr}")
+                self.handle_request(client_socket, self.prompt_data)
+
+    def handle_request(self, client_socket: socket.socket, prompt_data: PromptData):
+        # print(client_socket)
+        if r := client_socket.recv(1024):
+            # print(r)
+            payload = r.decode("utf-8")
+            try:
+                request = pydantic.parse_raw_as(Request, payload.strip())
+                response = prompt_data.server_calls[request.server_call_name].function(
+                    prompt_data, *request.args, **request.kwargs
+                )
+            except Exception:
+                response = traceback.format_exc()
+                # print(response)
+            if response:
+                client_socket.sendall(response.encode("utf-8"))
+        client_socket.close()
 
 
 if __name__ == "__main__":
-    start_server(PromptData(previews={"basic": Preview(id="basic")}))
+    ...

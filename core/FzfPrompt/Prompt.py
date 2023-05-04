@@ -8,9 +8,9 @@ from typing import Literal
 from pyfzf import FzfPrompt
 
 from ..monitoring.Logger import get_logger
-# from . import Server
 from .options import Hotkey, Options
 from .PromptData import PromptData
+from .Server import Server
 
 logger = get_logger()
 REQUIRED_OPTS = Options("--expect=enter", "--print-query")  # Result needs these in order to work
@@ -18,13 +18,13 @@ REQUIRED_OPTS = Options("--expect=enter", "--print-query")  # Result needs these
 
 # ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable specified in vscode-insiders://file/Users/honza/.dotfiles/.zshforfzf:4
 def run_fzf_prompt(prompt_data: PromptData, delimiter="\n", *, executable_path=None) -> Result:
-    # prompt_data_finished_contextualizing = threading.Event()
-    # threading.Thread(
-    #     target=Server.start_server, args=(prompt_data, prompt_data_finished_contextualizing), daemon=True
-    # ).start()
-
-    # prompt_data_finished_contextualizing.wait()
     prompt_data.options += REQUIRED_OPTS
+
+    server_setup_finished = threading.Event()
+    server = Server(prompt_data, server_setup_finished, daemon=True)
+    server.start()
+    server_setup_finished.wait()
+
     options = prompt_data.resolve_options()
     logger.debug("\n".join(options.options))
     result = Result(FzfPrompt(executable_path).prompt(prompt_data.choices, str(options), delimiter))

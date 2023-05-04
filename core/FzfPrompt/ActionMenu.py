@@ -35,14 +35,6 @@ class Action:
     command: str
     hotkey: Hotkey
 
-    @classmethod
-    def change_preview(cls, preview: Preview) -> Self:
-        return cls(
-            f"Change preview to '{preview.id}'",
-            f"change-preview({preview.command})+change-preview-window({preview.window_size},{preview.window_position})+refresh-preview",
-            preview.hotkey,
-        )
-
     def __call__(self, func: Moddable[P]) -> Moddable[P]:
         def with_action(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
             prompt_data.add_action(self)

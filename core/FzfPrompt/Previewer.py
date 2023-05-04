@@ -1,12 +1,16 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
 
+from dataclasses import dataclass, field
+from string import Template
 from typing import TYPE_CHECKING, Callable, Generic, Literal, Protocol, Self, Type, TypeVar
+
+from .ActionMenu import Action
+from .commands.fzf_placeholders import PLACEHOLDERS
+from .Server import ServerCall
 
 if TYPE_CHECKING:
     from .PromptData import PromptData
     from ..mods import Moddable, P
-
 
 from ..actions.functions import preview_basic
 from .options import Hotkey, Options, Position
@@ -19,6 +23,7 @@ class PreviewFunction(Protocol):
 
 
 PREVIEW_FUNCTIONS = {"no preview": lambda *args, **kwargs: None, "basic": preview_basic}
+
 
 PRESET_PREVIEWS = {
     "basic": "/Users/honza/Documents/Projects/PythonPackages/fzf_primitives/.env/bin/python3.11 -m fzf_primitives.experimental.core.actions.preview_basic {q} {} {+}"
@@ -45,27 +50,22 @@ class Preview:
     def __call__(self, func: Moddable[P]) -> Moddable[P]:
         def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
             prompt_data.add_preview(self)
-            return func(
-                prompt_data,
-                *args,
-                **kwargs,
-            )
+            return func(prompt_data, *args, **kwargs)
 
         return with_preview
 
-    def run_function(self, query, *selections):
-        output = PREVIEW_FUNCTIONS[self.id](query, selections)
-        self.output = output
-        return output
+    def server_call(self) -> ServerCall:
+        server_call = ServerCall(f"Change preview to '{self.id}'", self.change_preview, self.hotkey)
+        server_call.unformatted_command = Template(
+            f"change-preview({self.command})"
+            f"+change-preview-window({self.window_size},{self.window_position})"
+            "+refresh-preview"
+            f"+execute-silent({server_call.unformatted_command.template})"
+        )
+        return server_call
 
-    def update(self, query, selections):
-        self.output = PREVIEW_FUNCTIONS[self.id](query, selections)
-
-
-PREVIEW_COMMAND = (
-    "args=$(jq --compact-output --null-input '$ARGS.positional' --args -- %s {q} {+})"
-    ' && echo "{\\"function_name\\":\\"%s\\",\\"args\\":$args}" | nc localhost %i'
-)
+    def change_preview(self, prompt_data: PromptData):
+        prompt_data.previewer.main_preview = self
 
 
 class Previewer:
