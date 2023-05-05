@@ -50,8 +50,10 @@ if TYPE_CHECKING:
 
 
 REQUEST_COMMAND = (
+    "execute-silent("
     "args=$(jq --compact-output --null-input '$ARGS.positional' --args -- $placeholders)"
     ' && echo "{\\"server_call_name\\":\\"$server_call_name\\",\\"args\\":$args}" | nc localhost $socket_number'
+    ")"
 )
 
 
@@ -73,7 +75,7 @@ class ServerCall:
 
     def action(self, socket_number: int) -> Action:  # TODO: resolve last
         command = self.unformatted_command.safe_substitute({"socket_number": socket_number})
-        return Action(self.name, f"execute-silent({command})", self.hotkey)
+        return Action(self.name, command, self.hotkey)
 
     def __call__(self, func: Moddable[P]) -> Moddable[P]:
         def with_server_call(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):

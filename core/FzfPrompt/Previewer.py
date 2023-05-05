@@ -60,7 +60,7 @@ class Preview:
             f"change-preview({self.command})"
             f"+change-preview-window({self.window_size},{self.window_position})"
             "+refresh-preview"
-            f"+execute-silent({server_call.unformatted_command.template})"
+            f"+{server_call.unformatted_command.template}"
         )
         return server_call
 
