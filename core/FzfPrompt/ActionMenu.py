@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Self
 
 from .options import Hotkey, Options
-from .Previewer import Preview
 
 if TYPE_CHECKING:
     from .Prompt import Result
@@ -46,15 +45,19 @@ class Action:
 class ActionMenu:
     def __init__(self) -> None:
         self._options = Options()
-        self.actions: list[Action] = []
+        self.actions: dict[Hotkey, Action] = {}
 
     def add(self, action: Action):
-        self.actions.append(action)
+        if action.hotkey in self.actions:
+            raise RuntimeError(
+                f"Hotkey conflict ({action.hotkey}): {action.name} vs {self.actions[action.hotkey].name}"
+            )
+        self.actions[action.hotkey] = action
         self._options.bind(action.hotkey, action.command)
 
     def resolve_options(self) -> Options:
-        header_help = "\n".join(f"{action.hotkey}\t{action.name}" for action in self.actions)
+        header_help = "\n".join(f"{hotkey}\t{action.name}" for hotkey, action in self.actions.items())
         return self._options.header(header_help).header_first
 
-    def process_result(self, result: Result):
+    def process_result(self, result: Result):  # TODO: Use instead of processing in mods
         return result
