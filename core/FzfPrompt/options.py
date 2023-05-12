@@ -155,6 +155,7 @@ Hotkey = Literal[
     "ctrl-x",
     "ctrl-y",
     "ctrl-z",
+    "ctrl-6",
     "alt-a",
     "alt-b",
     "alt-c",
@@ -181,6 +182,17 @@ Hotkey = Literal[
     "alt-x",
     "alt-y",
     "alt-z",
+    "alt-0",
+    "alt-1",
+    "alt-2",
+    "alt-3",
+    "alt-4",
+    "alt-5",
+    "alt-6",
+    "alt-7",
+    "alt-8",
+    "alt-9",
+    "alt-0",
     "alt-up",
     "alt-down",
     "ctrl-alt-a",
@@ -254,6 +266,7 @@ class HOTKEY:
     ctrl_x = "ctrl-x"
     ctrl_y = "ctrl-y"
     ctrl_z = "ctrl-z"
+    ctrl_6 = "ctrl-6"  # the only number that's working
     alt_a = "alt-a"
     alt_b = "alt-b"
     alt_c = "alt-c"
@@ -280,6 +293,17 @@ class HOTKEY:
     alt_x = "alt-x"
     alt_y = "alt-y"
     alt_z = "alt-z"
+    alt_0 = "alt-0"
+    alt_1 = "alt-1"
+    alt_2 = "alt-2"
+    alt_3 = "alt-3"
+    alt_4 = "alt-4"
+    alt_5 = "alt-5"
+    alt_6 = "alt-6"
+    alt_7 = "alt-7"
+    alt_8 = "alt-8"
+    alt_9 = "alt-9"
+    alt_0 = "alt-0"
     alt_up = "alt-up"
     alt_down = "alt-down"
     ctrl_alt_a = "ctrl-alt-a"
