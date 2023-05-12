@@ -7,6 +7,7 @@ import clipboard
 
 from .exceptions import ExitLoop, ExitRound
 from .FzfPrompt.ActionMenu import Action
+from .FzfPrompt.commands import ACTION, SHELL_COMMAND
 from .FzfPrompt.decorators import constructor
 from .FzfPrompt.options import Hotkey, Options
 from .FzfPrompt.Previewer import Preview
@@ -98,9 +99,9 @@ get_action = constructor(Action)
 
 
 class action:
-    clip = functools.partial(get_action, "clip selections", "execute(arr=({+}); printf '%s\n' \"${arr[@]}\" | clip)")
-    select_all = functools.partial(get_action, "select all", "select-all")
-    toggle_all = functools.partial(get_action, "toggle all", "toggle-all")
+    clip = functools.partial(get_action, "clip selections", ACTION.execute_silent(SHELL_COMMAND.clip_selections))
+    select_all = functools.partial(get_action, "select all", ACTION.select_all)
+    toggle_all = functools.partial(get_action, "toggle all", ACTION.toggle_all)
     custom = staticmethod(get_action)
     quit = functools.partial(action_python, quit_app)
 
