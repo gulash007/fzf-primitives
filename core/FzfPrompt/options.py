@@ -55,8 +55,11 @@ class Options:
     def preview(self, command: str) -> Self:
         return self.add(shlex.join(["--preview", f"{command}"]))
 
-    def bind(self, hotkey: Hotkey, action: str) -> Self:
-        return self.add(shlex.join(["--bind", f"{hotkey}:{action}"]))
+    def preview_label(self, label: str) -> Self:
+        return self.add(shlex.join(["--preview-label", label]))
+
+    def bind(self, event: Hotkey | Event, action: str) -> Self:
+        return self.add(shlex.join(["--bind", f"{event}:{action}"]))
 
     def on_event(self, event: Event, action: str) -> Self:
         return self.add(shlex.join(["--bind", f"{event}:{action}"]))
@@ -332,7 +335,7 @@ class HOTKEY:
     ctrl_alt_x = "ctrl-alt-x"
     ctrl_alt_y = "ctrl-alt-y"
     ctrl_alt_z = "ctrl-alt-z"
-    enter = "enter"
+    enter = "enter"  # usually reserved for accepting a selection
     esc = "esc"  # usually reserved for exiting with no selection
     f1 = "f1"
     f2 = "f2"

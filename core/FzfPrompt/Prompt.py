@@ -10,7 +10,7 @@ from shutil import which
 from typing import Literal
 
 from ..monitoring.Logger import get_logger
-from .ActionMenu import Action
+from .ActionMenu import Action, PostProcessAction, ShellCommand
 from .options import Hotkey, Options
 from .PromptData import PromptData
 from .Server import Server
@@ -35,13 +35,17 @@ def run_fzf_prompt(prompt_data: PromptData, delimiter="\n", *, executable_path=N
     with tempfile.NamedTemporaryFile(delete=True) as output_file:
         output_file_path = Path(output_file.name)
         # TODO: generalize to solve other expected hotkeys
-        prompt_data.add_action(
-            Action(
-                "accept",
-                f"execute-silent(arr=({{q}} {ACCEPT_HOTKEY} {{+}}) && printf '%s\\n' \"${{arr[@]}}\" > {output_file_path})+accept",
-                "enter",
-            )
-        )
+        prompt_data.action_menu.add("accept", ACCEPT_HOTKEY, PostProcessAction(lambda result: result))
+        for hotkey, binding in prompt_data.action_menu.bindings.items():
+            # TODO: what if other actions use "accept"?
+            for action in binding.actions[:-1]:
+                if isinstance(action, PostProcessAction):
+                    raise RuntimeError("PostProcessAction has to come last")
+            if isinstance(binding.actions[-1], PostProcessAction):
+                binding.actions[-1:] = [
+                    ShellCommand(f"arr=({{q}} {hotkey} {{+}}) && printf '%s\\n' \"${{arr[@]}}\" > {output_file_path}"),
+                    "accept",
+                ]
 
         server_setup_finished = threading.Event()
         server = Server(prompt_data, server_setup_finished, daemon=True)
@@ -57,7 +61,7 @@ def run_fzf_prompt(prompt_data: PromptData, delimiter="\n", *, executable_path=N
             subprocess.run(
                 f"{executable_path} {options}",
                 shell=True,
-                input=delimiter.join(prompt_data.choices).encode(),
+                input=delimiter.join(str(choice) for choice in prompt_data.choices).encode(),
                 check=True,
             )
             fzf_result = output_file_path.read_text("utf-8").splitlines()
@@ -65,7 +69,7 @@ def run_fzf_prompt(prompt_data: PromptData, delimiter="\n", *, executable_path=N
             if err.returncode != 130:  # 130 means aborted
                 raise
 
-    return Result(fzf_result)
+    return prompt_data.action_menu.process_result(Result(fzf_result))
     # result = Result(FzfPrompt(executable_path).prompt(prompt_data.choices, str(options), delimiter))
     # return prompt_data.action_menu.process_result(result)
 
@@ -73,6 +77,7 @@ def run_fzf_prompt(prompt_data: PromptData, delimiter="\n", *, executable_path=N
 # Expects --print-query so it can interpret the first element as query.
 # Also expects at least one --expect=hotkey so that it can interpret the first element in fzf_result as hotkey.
 # This is implemented in required options for convenience.
+# TODO: Adapt result to change in getting selections (current result is historical and cryptic)
 class Result(list[str]):
     def __init__(self, fzf_result: list[str]) -> None:
         self.hotkey: Hotkey | Literal[""] = ""

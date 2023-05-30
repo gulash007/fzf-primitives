@@ -8,6 +8,9 @@ from .exceptions import ExitLoop
 from .FzfPrompt.options import Options
 from .FzfPrompt.Prompt import Result
 from .FzfPrompt.PromptData import PromptData
+from .monitoring.Logger import get_logger
+
+logger = get_logger()
 
 app = typer.Typer()
 
@@ -15,9 +18,8 @@ app = typer.Typer()
 # TODO: add support for outputting from all available info (including preview)
 
 
-@mods.action.toggle_all("ctrl-a")  # Doesn't have any use without multiselect
-@mods.action.clip("ctrl-c")
-@mods.action.quit("ctrl-q")
+@mods.on_event("ctrl-c").clip
+@mods.on_event("ctrl-q").quit
 @mods.exit_round_on_no_selection()
 def run(prompt_data: PromptData) -> Result:
     return BasePrompt.run(prompt_data=prompt_data)
@@ -35,4 +37,5 @@ def main(options: list[str] = typer.Argument(None, help="fzf options passed as s
 
 
 if __name__ == "__main__":
+    logger.enable("")
     app()
