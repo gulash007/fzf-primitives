@@ -3,9 +3,8 @@ import typer
 
 from thingies import read_from_pipe, color
 
-from .FzfPrompt.PromptData import PromptData
-from .exceptions import ExitLoop
-from .FzfPrompt.Prompt import run_fzf_prompt
+from .FzfPrompt.exceptions import ExitLoop
+from .FzfPrompt.Prompt import run_fzf_prompt, PromptData
 from .FzfPrompt.options import Options
 
 app = typer.Typer()

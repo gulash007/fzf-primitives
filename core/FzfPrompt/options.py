@@ -55,13 +55,13 @@ class Options:
     def preview(self, command: str) -> Self:
         return self.add(shlex.join(["--preview", f"{command}"]))
 
+    def preview_window(self, position: Position, size: int | str) -> Self:
+        return self.add(shlex.join(["--preview-window", f"{position},{size}"]))
+
     def preview_label(self, label: str) -> Self:
         return self.add(shlex.join(["--preview-label", label]))
 
-    def bind(self, event: Hotkey | Event, action: str) -> Self:
-        return self.add(shlex.join(["--bind", f"{event}:{action}"]))
-
-    def on_event(self, event: Event, action: str) -> Self:
+    def bind(self, event: Hotkey | FzfEvent, action: str) -> Self:
         return self.add(shlex.join(["--bind", f"{event}:{action}"]))
 
     def expect(self, *hotkeys: Hotkey) -> Self:
@@ -130,7 +130,7 @@ Position = Literal[
     "left",
     "right",
 ]
-Event = Literal["change", "focus"]
+FzfEvent = Literal["change", "focus"]
 Hotkey = Literal[
     "ctrl-a",
     "ctrl-b",

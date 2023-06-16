@@ -1,20 +1,25 @@
 # Syntax sugar layer
 from __future__ import annotations
+
 import functools
-from pathlib import Path
-from typing import Any, Callable, Generic, Literal, ParamSpec, Protocol, overload
+from typing import Any, Generic, Literal, ParamSpec, Protocol
 
 import clipboard
 
-from .exceptions import ExitLoop, ExitRound
-from .FzfPrompt.ActionMenu import Action, PostProcessAction, ShellCommand
-from .FzfPrompt.commands import ACTION, SHELL_COMMAND
-from .FzfPrompt.decorators import constructor
-from .FzfPrompt.options import Event, Hotkey, Options, Position
-from .FzfPrompt.Previewer import Preview
-from .FzfPrompt.Prompt import Result
-from .FzfPrompt.PromptData import PromptData
-from .FzfPrompt.Server import ServerCall
+from .FzfPrompt.commands import SHELL_COMMAND
+from .FzfPrompt.exceptions import ExitLoop, ExitRound
+from .FzfPrompt.options import FzfEvent, Hotkey, Options, Position
+from .FzfPrompt.Prompt import (
+    Action,
+    Binding,
+    PostProcessAction,
+    Preview,
+    PromptData,
+    PromptEndingAction,
+    Result,
+    ServerCall,
+    ShellCommand,
+)
 from .monitoring.Logger import get_logger
 
 P = ParamSpec("P")
@@ -43,15 +48,16 @@ ansi = add_options(Options().ansi)
 no_sort = add_options(Options().no_sort)
 
 
-def exit_round_on_no_selection(message: str = ""):
+def exit_round_when_aborted(message: str = ""):
     def decorator(func: Moddable[P]) -> Moddable[P]:
-        def exiting_round_on_no_selection(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-            if not (result := func(prompt_data, *args, **kwargs)) and not result.hotkey:
+        def exiting_round_when_aborted(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+            result = func(prompt_data, *args, **kwargs)
+            if result.end_status == "abort":
                 logger.info(message)
                 raise ExitRound(message)
             return result
 
-        return exiting_round_on_no_selection
+        return exiting_round_when_aborted
 
     return decorator
 
@@ -61,9 +67,11 @@ def exit_round_on_no_selection(message: str = ""):
 # TODO: preview label
 
 
-def quit_app(result: Result):
+def quit_app(prompt_data: PromptData):
     sep = "\n\t"
-    raise ExitLoop(f"Exiting app with\nquery: {result.query}\nselections:{sep}{sep.join(result)}")
+    raise ExitLoop(
+        f"Exiting app with\nquery: {prompt_data.result.query}\nselections:{sep}{sep.join(prompt_data.result)}"
+    )
 
 
 def clip_current_preview(prompt_data: PromptData):
@@ -71,12 +79,22 @@ def clip_current_preview(prompt_data: PromptData):
 
 
 class event_preset:
-    def __init__(self, name: str, *actions: Action) -> None:
+    def __init__(self, name: str, *actions: Action, end_prompt: PromptEndingAction | Literal[False] = False) -> None:
         self._name = name
         self._actions = actions
+        self._end_prompt: PromptEndingAction | Literal[False] = end_prompt
 
     def __get__(self, obj: on_event, objtype=None):
-        return obj(self._name, *self._actions)
+        return obj(self._name, *self._actions, end_prompt=self._end_prompt)
+
+
+def pipe_results(prompt_data: PromptData, query: str, selections: list[str]):
+    prompt_data.result.query = "test"
+    prompt_data.result.event = "enter"
+    prompt_data.result.end_status = "accept"
+    prompt_data.result.extend(selections)
+    logger.debug("Piping results")
+    logger.debug(prompt_data.result)
 
 
 # TODO: chaining?
@@ -84,24 +102,21 @@ class on_event:
     clip = event_preset("clip selections", ShellCommand(SHELL_COMMAND.clip_selections))
     toggle_all = event_preset("toggle all", "toggle-all")
     select_all = event_preset("select all", "select-all")
-    quit = event_preset("quit", PostProcessAction(quit_app))
+    quit = event_preset("quit", PostProcessAction(quit_app), end_prompt="abort")
     clip_current_preview = event_preset("clip current preview", ServerCall(clip_current_preview))
 
-    def __init__(self, event: Hotkey | Event):
-        self.event: Hotkey | Event = event
+    def __init__(self, event: Hotkey | FzfEvent):
+        self.event: Hotkey | FzfEvent = event
 
-    def __call__(self, name: str, *actions: Action) -> Any:
+    def __call__(self, name: str, *actions: Action, end_prompt: PromptEndingAction | Literal[False] = False) -> Any:
         def decorator(func: Moddable[P]) -> Moddable[P]:
             def wrapper(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-                prompt_data.action_menu.add(name, self.event, *actions)
+                prompt_data.action_menu.add(self.event, Binding(name, *actions, end_prompt=end_prompt))
                 return func(prompt_data, *args, **kwargs)
 
             return wrapper
 
         return decorator
-
-    def post_process_action(self, post_processor: Callable[[Result], Any], custom_name: str | None = None):
-        return self(custom_name or post_processor.__name__, PostProcessAction(post_processor))
 
 
 PRESET_PREVIEWS = {
@@ -111,15 +126,14 @@ PRESET_PREVIEWS = {
 
 def add_preview(
     name: str,
-    command: str | ServerCall,
+    command: str,
     hotkey: Hotkey,
     window_size: int | str = "50%",
     window_position: Position = "right",
 ):
     def decorator(func: Moddable[P]) -> Moddable[P]:
         def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-            cmd = ShellCommand(command) if isinstance(command, str) else command
-            prompt_data.add_preview(Preview(name, cmd, hotkey, window_size, window_position))
+            prompt_data.add_preview(Preview(name, command, hotkey, window_size, window_position))
             return func(prompt_data, *args, **kwargs)
 
         return with_preview

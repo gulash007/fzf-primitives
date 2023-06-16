@@ -4,10 +4,9 @@ import typer
 from thingies import color
 
 from . import BasePrompt, mods
-from .exceptions import ExitLoop
+from .FzfPrompt.exceptions import ExitLoop
 from .FzfPrompt.options import Options
-from .FzfPrompt.Prompt import Result
-from .FzfPrompt.PromptData import PromptData
+from .FzfPrompt.Prompt import Result, PromptData
 from .monitoring.Logger import get_logger
 
 logger = get_logger()
@@ -20,7 +19,7 @@ app = typer.Typer()
 
 @mods.on_event("ctrl-c").clip
 @mods.on_event("ctrl-q").quit
-@mods.exit_round_on_no_selection()
+@mods.exit_round_when_aborted()
 def run(prompt_data: PromptData) -> Result:
     return BasePrompt.run(prompt_data=prompt_data)
 
