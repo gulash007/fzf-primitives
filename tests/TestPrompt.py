@@ -1,14 +1,10 @@
 from pathlib import Path
 from typing import Iterable
 
-
-from ..core.FzfPrompt.ActionMenu import Action
 from ..core import BasePrompt, mods
 from ..core.BasicLoop import BasicLoop
 from ..core.FzfPrompt.constants import TOP_LEVEL_PACKAGE_PATH
-from ..core.FzfPrompt.Prompt import Result
-from ..core.FzfPrompt.PromptData import PromptData
-from ..core.FzfPrompt.Server import ServerCall
+from ..core.FzfPrompt.Prompt import Action, PostProcessAction, PromptData, Result, ServerCall
 from ..core.monitoring.Logger import LOG_FORMAT, get_logger, remove_handler
 
 HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
@@ -20,7 +16,7 @@ def hello(prompt_data):
     return "hello"
 
 
-def quit(result: Result):
+def quit_app(prompt_data: PromptData):
     raise Exception
 
 
@@ -33,12 +29,12 @@ def quit(result: Result):
 # @mods.on_event("ctrl-c")("whatever", ServerCall())
 # @mods.on_event("ctrl-c")("whatever", )
 # @mods.action.clip_current_preview("ctrl-c")
-# @mods.on_event("ctrl-q").post_process_action(quit)
+# @mods.on_event("ctrl-q")("quit", PostProcessAction(quit_app), end_prompt="abort")
 @mods.on_event("ctrl-q").quit
 @mods.preview.basic("ctrl-h")
-@mods.preview.custom(name="basic2", hotkey="ctrl-y", command="echo hello", window_size="10%", window_position="up")
+@mods.preview.custom(name="basic2", hotkey="ctrl-y", command="echo hello", window_size="50%", window_position="up")
 @mods.multiselect
-# @mods.exit_round_on_no_selection("No selection!")
+@mods.exit_round_when_aborted("Aborted!")
 def run(prompt_data: PromptData):
     return BasePrompt.run(prompt_data)
 

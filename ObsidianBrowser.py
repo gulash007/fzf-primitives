@@ -10,7 +10,7 @@ from .core import DefaultPrompt, mods
 from .core.actions.actions import ACTION
 from .core.BasicLoop import BasicLoop
 from .core.FzfPrompt.options import Options
-from .core.FzfPrompt.PromptData import PromptData
+from .core.FzfPrompt.Prompt import PromptData
 
 DEFAULT_VAULT_PATH = Path("/Users/honza/Documents/HOLLY")
 

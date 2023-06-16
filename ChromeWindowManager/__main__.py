@@ -1,20 +1,18 @@
+import difflib
 import os
 import time
-from pathlib import Path
 import traceback
+from pathlib import Path
 from typing import Self
-import difflib
 
 from pydantic import BaseModel, parse_file_as
-
-
 from thingies import shell_command
 
 from ..core import DefaultPrompt, mods
 from ..core.BasicLoop import BasicLoop
-from ..core.FzfPrompt.Prompt import Result
-from ..core.FzfPrompt.PromptData import PromptData
-from ..core.monitoring.Logger import get_logger
+from ..core.FzfPrompt.exceptions import ExitLoop, ExitRound
+from ..core.FzfPrompt.Prompt import ActionMenu, Preview, PromptData, Result, ServerCall, ShellCommand, PostProcessAction
+from ..core.monitoring.Logger import get_logger, remove_handler
 
 logger = get_logger()
 
@@ -145,23 +143,38 @@ def focus_window(window_id: str):
     time.sleep(0.3)
 
 
+class EPD(ActionMenu):
+    def __init__(self, windows: Windows) -> None:
+        self.windows = windows
+        super().__init__()
+
+
+def close_window(prompt_data: PromptData):
+    window_id = prompt_data.result[0].split()[0]
+    window = prompt_data.action_menu.windows.windows[window_id]
+    shell_command(f"brotab close {' '.join(tab.id for tab in window.tabs)}")
+    raise ExitRound
+
+
+@mods.on_event("ctrl-g")("Open windows.json", ShellCommand(f"code-insiders '{STORED_WINDOWS_PATH}'"))
 @mods.preview.custom(
     "List tabs",
     "source ~/.zshforchrome 2>/dev/null && echo {} | awk '{ print $1 }' | read -r window_id && brotab query -windowId ${window_id:2} | brotab_format_better_line",
     "ctrl-y",
 )
-def run_window_selection_prompt(prompt_data: PromptData) -> Result:
+@mods.on_event("ctrl-w")("Close window", PostProcessAction(close_window), end_prompt="accept")
+def run_window_selection_prompt(prompt_data: EPD) -> Result:
     return DefaultPrompt.run(prompt_data=prompt_data)
 
 
 def run():
-    """Runs one round of the application until end state. Loop should be implemented externally"""
     windows = get_windows()
     window_mapping = {str(window): window for window in windows.windows.values()}
     window = window_mapping[
         run_window_selection_prompt(
             PromptData(
-                choices=sorted(window_mapping.values(), key=lambda x: (not x.name, str(x.name), x.active_tab.title))
+                choices=sorted(window_mapping.values(), key=lambda x: (not x.name, str(x.name), x.active_tab.title)),
+                action_menu=EPD(windows),
             )
         )[0]
     ]

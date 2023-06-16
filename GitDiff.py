@@ -3,7 +3,7 @@ from thingies import shell_command
 
 from .core import BasePrompt, DefaultPrompt, mods
 from .core.BasicLoop import BasicLoop
-from .core.FzfPrompt.PromptData import PromptData
+from .core.FzfPrompt.Prompt import PromptData
 from .core.monitoring.Logger import get_logger
 
 app = typer.Typer()

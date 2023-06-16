@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import functools
-from typing import Any, Generic, Literal, ParamSpec, Protocol
+from typing import Any, Callable, Generic, Literal, ParamSpec, Protocol
 
 import clipboard
 
@@ -156,10 +156,14 @@ class preview:
         )
 
 
-def clip_output(func: Moddable[P]) -> Moddable[P]:
-    def clipping_output(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-        result = func(prompt_data, *args, **kwargs)
-        clipboard.copy("\n".join(result))
-        return result
+def clip_output(output_processor: Callable[[str], str] | None = None):
+    def decorator(func: Moddable[P]) -> Moddable[P]:
+        def clipping_output(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+            result = func(prompt_data, *args, **kwargs)
+            to_clip = map(output_processor, result) if output_processor else result
+            clipboard.copy("\n".join(to_clip))
+            return result
 
-    return clipping_output
+        return clipping_output
+
+    return decorator
