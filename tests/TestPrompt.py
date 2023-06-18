@@ -4,7 +4,7 @@ from typing import Iterable
 from ..core import BasePrompt, mods
 from ..core.BasicLoop import BasicLoop
 from ..core.FzfPrompt.constants import TOP_LEVEL_PACKAGE_PATH
-from ..core.FzfPrompt.Prompt import Action, PostProcessAction, PromptData, Result, ServerCall
+from ..core.FzfPrompt.Prompt import Action, Binding, PostProcessAction, PromptData, Result, ServerCall
 from ..core.monitoring import Logger
 
 HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
@@ -36,6 +36,8 @@ def quit_app(prompt_data: PromptData):
 @mods.multiselect
 @mods.exit_round_when_aborted("Aborted!")
 def run(prompt_data: PromptData):
+    prompt_data.action_menu.automate(Binding("clear query", "clear-query", "clear-query"))
+    prompt_data.action_menu.automate_keys("ctrl-a", "ctrl-q")
     return BasePrompt.run(prompt_data)
 
 

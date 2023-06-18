@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import inspect
 import json
+import shlex
 import socket
 import subprocess
 import traceback
@@ -15,6 +16,7 @@ from threading import Event, Thread
 from typing import Any, Callable, Concatenate, Generic, Literal, NoReturn, ParamSpec, Protocol, TypeVar
 
 import pydantic
+from thingies import shell_command
 
 from ...core.actions.functions import preview_basic
 from ..monitoring.Logger import get_logger
@@ -47,6 +49,8 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
 
     options = prompt_data.resolve_options()
     logger.debug("\n".join(options.options))
+
+    prompt_data.action_menu.automator.start()
 
     # TODO: catch 130 in mods.exit_round_on_no_selection (rename it appropriately)
     # TODO: 🧊 Use subprocess.run without shell=True (need to change Options)
@@ -155,6 +159,9 @@ class PostProcessAction:
     def __init__(self, post_processor: PostProcessor) -> None:
         self.post_processor = post_processor
 
+    def __str__(self) -> str:
+        return self.post_processor.__name__
+
 
 class Binding:
     def __init__(self, name, /, *actions: Action, end_prompt: PromptEndingAction | Literal[False] = False):
@@ -199,6 +206,8 @@ class ActionMenu:
         self.post_processors: dict[Hotkey | FzfEvent, PostProcessor] = {}
         self.add("enter", Binding("accept", end_prompt="accept"))
         self.add("esc", Binding("abort", end_prompt="abort"))
+        self.automator = Automator()
+        self.add("start", Binding("get automator port", ServerCall(self.automator.get_port_number)))
 
     @property
     def actions(self) -> list[Action]:
@@ -230,22 +239,69 @@ class ActionMenu:
         for event, binding in self.bindings.items():
             options.bind(event, binding.resolve())
         header_help = "\n".join(f"{event}\t{action.name}" for event, action in self.bindings.items())
-        return options.header(header_help).header_first
+        return options.header(header_help).header_first + self.automator.resolve_options()
 
     def get_result(self, prompt_data: PromptData):
         post_processor = self.post_processors.get(prompt_data.result.event)
         return post_processor(prompt_data) if post_processor else prompt_data.result
 
+    def automate_keys(self, *hotkeys: Hotkey):
+        self.automate(*(self.bindings[hotkey] for hotkey in hotkeys))
+
+    def automate(self, *bindings: Binding):
+        self.automator.bindings.extend(bindings)
+
 
 PRESET_ACTIONS = {}
 # raw fzf actions that aren't parametrized or name of preset action
 BaseAction = Literal[
+    "clear-query",
     "toggle-all",
     "select-all",
     "refresh-preview",
 ]
 # Action can just be a string if you know what you're doing (look in `man fzf` for what can be assigned to '--bind')
 Action = BaseAction | ParametrizedAction | PostProcessAction | ShellCommand
+
+
+class Automator(Thread):
+    @property
+    def port(self) -> str:
+        if self.__port is None:
+            raise RuntimeError("port not set")
+        return self.__port
+
+    @port.setter
+    def port(self, value: str):
+        self.__port = value
+        logger.info(f"Automator listening on port {self.port}")
+
+    def __init__(self) -> None:
+        self.__port: str | None = None
+        self.bindings: list[Binding] = []
+        self.x = Event()
+        super().__init__()
+
+    def run(self):
+        self.x.wait()
+        for binding in self.bindings:
+            self.execute_binding(binding)
+
+    def execute_binding(self, binding: Binding):
+        logger.debug(f"Automating {binding}")
+        action_str = binding.resolve()
+        if response := shell_command(shlex.join(["curl", "-XPOST", f"localhost:{self.port}", "-d", action_str])):
+            if not response.startswith("unknown action:"):
+                logger.weirdness(response)
+            raise RuntimeError(response)
+
+    def resolve_options(self) -> Options:
+        return Options().listen()
+
+    def get_port_number(self, prompt_data: PromptData, FZF_PORT: str):
+        """Utilizes the $FZF_PORT variable containing the assigned port to --listen option"""
+        self.port = FZF_PORT
+        self.x.set()
 
 
 class PreviewFunction(Protocol):

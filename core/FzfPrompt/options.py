@@ -81,6 +81,9 @@ class Options:
     def header(self, header: str) -> Self:
         return self.add(shlex.join(["--header", header]))
 
+    def listen(self, port_number: int = 0):
+        return self.add(f"--listen={port_number}")
+
     def __str__(self) -> str:
         return " ".join(self.options)
 
@@ -130,7 +133,7 @@ Position = Literal[
     "left",
     "right",
 ]
-FzfEvent = Literal["change", "focus"]
+FzfEvent = Literal["start", "load", "change", "focus", "one", "backward-eof"]
 Hotkey = Literal[
     "ctrl-a",
     "ctrl-b",
