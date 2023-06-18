@@ -168,6 +168,11 @@ class Binding:
         self.name = name
         self.actions: list[Action] = list(actions)
         self.end_prompt: PromptEndingAction | Literal[False] = end_prompt
+        post_process_action_count = sum(1 for action in actions if isinstance(action, PostProcessAction))
+        if post_process_action_count > 0 and not self.end_prompt:
+            raise RuntimeError("Post-process action needs prompt to end")
+        if post_process_action_count > 1:
+            raise RuntimeError(f"Multiple post-process actions disallowed ({post_process_action_count})")
 
     def resolve(self) -> str:
         action_strings = [
