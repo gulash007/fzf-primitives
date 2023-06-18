@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import sys
 from functools import partialmethod
 from pathlib import Path
@@ -22,12 +21,18 @@ LOG_FORMAT = (
     "<level>{message}</level>"
 )
 
-LOG_FILE_PATH = Path(__file__).parents[2].joinpath("_logs/main.log")
+LOG_FILE_FOLDER = Path(__file__).parents[2].joinpath("_logs/")
+
+
+def add_file_handler(file_name: str, level="DEBUG", format=LOG_FORMAT, colorize=True, **kwargs):
+    return logger.add(
+        LOG_FILE_FOLDER.joinpath(f"{file_name}.log"), level=level, format=format, colorize=colorize, **kwargs
+    )
 
 
 class HANDLERS:
     STDERR = logger.add(sys.stderr, level="DEBUG", format=LOG_FORMAT, colorize=True)
-    MAIN_LOG_FILE = logger.add(LOG_FILE_PATH, level="DEBUG", format=LOG_FORMAT, colorize=True)
+    MAIN_LOG_FILE = add_file_handler("main", level="DEBUG", format=LOG_FORMAT, colorize=True)
 
 
 HandlerID = Literal["STDERR", "MAIN_LOG_FILE"]

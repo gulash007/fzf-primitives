@@ -5,7 +5,7 @@ from ..core import BasePrompt, mods
 from ..core.BasicLoop import BasicLoop
 from ..core.FzfPrompt.constants import TOP_LEVEL_PACKAGE_PATH
 from ..core.FzfPrompt.Prompt import Action, PostProcessAction, PromptData, Result, ServerCall
-from ..core.monitoring.Logger import LOG_FORMAT, get_logger, remove_handler
+from ..core.monitoring import Logger
 
 HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
 
@@ -40,11 +40,10 @@ def run(prompt_data: PromptData):
 
 
 if __name__ == "__main__":
-    logger = get_logger()
-    remove_handler("MAIN_LOG_FILE")
-    remove_handler("STDERR")
-    log_file_path = Path(__file__).parent.parent.joinpath("_logs/TestPrompt.log")
-    logger.add(log_file_path, level="DEBUG", format=LOG_FORMAT, colorize=True)
+    logger = Logger.get_logger()
+    Logger.remove_handler("MAIN_LOG_FILE")
+    Logger.remove_handler("STDERR")
+    Logger.add_file_handler("TestPrompt")
     logger.enable("")
     logger.info("TestPrompt running…")
     print(run(PromptData(choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10])))
