@@ -88,15 +88,6 @@ class event_preset:
         return obj(self._name, *self._actions, end_prompt=self._end_prompt)
 
 
-def pipe_results(prompt_data: PromptData, query: str, selections: list[str]):
-    prompt_data.result.query = "test"
-    prompt_data.result.event = "enter"
-    prompt_data.result.end_status = "accept"
-    prompt_data.result.extend(selections)
-    logger.debug("Piping results")
-    logger.debug(prompt_data.result)
-
-
 # TODO: chaining?
 class on_event:
     clip = event_preset("clip selections", ShellCommand(SHELL_COMMAND.clip_selections))
