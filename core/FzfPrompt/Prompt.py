@@ -446,6 +446,8 @@ PLACEHOLDERS = {
     "query": "--arg query {q}",
     "selection": "--arg selection {}",
     "selections": "--argjson selections \"$(jq --compact-output --null-input '$ARGS.positional' --args {+})\"",
+    "index": "--arg selection {n}",
+    "indices": "--argjson selections \"$(jq --compact-output --null-input '$ARGS.positional' --args {+n})\"",
 }
 
 
@@ -457,12 +459,12 @@ def get_json_creating_command(function: Callable) -> str:
     parameters = list(inspect.signature(function).parameters.values())[1:]  # excludes prompt_data
     jq_args = []
     for parameter in parameters:
-        if parameter.name in PLACEHOLDERS:
-            jq_args.append(PLACEHOLDERS[parameter.name])
+        if placeholder := PLACEHOLDERS.get(parameter.name):
+            jq_args.append(placeholder)
         elif isinstance(parameter.default, CommandOutput):
             jq_args.append(f'--arg {parameter.name} "$({parameter.default})"')
         else:
-            # to be replaced using string.Template.safe_substitute
+            # to be replaced using string.Template.safe_substitute or is an environment variable
             jq_args.append(f'--arg {parameter.name} "${parameter.name}"')
 
     return (
@@ -478,7 +480,7 @@ ServerCallFunction = Callable[Concatenate[PromptData, P], Any]
 # TODO: Add support for index {n} and indices {+n}
 # TODO: Will logging slow it down too much?
 class ServerCall(ShellCommand):
-    """❗ custom name mustn't have single quotes in it. It only serves to distinguish functions"""
+    """❗ custom name mustn't have single quotes in it. It only serves to distinguish functions anyway"""
 
     def __init__(self, function: ServerCallFunction, name: str | None = None) -> None:
         self.function = function
