@@ -258,6 +258,9 @@ class ActionMenu:
     def automate_keys(self, *hotkeys: Hotkey):
         self.automate(*(self.bindings[hotkey] for hotkey in hotkeys))
 
+    def automate_actions(self, *actions: Action):
+        self.automate(Binding("anonymous actions", *actions))
+
     def automate(self, *bindings: Binding):
         self.automator.bindings.extend(bindings)
 
