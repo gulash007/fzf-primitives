@@ -41,9 +41,9 @@ def quit_app(prompt_data: PromptData):
 @mods.on_event("ctrl-c").clip_current_preview.run("abort", end_prompt="abort")
 def run(prompt_data: PromptData):
     prompt_data.action_menu.automate(Binding("clear query", "clear-query", "clear-query"))
-    prompt_data.action_menu.automate_keys("ctrl-a")
+    prompt_data.action_menu.automate("ctrl-a")
     prompt_data.action_menu.automate_actions("toggle-all")
-    prompt_data.action_menu.automate_keys("ctrl-q")
+    prompt_data.action_menu.automate("ctrl-q")
     return BasePrompt.run(prompt_data)
 
 
@@ -56,7 +56,12 @@ def test_prompt():
         Logger.clear_log_file("AutomatedTestPrompt")
         logger.enable("")
         logger.info("AutomatedTestPrompt running…")
-        print(run(PromptData(choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10])))
+        pd = PromptData(choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10])
+        pd.action_menu.automate(Binding("clear query", "clear-query", "clear-query"))
+        pd.action_menu.automate("ctrl-a")
+        pd.action_menu.automate_actions("toggle-all")
+        pd.action_menu.automate("ctrl-q")
+        print(run(pd))
 
 
 if __name__ == "__main__":

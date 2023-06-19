@@ -4,6 +4,7 @@ from typing import Iterable
 from ..core import BasePrompt, mods
 from ..core.BasicLoop import BasicLoop
 from ..core.FzfPrompt.constants import TOP_LEVEL_PACKAGE_PATH
+from ..core.FzfPrompt.exceptions import ExitLoop
 from ..core.FzfPrompt.Prompt import Action, Binding, PostProcessAction, PromptData, Result, ServerCall
 from ..core.monitoring import Logger
 
@@ -17,7 +18,7 @@ def hello(prompt_data):
 
 
 def quit_app(prompt_data: PromptData):
-    raise Exception("Quitting app")
+    raise ExitLoop("Quitting app")
 
 
 # @mods.action.custom("Become hello", "become(printf 'hello\\nworld')", "ctrl-y")
@@ -37,10 +38,6 @@ def quit_app(prompt_data: PromptData):
 @mods.exit_round_when_aborted("Aborted!")
 @mods.on_event("ctrl-c").clip_current_preview.run("abort", end_prompt="abort")
 def run(prompt_data: PromptData):
-    prompt_data.action_menu.automate(Binding("clear query", "clear-query", "clear-query"))
-    prompt_data.action_menu.automate_keys("ctrl-a")
-    prompt_data.action_menu.automate_actions("toggle-all")
-    prompt_data.action_menu.automate_keys("ctrl-q")
     return BasePrompt.run(prompt_data)
 
 
@@ -51,5 +48,10 @@ if __name__ == "__main__":
     Logger.add_file_handler("TestPrompt")
     logger.enable("")
     logger.info("TestPrompt running…")
-    print(run(PromptData(choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10])))
+    pd = PromptData(choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10])
+    pd.action_menu.automate(Binding("clear query", "clear-query", "clear-query"))
+    pd.action_menu.automate("ctrl-a")
+    pd.action_menu.automate_actions("toggle-all")
+    pd.action_menu.automate("ctrl-q")
+    print(run(pd))
     # BasicLoop(lambda: run(PromptData(choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10]))).run_in_loop()

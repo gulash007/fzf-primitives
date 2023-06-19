@@ -216,7 +216,7 @@ class ActionMenu:
         self.post_processors: dict[Hotkey | FzfEvent, PostProcessor] = {}
         self.add("enter", Binding("accept", end_prompt="accept"))
         self.add("esc", Binding("abort", end_prompt="abort"))
-        self.automator = Automator()
+        self.automator = Automator(self)
         self.add("start", Binding("get automator port", ServerCall(self.automator.get_port_number)))
 
     @property
@@ -255,14 +255,11 @@ class ActionMenu:
         post_processor = self.post_processors.get(prompt_data.result.event)
         return post_processor(prompt_data) if post_processor else prompt_data.result
 
-    def automate_keys(self, *hotkeys: Hotkey):
-        self.automate(*(self.bindings[hotkey] for hotkey in hotkeys))
+    def automate(self, *to_execute: Binding | Hotkey):
+        self.automator.to_execute.extend(to_execute)
 
     def automate_actions(self, *actions: Action):
         self.automate(Binding("anonymous actions", *actions))
-
-    def automate(self, *bindings: Binding):
-        self.automator.bindings.extend(bindings)
 
 
 PRESET_ACTIONS = {}
@@ -289,15 +286,16 @@ class Automator(Thread):
         self.__port = value
         logger.info(f"Automator listening on port {self.port}")
 
-    def __init__(self) -> None:
+    def __init__(self, action_menu: ActionMenu) -> None:
         self.__port: str | None = None
-        self.bindings: list[Binding] = []
+        self._action_menu = action_menu
+        self.to_execute: list[Binding | Hotkey] = []
         self.x = Event()
         super().__init__()
 
     def run(self):
         self.x.wait()
-        for binding in self.bindings:
+        for binding in [x if isinstance(x, Binding) else self._action_menu.bindings[x] for x in self.to_execute]:
             self.execute_binding(binding)
 
     def execute_binding(self, binding: Binding):
