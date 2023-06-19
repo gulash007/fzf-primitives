@@ -18,7 +18,6 @@ from typing import Any, Callable, Concatenate, Generic, Literal, NoReturn, Param
 import pydantic
 from thingies import shell_command
 
-from ...core.actions.functions import preview_basic
 from ..monitoring.Logger import get_logger
 from .commands.fzf_placeholders import PLACEHOLDERS
 from .exceptions import ExpectedException
@@ -304,7 +303,8 @@ class Automator(Thread):
         return Options().listen()
 
     def get_port_number(self, prompt_data: PromptData, FZF_PORT: str):
-        """Utilizes the $FZF_PORT variable containing the assigned port to --listen option"""
+        """Utilizes the $FZF_PORT variable containing the port assigned to --listen option
+        (or the one generated automatically when --listen=0)"""
         self.port = FZF_PORT
         self.x.set()
 
@@ -313,16 +313,6 @@ class PreviewFunction(Protocol):
     @staticmethod
     def __call__(query: str, selection: str, selections: list[str]) -> str:
         ...
-
-
-PREVIEW_FUNCTIONS = {"no preview": lambda *args, **kwargs: None, "basic": preview_basic}
-
-
-PREVIEW_OUTPUT_SERVER_CALL_COMMAND_TEMPLATE = Template(
-    "preview_output=$($preview_output_getter)"
-    ' && echo "{\\"server_call_name\\":\\"$server_call_name\\", "kwargs": {\\"preview_name\\":$preview_name, \\"preview_output\\": "$preview_output"}" | nc localhost $socket_number;'
-    ' echo "$preview_output"'
-)
 
 
 @dataclass
