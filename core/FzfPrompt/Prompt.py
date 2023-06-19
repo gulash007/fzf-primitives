@@ -13,7 +13,7 @@ from datetime import datetime
 from shutil import which
 from string import Template
 from threading import Event, Thread
-from typing import Any, Callable, Concatenate, Generic, Literal, NoReturn, ParamSpec, Protocol, TypeVar
+from typing import Any, Callable, Concatenate, Generic, Literal, NoReturn, ParamSpec, Protocol, Self, TypeVar
 
 import pydantic
 from thingies import shell_command
@@ -163,11 +163,11 @@ class PostProcessAction:
 
 
 class Binding:
-    def __init__(self, name, /, *actions: Action, end_prompt: PromptEndingAction | Literal[False] = False):
+    def __init__(self, name: str, /, *actions: Action, end_prompt: PromptEndingAction | Literal[False] = False):
         self.name = name
         self.actions: list[Action] = list(actions)
         self.end_prompt: PromptEndingAction | Literal[False] = end_prompt
-        post_process_action_count = sum(1 for action in actions if isinstance(action, PostProcessAction))
+        post_process_action_count = sum(isinstance(action, PostProcessAction) for action in actions)
         if post_process_action_count > 0 and not self.end_prompt:
             raise RuntimeError("Post-process action needs prompt to end")
         if post_process_action_count > 1:
@@ -186,6 +186,12 @@ class Binding:
     def __str__(self) -> str:
         actions = [f"'{str(action)}'" for action in self.actions]
         return f"{self.name}: {' -> '.join(actions)}"
+
+    def __add__(self, other: Self) -> Self:
+        self.actions.extend(other.actions)
+        self.name = f"{self.name}+{other.name}"
+        self.end_prompt = other.end_prompt
+        return self
 
 
 PromptEndingAction = Literal["accept", "abort"]
