@@ -105,11 +105,33 @@ class on_event:
         return self
 
     def __call__(self, func: Moddable[P]) -> Moddable[P]:
-        def wrapper(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+        def with_added_binding(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
             prompt_data.action_menu.add(self.event, functools.reduce(lambda b1, b2: b1 + b2, self.bindings))
             return func(prompt_data, *args, **kwargs)
 
-        return wrapper
+        return with_added_binding
+
+
+def automate(*to_execute: Binding | Hotkey):
+    def decorator(func: Moddable[P]) -> Moddable[P]:
+        def with_automatization(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+            prompt_data.action_menu.automate(*to_execute)
+            return func(prompt_data, *args, **kwargs)
+
+        return with_automatization
+
+    return decorator
+
+
+def automate_actions(*actions: Action):
+    def decorator(func: Moddable[P]) -> Moddable[P]:
+        def with_automatization(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+            prompt_data.action_menu.automate_actions(*actions)
+            return func(prompt_data, *args, **kwargs)
+
+        return with_automatization
+
+    return decorator
 
 
 PRESET_PREVIEWS = {

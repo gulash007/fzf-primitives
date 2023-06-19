@@ -21,6 +21,10 @@ def quit_app(prompt_data: PromptData):
     raise ExitLoop("Quitting app")
 
 
+@mods.automate(Binding("clear query", "clear-query", "clear-query"))
+@mods.automate("ctrl-a")
+@mods.automate_actions("toggle-all")
+@mods.automate("ctrl-q")
 # @mods.action.custom("Become hello", "become(printf 'hello\\nworld')", "ctrl-y")
 # @mods.action.get_current_preview("ctrl-c")
 @mods.on_event("ctrl-a").toggle_all
@@ -49,9 +53,5 @@ if __name__ == "__main__":
     logger.enable("")
     logger.info("TestPrompt running…")
     pd = PromptData(choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10])
-    pd.action_menu.automate(Binding("clear query", "clear-query", "clear-query"))
-    pd.action_menu.automate("ctrl-a")
-    pd.action_menu.automate_actions("toggle-all")
-    pd.action_menu.automate("ctrl-q")
     print(run(pd))
     # BasicLoop(lambda: run(PromptData(choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10]))).run_in_loop()
