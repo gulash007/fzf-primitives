@@ -511,7 +511,6 @@ class Server(Thread):
             for preview in prompt_data.previewer.previews.values()
             if isinstance(preview.command, ServerCall)
         }
-        logger.info(self.server_calls)
 
     def run(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
@@ -559,7 +558,6 @@ class Server(Thread):
     def resolve_all_server_calls(self, socket_number: int):
         for server_call in self.server_calls.values():
             server_call.resolve(socket_number)
-            logger.debug(server_call.value)
 
 
 if __name__ == "__main__":
