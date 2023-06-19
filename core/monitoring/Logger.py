@@ -30,6 +30,11 @@ def add_file_handler(file_name: str, level="DEBUG", format=LOG_FORMAT, colorize=
     )
 
 
+def clear_log_file(file_name: str):
+    with open(LOG_FILE_FOLDER.joinpath(f"{file_name}.log"), "r+") as f:
+        f.truncate(0)
+
+
 class HANDLERS:
     STDERR = logger.add(sys.stderr, level="DEBUG", format=LOG_FORMAT, colorize=True)
     MAIN_LOG_FILE = add_file_handler("main", level="DEBUG", format=LOG_FORMAT, colorize=True)
