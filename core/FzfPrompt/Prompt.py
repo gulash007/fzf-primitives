@@ -500,7 +500,7 @@ class Server(Thread):
         server_setup_finished: Event,
         server_should_close: Event,
     ) -> None:
-        super().__init__()
+        super().__init__(name="Server")
         self.prompt_data = prompt_data
         self.server_setup_finished = server_setup_finished
         self.server_should_close = server_should_close
