@@ -143,7 +143,7 @@ def focus_window(window_id: str):
     time.sleep(0.3)
 
 
-class EPD(ActionMenu):
+class ActionMenuWithWindows(ActionMenu):
     def __init__(self, windows: Windows) -> None:
         self.windows = windows
         super().__init__()
@@ -156,14 +156,14 @@ def close_window(prompt_data: PromptData):
     raise ExitRound
 
 
-@mods.on_event("ctrl-g")("Open windows.json", ShellCommand(f"code-insiders '{STORED_WINDOWS_PATH}'"))
+@mods.on_event("ctrl-g").run("Open windows.json", ShellCommand(f"code-insiders '{STORED_WINDOWS_PATH}'"))
 @mods.preview.custom(
     "List tabs",
     "source ~/.zshforchrome 2>/dev/null && echo {} | awk '{ print $1 }' | read -r window_id && brotab query -windowId ${window_id:2} | brotab_format_better_line",
     "ctrl-y",
 )
-@mods.on_event("ctrl-w")("Close window", PostProcessAction(close_window), end_prompt="accept")
-def run_window_selection_prompt(prompt_data: EPD) -> Result:
+@mods.on_event("ctrl-w").run("Close window", PostProcessAction(close_window), end_prompt="accept")
+def run_window_selection_prompt(prompt_data: PromptData) -> Result:
     return DefaultPrompt.run(prompt_data=prompt_data)
 
 
@@ -174,7 +174,7 @@ def run():
         run_window_selection_prompt(
             PromptData(
                 choices=sorted(window_mapping.values(), key=lambda x: (not x.name, str(x.name), x.active_tab.title)),
-                action_menu=EPD(windows),
+                action_menu=ActionMenuWithWindows(windows),
             )
         )[0]
     ]

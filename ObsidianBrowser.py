@@ -19,7 +19,7 @@ app = typer.Typer()
 
 
 # @mods.clip_output
-@mods.on_event("ctrl-o")("Obsidian: Open file", ACTION.obsidian_open_files)
+@mods.on_event("ctrl-o").run("Obsidian: Open file", ACTION.obsidian_open_files)
 @mods.ansi
 @mods.multiselect
 @mods.preview.file(language="markdown")("ctrl-y", window_size="80%")
