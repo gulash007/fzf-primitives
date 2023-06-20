@@ -25,13 +25,13 @@ def run(prompt_data: PromptData):
 def test_prompt():
     Logger.remove_handler("MAIN_LOG_FILE")
     Logger.remove_handler("STDERR")
-    recording = Recording()
+    recording = Recording(name="AutomatedTestPrompt")
     recording.enable_logging()
     pd = PromptData()
     run(pd)
     recording.save_result(pd.result)
-
-    expected = Recording.load()
+    recording.save()
+    expected = Recording.load("TestPrompt")
     assert expected.end_status == pd.result.end_status
     assert expected.event == pd.result.event
     assert expected.query == pd.result.query

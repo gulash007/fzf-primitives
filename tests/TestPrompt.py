@@ -47,7 +47,7 @@ if __name__ == "__main__":
     Logger.remove_handler("MAIN_LOG_FILE")
     Logger.remove_handler("STDERR")
     Logger.add_file_handler("TestPrompt")
-    recording = Recording()
+    recording = Recording(name="TestPrompt")
     recording.enable_logging()
     pd = PromptData()
     try:

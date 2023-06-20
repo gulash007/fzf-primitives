@@ -11,7 +11,7 @@ from ..core.FzfPrompt.options import FzfEvent, Hotkey
 from ..core.FzfPrompt.Prompt import PromptEndingAction, Result
 from ..core.monitoring.Logger import get_logger
 
-PATH = Path(__file__).parent.joinpath("recording.json")
+RECORDINGS_DIR = Path(__file__).parent.joinpath("recordings/")
 
 
 class Event(pydantic.BaseModel):
@@ -19,6 +19,7 @@ class Event(pydantic.BaseModel):
 
 
 class Recording(pydantic.BaseModel):
+    name: str
     events: list[Event] = []
     end_status: PromptEndingAction = None
     event: Hotkey | FzfEvent = None
@@ -51,13 +52,17 @@ class Recording(pydantic.BaseModel):
         logger.enable("")
 
     def save(self):
-        with open(PATH, "w", encoding="utf8") as f:
+        with open(self.get_path(self.name), "w", encoding="utf8") as f:
             f.write(self.json(indent=2))
 
     @classmethod
-    def load(cls):
-        return pydantic.parse_file_as(cls, PATH)
+    def load(cls, name: str):
+        return pydantic.parse_file_as(cls, cls.get_path(name))
+
+    @staticmethod
+    def get_path(name: str) -> Path:
+        return RECORDINGS_DIR.joinpath(f"{name}.json")
 
 
 if __name__ == "__main__":
-    print(Recording.load())
+    print(Recording.load("TestPrompt"))
