@@ -7,6 +7,7 @@ from ..core.FzfPrompt.constants import TOP_LEVEL_PACKAGE_PATH
 from ..core.FzfPrompt.exceptions import ExitLoop
 from ..core.FzfPrompt.Prompt import Action, Binding, PostProcessAction, PromptData, Result, ServerCall
 from ..core.monitoring import Logger
+from .Recording import Recording
 
 HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
 
@@ -21,10 +22,6 @@ def quit_app(prompt_data: PromptData):
     raise ExitLoop("Quitting app")
 
 
-@mods.automate(Binding("clear query", "clear-query", "clear-query"))
-@mods.automate("ctrl-a")
-@mods.automate_actions("toggle-all")
-@mods.automate("ctrl-q")
 # @mods.action.custom("Become hello", "become(printf 'hello\\nworld')", "ctrl-y")
 # @mods.action.get_current_preview("ctrl-c")
 @mods.on_event("ctrl-a").toggle_all
@@ -42,16 +39,21 @@ def quit_app(prompt_data: PromptData):
 @mods.exit_round_when_aborted("Aborted!")
 @mods.on_event("ctrl-c").clip_current_preview.run("abort", end_prompt="abort")
 def run(prompt_data: PromptData):
+    prompt_data.choices = [x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10]
     return BasePrompt.run(prompt_data)
 
 
 if __name__ == "__main__":
-    logger = Logger.get_logger()
     Logger.remove_handler("MAIN_LOG_FILE")
     Logger.remove_handler("STDERR")
     Logger.add_file_handler("TestPrompt")
-    logger.enable("")
-    logger.info("TestPrompt running…")
-    pd = PromptData(choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10])
-    print(run(pd))
+    recording = Recording()
+    recording.enable_logging()
+    pd = PromptData()
+    try:
+        run(pd)
+    except ExitLoop as e:
+        pass
+    recording.save_result(pd.result)
+    recording.save()
     # BasicLoop(lambda: run(PromptData(choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10]))).run_in_loop()
