@@ -145,10 +145,14 @@ def add_preview(
     hotkey: Hotkey,
     window_size: int | str = "50%",
     window_position: Position = "right",
+    preview_label: str | None = None,
+    store_output: bool = True,
 ):
     def decorator(func: Moddable[P]) -> Moddable[P]:
         def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-            prompt_data.add_preview(Preview(name, command, hotkey, window_size, window_position))
+            prompt_data.add_preview(
+                Preview(name, command, hotkey, window_size, window_position, preview_label, store_output)
+            )
             return func(prompt_data, *args, **kwargs)
 
         return with_preview
