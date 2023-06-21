@@ -278,11 +278,6 @@ BaseAction = Literal[
 Action = BaseAction | ParametrizedAction | PostProcessAction | ShellCommand
 
 
-# BUG: Sending 'change-preview' action doesn't make the preview "stick"
-# in  the sense that any other action that causes preview to update reverts the preview back
-# to the original preview (the one defined using --preview option);
-# therefore checking changes in preview using automated prompt is not advised
-# - sending actions is non-blocking
 class Automator(Thread):
     @property
     def port(self) -> str:
