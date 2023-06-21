@@ -4,13 +4,12 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-from thingies import shell_command
+from thingies import shell_command, url_encode
 
 from .core import DefaultPrompt, mods
-from .core.actions.actions import ACTION
 from .core.BasicLoop import BasicLoop
 from .core.FzfPrompt.options import Options
-from .core.FzfPrompt.Prompt import PromptData
+from .core.FzfPrompt.Prompt import PromptData, ServerCall
 
 DEFAULT_VAULT_PATH = Path("/Users/honza/Documents/HOLLY")
 
@@ -18,11 +17,22 @@ DEFAULT_VAULT_PATH = Path("/Users/honza/Documents/HOLLY")
 app = typer.Typer()
 
 
+def obsidian_open_files(prompt_data: PromptData, query: str, selections: list[str], vault_name: str = "HOLLY"):
+    for selection in selections:
+        note_name = url_encode(Path(selection).stem)
+        command = [
+            "open",
+            f"obsidian://advanced-uri?vault={vault_name}&commandid=workspace%253Anew-tab",
+            f"obsidian://open?vault={vault_name}&file={note_name}",
+        ]
+        shell_command(command)
+
+
 # @mods.clip_output
-@mods.on_event("ctrl-o").run("Obsidian: Open file", ACTION.obsidian_open_files)
+@mods.on_event("ctrl-o").run("Obsidian: Open file", ServerCall(obsidian_open_files))
 @mods.ansi
 @mods.multiselect
-@mods.preview.file(language="markdown")("ctrl-y", window_size="80%")
+@mods.preview("ctrl-y").file(language="markdown")
 def run_folder_browser_prompt(prompt_data: PromptData, dirpath: Path = DEFAULT_VAULT_PATH):
     prompt_data.choices = shell_command(
         f"cd {dirpath} && find . -name '*.md' -not -path 'ALFRED/Personal/*' | sed 's#^\\./##'"

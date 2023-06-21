@@ -22,6 +22,7 @@ from .FzfPrompt.Prompt import (
     ShellCommand,
 )
 from .monitoring.Logger import get_logger
+from thingies import shell_command
 
 P = ParamSpec("P")
 logger = get_logger()
@@ -172,15 +173,21 @@ class preview:
     def __init__(self, hotkey: Hotkey):
         self.hotkey: Hotkey = hotkey
 
-    # @staticmethod
-    # def file(language: str = "python", theme: str = "Solarized (light)"):
-    #     language_arg = f"--language {language}" if language else ""
-    #     theme_arg = f'--theme "{theme}"' if theme else ""
-    #     return functools.partial(
-    #         add_preview,
-    #         "View File",
-    #         f"python3.11 -m fzf_primitives.core.actions.view_file {{q}} {{+}} {language_arg} {theme_arg}",
-    #     )
+    def file(self, language: str = "python", theme: str = "Solarized (light)"):
+        def view_file(
+            prompt_data: PromptData,
+            selections: list[str],
+        ):
+            command = ["bat", "--color=always"]
+            if language:
+                command.extend(("--language", language))
+            if theme:
+                command.extend(("--theme", theme))
+            command.append("--")  # Fixes file names starting with a hyphen
+            command.extend(selections)
+            return shell_command(command)
+
+        return self("View File", view_file)
 
     def __call__(
         self,
