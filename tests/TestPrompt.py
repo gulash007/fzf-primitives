@@ -39,8 +39,9 @@ def quit_app_without_saving_recording(prompt_data: PromptData):
 @mods.on_event("ctrl-alt-q").run(
     "quit without saving recording", PostProcessAction(quit_app_without_saving_recording), end_prompt="abort"
 )
-@mods.preview.basic("ctrl-h")
-@mods.preview.custom(name="basic2", hotkey="ctrl-y", command="echo hello", window_size="50%", window_position="up")
+@mods.preview("ctrl-h").basic
+@mods.preview("ctrl-6").basic_indexed
+@mods.preview("ctrl-y")(name="basic2", command="echo hello", window_size="50%", window_position="up")
 @mods.multiselect
 @mods.exit_round_when_aborted("Aborted!")
 @mods.on_event("ctrl-c").clip_current_preview.run("abort", end_prompt="abort")

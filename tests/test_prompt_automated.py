@@ -16,6 +16,7 @@ HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
 
 @mods.automate_actions("up")
 @mods.automate_actions("down")
+@mods.automate("ctrl-6")
 @mods.automate("ctrl-y")
 @mods.automate("ctrl-h")
 @mods.automate("ctrl-a")
