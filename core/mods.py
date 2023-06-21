@@ -152,13 +152,20 @@ def add_preview(
 
 def preview_basic(prompt_data: PromptData, query: str, selection: str, selections: list[str]):
     sep = "\n\t"
-    # if indices:
-    #     selections = [f"{index}\t{selection}" for index, selection in zip(indices, selections)]
     return f"query: {query}\nselection: {selection}\nselections:\n\t{sep.join(selections)}"
+
+
+def preview_basic_indexed(
+    prompt_data: PromptData, query: str, selection: str, selections: list[str], index: int, indices: list[int]
+):
+    sep = "\n\t"
+    indexed_selections = [f"{i}\t{selection}" for i, selection in zip(indices, selections)]
+    return f"query: {query}\nselection: {selection}\nselections:\n\t{sep.join(indexed_selections)}"
 
 
 class preview:
     basic = functools.partial(add_preview, "basic", preview_basic)
+    basic_indexed = functools.partial(add_preview, "basic indexed", preview_basic_indexed)
     custom = staticmethod(add_preview)  # without staticmethod get_preview is treated like instance method
 
     @staticmethod
