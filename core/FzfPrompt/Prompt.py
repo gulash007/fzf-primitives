@@ -511,10 +511,17 @@ class ServerCall(ShellCommand):
     def __init__(self, function: ServerCallFunction, name: str | None = None) -> None:
         self.function = function
         self.name = name or function.__name__
+        self.resolved = False
         super().__init__(Template(get_json_creating_command(function)).safe_substitute({"server_call_name": self.name}))
 
     def resolve(self, socket_number: int) -> None:
         self.value = f"{self.value} | nc localhost {socket_number}"
+        self.resolved = True
+
+    def __str__(self) -> str:
+        if not self.resolved:
+            raise RuntimeError(f"{self.name} not resolved")
+        return super().__str__()
 
 
 class Server(Thread):
