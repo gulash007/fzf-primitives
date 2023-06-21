@@ -6,6 +6,7 @@ import json
 import shlex
 import socket
 import subprocess
+import time
 import traceback
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -49,7 +50,8 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
     options = prompt_data.resolve_options()
     logger.debug("\n".join(options.options))
 
-    prompt_data.action_menu.automator.start()
+    if prompt_data.action_menu.automator.to_execute:
+        prompt_data.action_menu.automator.start()
 
     # TODO: catch 130 in mods.exit_round_on_no_selection (rename it appropriately)
     # TODO: 🧊 Use subprocess.run without shell=True (need to change Options)
@@ -190,7 +192,7 @@ class Binding:
     def __add__(self, other: Self) -> Self:
         self.actions.extend(other.actions)
         self.name = f"{self.name}+{other.name}"
-        self.end_prompt = other.end_prompt
+        self.end_prompt = self.end_prompt
         return self
 
 
@@ -256,7 +258,7 @@ class ActionMenu:
         return post_processor(prompt_data) if post_processor else prompt_data.result
 
     def automate(self, *to_execute: Binding | Hotkey):
-        self.automator.to_execute.extend(to_execute)
+        self.automator.add_bindings(*to_execute)
 
     def automate_actions(self, *actions: Action):
         self.automate(Binding("anonymous actions", *actions))
@@ -265,6 +267,8 @@ class ActionMenu:
 PRESET_ACTIONS = {}
 # raw fzf actions that aren't parametrized or name of preset action
 BaseAction = Literal[
+    "up",
+    "down",
     "clear-query",
     "toggle-all",
     "select-all",
@@ -274,6 +278,11 @@ BaseAction = Literal[
 Action = BaseAction | ParametrizedAction | PostProcessAction | ShellCommand
 
 
+# BUG: Sending 'change-preview' action doesn't make the preview "stick"
+# in  the sense that any other action that causes preview to update reverts the preview back
+# to the original preview (the one defined using --preview option);
+# therefore checking changes in preview using automated prompt is not advised
+# - sending actions is non-blocking
 class Automator(Thread):
     @property
     def port(self) -> str:
@@ -290,21 +299,36 @@ class Automator(Thread):
         self.__port: str | None = None
         self._action_menu = action_menu
         self.to_execute: list[Binding | Hotkey] = []
-        self.x = Event()
+        self.starting_signal = Event()
+        self.binding_executed = Event()
+        self.move_to_next_binding_server_call = ServerCall(self.move_to_next_binding)
         super().__init__()
 
     def run(self):
-        self.x.wait()
-        for binding in [x if isinstance(x, Binding) else self._action_menu.bindings[x] for x in self.to_execute]:
-            self.execute_binding(binding)
+        try:
+            self.starting_signal.wait()
+            for binding in [x if isinstance(x, Binding) else self._action_menu.bindings[x] for x in self.to_execute]:
+                self.execute_binding(binding + Binding("move to next binding", self.move_to_next_binding_server_call))
+        except Exception as e:
+            logger.exception(e)
+            raise
+
+    def add_bindings(self, *bindings: Binding | Hotkey):
+        self.to_execute.extend(bindings)
 
     def execute_binding(self, binding: Binding):
         logger.debug(f"Automating {binding}")
         action_str = binding.resolve()
+        self.binding_executed.clear()
         if response := shell_command(shlex.join(["curl", "-XPOST", f"localhost:{self.port}", "-d", action_str])):
             if not response.startswith("unknown action:"):
                 logger.weirdness(response)
             raise RuntimeError(response)
+        self.binding_executed.wait()
+        time.sleep(0.3)
+
+    def move_to_next_binding(self, prompt_data: PromptData):
+        self.binding_executed.set()
 
     def resolve_options(self) -> Options:
         return Options().listen()
@@ -313,7 +337,7 @@ class Automator(Thread):
         """Utilizes the $FZF_PORT variable containing the port assigned to --listen option
         (or the one generated automatically when --listen=0)"""
         self.port = FZF_PORT
-        self.x.set()
+        self.starting_signal.set()
 
 
 class PreviewFunction(Protocol):
@@ -504,38 +528,45 @@ class Server(Thread):
         self.prompt_data = prompt_data
         self.server_setup_finished = server_setup_finished
         self.server_should_close = server_should_close
-        self.server_calls: dict[str, ServerCall] = {
-            action.name: action for action in prompt_data.action_menu.actions if isinstance(action, ServerCall)
-        } | {
-            preview.command.name: preview.command
-            for preview in prompt_data.previewer.previews.values()
-            if isinstance(preview.command, ServerCall)
-        }
+        self.server_calls: dict[str, ServerCall] = (
+            {action.name: action for action in prompt_data.action_menu.actions if isinstance(action, ServerCall)}
+            | {
+                preview.command.name: preview.command
+                for preview in prompt_data.previewer.previews.values()
+                if isinstance(preview.command, ServerCall)
+            }
+            | {
+                prompt_data.action_menu.automator.move_to_next_binding_server_call.name: prompt_data.action_menu.automator.move_to_next_binding_server_call
+            }
+        )
 
     def run(self):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-            server_socket.bind(("localhost", 0))
-            socket_specs = server_socket.getsockname()
-            socket_number = socket_specs[1]
-            self.resolve_all_server_calls(socket_number)
-            server_socket.listen()
-            logger.info(f"Server listening on {socket_specs}...")
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+                server_socket.bind(("localhost", 0))
+                socket_specs = server_socket.getsockname()
+                socket_number = socket_specs[1]
+                self.resolve_all_server_calls(socket_number)
+                server_socket.listen()
+                logger.info(f"Server listening on {socket_specs}...")
 
-            self.server_setup_finished.set()
-            server_socket.settimeout(0.05)
-            while True:
-                try:
-                    client_socket, addr = server_socket.accept()
-                except TimeoutError:
-                    if self.server_should_close.is_set():
-                        logger.info(f"Server closing with result: {self.prompt_data.result}")
-                        break
-                    continue
-                logger.info(f"Connection from {addr}")
-                self.handle_request(client_socket, self.prompt_data)
+                self.server_setup_finished.set()
+                server_socket.settimeout(0.05)
+                while True:
+                    try:
+                        client_socket, addr = server_socket.accept()
+                    except TimeoutError:
+                        if self.server_should_close.is_set():
+                            logger.info(f"Server closing with result: {self.prompt_data.result}")
+                            break
+                        continue
+                    logger.info(f"Connection from {addr}")
+                    self.handle_request(client_socket, self.prompt_data)
+        except Exception as e:
+            logger.exception(e)
+            raise
 
     def handle_request(self, client_socket: socket.socket, prompt_data: PromptData):
-        # print(client_socket)
         payload = bytearray()
         while r := client_socket.recv(1024):
             payload.extend(r)
@@ -550,7 +581,6 @@ class Server(Thread):
             return
         except Exception:
             response = traceback.format_exc()
-            # print(response)
         if response:
             client_socket.sendall(response.encode("utf-8"))
         client_socket.close()
