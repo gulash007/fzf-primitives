@@ -157,10 +157,9 @@ def close_window(prompt_data: PromptData):
 
 
 @mods.on_event("ctrl-g").run("Open windows.json", ShellCommand(f"code-insiders '{STORED_WINDOWS_PATH}'"))
-@mods.preview.custom(
+@mods.preview("ctrl-y")(
     "List tabs",
     "source ~/.zshforchrome 2>/dev/null && echo {} | awk '{ print $1 }' | read -r window_id && brotab query -windowId ${window_id:2} | brotab_format_better_line",
-    "ctrl-y",
 )
 @mods.on_event("ctrl-w").run("Close window", PostProcessAction(close_window), end_prompt="accept")
 def run_window_selection_prompt(prompt_data: PromptData) -> Result:
