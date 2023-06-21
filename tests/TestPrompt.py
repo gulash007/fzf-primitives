@@ -22,6 +22,10 @@ def quit_app(prompt_data: PromptData):
     raise ExitLoop("Quitting app")
 
 
+def quit_app_without_saving_recording(prompt_data: PromptData):
+    raise ExitLoop("Don't save recording")
+
+
 # @mods.action.custom("Become hello", "become(printf 'hello\\nworld')", "ctrl-y")
 # @mods.action.get_current_preview("ctrl-c")
 @mods.on_event("ctrl-a").toggle_all
@@ -33,6 +37,9 @@ def quit_app(prompt_data: PromptData):
 # @mods.action.clip_current_preview("ctrl-c")
 @mods.on_event("ctrl-q").run("quit", PostProcessAction(quit_app), end_prompt="abort")
 # @mods.on_event("ctrl-q").quit
+@mods.on_event("ctrl-alt-q").run(
+    "quit without saving recording", PostProcessAction(quit_app_without_saving_recording), end_prompt="abort"
+)
 @mods.preview.basic("ctrl-h")
 @mods.preview.custom(name="basic2", hotkey="ctrl-y", command="echo hello", window_size="50%", window_position="up")
 @mods.multiselect
@@ -46,14 +53,17 @@ def run(prompt_data: PromptData):
 if __name__ == "__main__":
     Logger.remove_handler("MAIN_LOG_FILE")
     Logger.remove_handler("STDERR")
-    Logger.add_file_handler("TestPrompt")
+    Logger.add_file_handler("TestPrompt", level="TRACE")
     recording = Recording(name="TestPrompt")
     recording.enable_logging()
     pd = PromptData()
+    save_recording = True
     try:
         run(pd)
     except ExitLoop as e:
-        pass
+        if str(e) == "Don't save recording":
+            save_recording = False
     recording.save_result(pd.result)
-    recording.save()
+    if save_recording:
+        recording.save()
     # BasicLoop(lambda: run(PromptData(choices=[x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10]))).run_in_loop()
