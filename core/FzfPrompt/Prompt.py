@@ -480,8 +480,8 @@ PLACEHOLDERS = {
     "query": "--arg query {q}",
     "selection": "--arg selection {}",
     "selections": "--argjson selections \"$(jq --compact-output --null-input '$ARGS.positional' --args {+})\"",
-    "index": "--arg selection {n}",
-    "indices": "--argjson selections \"$(jq --compact-output --null-input '$ARGS.positional' --args {+n})\"",
+    "index": "--arg index {n}",
+    "indices": "--argjson indices \"$(jq --compact-output --null-input '$ARGS.positional' --args {+n})\"",
 }
 
 
