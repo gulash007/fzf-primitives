@@ -62,11 +62,6 @@ def exit_round_when_aborted(message: str = ""):
     return decorator
 
 
-# TODO: make it somehow compatible with multi or throw it away
-# TODO: decorator factory type hinting
-# TODO: preview label
-
-
 def quit_app(prompt_data: PromptData):
     sep = "\n\t"
     raise ExitLoop(
@@ -88,7 +83,6 @@ class event_preset:
         return obj.run(self._name, *self._actions, end_prompt=self._end_prompt)
 
 
-# TODO: chaining?
 class on_event:
     clip = event_preset("clip selections", ShellCommand(SHELL_COMMAND.clip_selections))
     toggle_all = event_preset("toggle all", "toggle-all")
