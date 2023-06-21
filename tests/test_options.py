@@ -1,4 +1,4 @@
-from core.options import Options
+from ..core.FzfPrompt.options import Options
 
 
 def test_options_comparisons():
@@ -25,9 +25,8 @@ def test_options_comparisons():
 
 
 def test_options_type():
+    def assert_type_equality(x, t):
+        assert isinstance(x, t), f"{type(x)}: {x}"
+
     assert_type_equality(Options().ansi, Options)
     assert_type_equality(Options().ansi + Options().multiselect, Options)
-
-
-def assert_type_equality(x, t):
-    assert isinstance(x, t), f"{type(x)}: {x}"
