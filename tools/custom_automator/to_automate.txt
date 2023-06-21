@@ -1,0 +1,1 @@
+change-preview-window(50%,up)+change-preview(echo hello)+refresh-preview
