@@ -418,10 +418,11 @@ class Previewer:
         self.previews[preview.name] = preview
         action_menu.add(
             preview.hotkey,
+            # It's crucial that window change happens before preview change (see )
             Binding(
                 f"Change preview to '{preview.name}'",
-                PreviewChange(preview),
                 PreviewWindowChange(preview.window_size, preview.window_position),
+                PreviewChange(preview),
                 "refresh-preview",
             ),
         )
