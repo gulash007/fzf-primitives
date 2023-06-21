@@ -368,13 +368,11 @@ class Preview:
 
                 def execute_preview(
                     prompt_data: PromptData,
-                    # preview_output: str = CommandOutput(command),
                     preview_output: str = CommandOutput("echo $preview_output"),
                 ):
                     prompt_data.previewer.current_preview = prompt_data.previewer.previews[name]
                     prompt_data.previewer.previews[name].output = preview_output
                     logger.trace(f"Changing preview to '{name}'", preview=name)
-                    # return preview_output
 
                 self.command = ServerCall(execute_preview, f"Execute preview {self.name}")
                 self.command.value = f"preview_output=$({command}) && echo $preview_output && {self.command.value}"
