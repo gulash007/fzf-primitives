@@ -6,7 +6,7 @@ from typing import Callable, Generic, Literal, ParamSpec, Protocol, Self
 
 import clipboard
 
-from .FzfPrompt.commands import SHELL_COMMAND
+from .FzfPrompt.constants import SHELL_COMMAND
 from .FzfPrompt.exceptions import ExitLoop, ExitRound
 from .FzfPrompt.options import FzfEvent, Hotkey, Options, Position
 from .FzfPrompt.Prompt import (

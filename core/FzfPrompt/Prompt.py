@@ -21,7 +21,6 @@ import pydantic
 from thingies import shell_command
 
 from ..monitoring.Logger import get_logger
-from .commands.fzf_placeholders import PLACEHOLDERS
 from .exceptions import ExpectedException
 from .options import FzfEvent, Hotkey, Options, Position
 

@@ -3,7 +3,6 @@ from typing import Iterable
 
 from ..core import BasePrompt, mods
 from ..core.BasicLoop import BasicLoop
-from ..core.FzfPrompt.constants import TOP_LEVEL_PACKAGE_PATH
 from ..core.FzfPrompt.exceptions import ExitLoop
 from ..core.FzfPrompt.Prompt import Action, Binding, PostProcessAction, PromptData, Result, ServerCall
 from ..core.monitoring import Logger
