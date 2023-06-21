@@ -14,6 +14,8 @@ from .Recording import Recording
 HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
 
 
+@mods.automate_actions("up")
+@mods.automate_actions("down")
 @mods.automate("ctrl-y")
 @mods.automate("ctrl-h")
 @mods.automate("ctrl-a")
@@ -22,9 +24,11 @@ def run(prompt_data: PromptData):
     return TestPrompt.run(prompt_data)
 
 
+# ❗ Checking events might be non-deterministic. Try running this test multiple times
 def test_prompt():
     Logger.remove_handler("MAIN_LOG_FILE")
     Logger.remove_handler("STDERR")
+    Logger.add_file_handler("AutomatedTestPrompt", level="TRACE")
     recording = Recording(name="AutomatedTestPrompt")
     recording.enable_logging()
     pd = PromptData()

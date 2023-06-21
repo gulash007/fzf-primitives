@@ -15,7 +15,10 @@ RECORDINGS_DIR = Path(__file__).parent.joinpath("recordings/")
 
 
 class Event(pydantic.BaseModel):
-    ...
+    process: str
+    thread: str
+    function: str
+    extra: dict
 
 
 class Recording(pydantic.BaseModel):
@@ -27,7 +30,14 @@ class Recording(pydantic.BaseModel):
     selections: list[str] = None
 
     def __call__(self, message: loguru.Message):
-        self.events.append(Event())
+        self.events.append(
+            Event(
+                process=message.record["process"].name,
+                thread=message.record["thread"].name,
+                function=message.record["function"],
+                extra=message.record["extra"],
+            )
+        )
 
     def save_result(self, result: Result):
         self.end_status = result.end_status

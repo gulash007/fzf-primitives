@@ -379,6 +379,7 @@ class Preview:
             ):
                 prompt_data.previewer.current_preview = prompt_data.previewer.previews[preview_name]
                 prompt_data.previewer.previews[preview_name].output = preview_output
+                logger.trace(f"Changing preview to '{preview_name}'", preview=preview_name)
                 # return preview_output
 
             self.command = ServerCall(execute_preview, f"Execute preview {self.name}")
