@@ -15,6 +15,7 @@ from shutil import which
 from string import Template
 from threading import Event, Thread
 from typing import Any, Callable, Concatenate, Generic, Literal, NoReturn, ParamSpec, Protocol, Self, TypeVar
+import clipboard
 
 import pydantic
 from thingies import shell_command
@@ -337,6 +338,7 @@ class Automator(Thread):
         """Utilizes the $FZF_PORT variable containing the port assigned to --listen option
         (or the one generated automatically when --listen=0)"""
         self.port = FZF_PORT
+        clipboard.copy(FZF_PORT)
         self.starting_signal.set()
 
 
