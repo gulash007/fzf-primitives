@@ -129,11 +129,6 @@ def automate_actions(*actions: Action):
     return decorator
 
 
-PRESET_PREVIEWS = {
-    "basic": "/Users/honza/Documents/Projects/PythonPackages/fzf_primitives/.env/bin/python3.11 -m fzf_primitives.experimental.core.actions.preview_basic {q} {} {+}"
-}
-
-
 def add_preview(
     name: str,
     command: str | ServerCallFunction,
