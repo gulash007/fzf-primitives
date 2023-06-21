@@ -349,7 +349,7 @@ class Preview:
     def __init__(
         self,
         name: str,
-        command: str,
+        command: str | ServerCallFunction,
         hotkey: Hotkey,
         window_size: int | str = "50%",
         window_position: Position = "right",
@@ -363,24 +363,36 @@ class Preview:
         self.preview_label = preview_label
         self.output: str
 
-        if store_output:
+        if isinstance(command, str):
+            if store_output:
 
-            def execute_preview(
-                prompt_data: PromptData,
-                preview_name: str,
-                # preview_output: str = CommandOutput(command),
-                preview_output: str = CommandOutput("echo $preview_output"),
-            ):
-                prompt_data.previewer.current_preview = prompt_data.previewer.previews[preview_name]
-                prompt_data.previewer.previews[preview_name].output = preview_output
-                logger.trace(f"Changing preview to '{preview_name}'", preview=preview_name)
-                # return preview_output
+                def execute_preview(
+                    prompt_data: PromptData,
+                    # preview_output: str = CommandOutput(command),
+                    preview_output: str = CommandOutput("echo $preview_output"),
+                ):
+                    prompt_data.previewer.current_preview = prompt_data.previewer.previews[name]
+                    prompt_data.previewer.previews[name].output = preview_output
+                    logger.trace(f"Changing preview to '{name}'", preview=name)
+                    # return preview_output
 
-            self.command = ServerCall(execute_preview, f"Execute preview {self.name}")
-            self.command.value = f"preview_output=$({command}) && echo $preview_output && {self.command.value}"
-            self.command.safe_substitute({"preview_name": self.name})
+                self.command = ServerCall(execute_preview, f"Execute preview {self.name}")
+                self.command.value = f"preview_output=$({command}) && echo $preview_output && {self.command.value}"
+            else:
+                self.command = command
         else:
-            self.command = command
+
+            def execute_preview_with_enclosed_function(prompt_data: PromptData, **kwargs):
+                prompt_data.previewer.current_preview = prompt_data.previewer.previews[name]
+                logger.trace(f"Changing preview to '{name}'", preview=name)
+                preview_output = command(prompt_data, **kwargs)
+                if store_output:
+                    prompt_data.previewer.previews[name].output = preview_output
+                return prompt_data.previewer.previews[name].output
+
+            self.command = ServerCall(command, f"Execute preview {self.name}")
+            self.command.function = execute_preview_with_enclosed_function  # HACK
+            self.command.safe_substitute({"preview_name": self.name})
 
 
 class PreviewChange(ParametrizedAction):

@@ -18,6 +18,7 @@ from .FzfPrompt.Prompt import (
     PromptEndingAction,
     Result,
     ServerCall,
+    ServerCallFunction,
     ShellCommand,
 )
 from .monitoring.Logger import get_logger
@@ -135,7 +136,7 @@ PRESET_PREVIEWS = {
 
 def add_preview(
     name: str,
-    command: str,
+    command: str | ServerCallFunction,
     hotkey: Hotkey,
     window_size: int | str = "50%",
     window_position: Position = "right",
@@ -154,8 +155,15 @@ def add_preview(
     return decorator
 
 
+def preview_basic(prompt_data: PromptData, query: str, selection: str, selections: list[str]):
+    sep = "\n\t"
+    # if indices:
+    #     selections = [f"{index}\t{selection}" for index, selection in zip(indices, selections)]
+    return f"query: {query}\nselection: {selection}\nselections:\n\t{sep.join(selections)}"
+
+
 class preview:
-    basic = functools.partial(add_preview, "basic", PRESET_PREVIEWS["basic"])
+    basic = functools.partial(add_preview, "basic", preview_basic)
     custom = staticmethod(add_preview)  # without staticmethod get_preview is treated like instance method
 
     @staticmethod
