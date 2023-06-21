@@ -129,27 +129,6 @@ def automate_actions(*actions: Action):
     return decorator
 
 
-def add_preview(
-    name: str,
-    command: str | ServerCallFunction,
-    hotkey: Hotkey,
-    window_size: int | str = "50%",
-    window_position: Position = "right",
-    preview_label: str | None = None,
-    store_output: bool = True,
-):
-    def decorator(func: Moddable[P]) -> Moddable[P]:
-        def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-            prompt_data.add_preview(
-                Preview(name, command, hotkey, window_size, window_position, preview_label, store_output)
-            )
-            return func(prompt_data, *args, **kwargs)
-
-        return with_preview
-
-    return decorator
-
-
 def preview_basic(prompt_data: PromptData, query: str, selection: str, selections: list[str]):
     sep = "\n\t"
     return f"query: {query}\nselection: {selection}\nselections:\n\t{sep.join(selections)}"
@@ -163,20 +142,65 @@ def preview_basic_indexed(
     return f"query: {query}\nselection: {selection}\nselections:\n\t{sep.join(indexed_selections)}"
 
 
-class preview:
-    basic = functools.partial(add_preview, "basic", preview_basic)
-    basic_indexed = functools.partial(add_preview, "basic indexed", preview_basic_indexed)
-    custom = staticmethod(add_preview)  # without staticmethod get_preview is treated like instance method
+class preview_preset:
+    def __init__(
+        self,
+        name: str,
+        command: str | ServerCallFunction,
+        window_size: int | str = "50%",
+        window_position: Position = "right",
+        preview_label: str | None = None,
+        store_output: bool = True,
+    ) -> None:
+        self._name = name
+        self._command = command
+        self._window_size = window_size
+        self._window_position: Position = window_position
+        self._preview_label = preview_label
+        self._store_output = store_output
 
-    @staticmethod
-    def file(language: str = "python", theme: str = "Solarized (light)"):
-        language_arg = f"--language {language}" if language else ""
-        theme_arg = f'--theme "{theme}"' if theme else ""
-        return functools.partial(
-            add_preview,
-            "View File",
-            f"python3.11 -m fzf_primitives.core.actions.view_file {{q}} {{+}} {language_arg} {theme_arg}",
+    def __get__(self, obj: preview, objtype=None):
+        return obj(
+            self._name, self._command, self._window_size, self._window_position, self._preview_label, self._store_output
         )
+
+
+class preview:
+    basic = preview_preset("basic", preview_basic)
+    basic_indexed = preview_preset("basic indexed", preview_basic_indexed)
+
+    def __init__(self, hotkey: Hotkey):
+        self.hotkey: Hotkey = hotkey
+
+    # @staticmethod
+    # def file(language: str = "python", theme: str = "Solarized (light)"):
+    #     language_arg = f"--language {language}" if language else ""
+    #     theme_arg = f'--theme "{theme}"' if theme else ""
+    #     return functools.partial(
+    #         add_preview,
+    #         "View File",
+    #         f"python3.11 -m fzf_primitives.core.actions.view_file {{q}} {{+}} {language_arg} {theme_arg}",
+    #     )
+
+    def __call__(
+        self,
+        name: str,
+        command: str | ServerCallFunction,
+        window_size: int | str = "50%",
+        window_position: Position = "right",
+        preview_label: str | None = None,
+        store_output: bool = True,
+    ):
+        def decorator(func: Moddable[P]) -> Moddable[P]:
+            def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+                prompt_data.add_preview(
+                    Preview(name, command, self.hotkey, window_size, window_position, preview_label, store_output)
+                )
+                return func(prompt_data, *args, **kwargs)
+
+            return with_preview
+
+        return decorator
 
 
 def clip_output(output_processor: Callable[[str], str] | None = None):
