@@ -15,12 +15,13 @@ from shutil import which
 from string import Template
 from threading import Event, Thread
 from typing import Any, Callable, Concatenate, Generic, Literal, NoReturn, ParamSpec, Protocol, Self, TypeVar
-import clipboard
 
+import clipboard
 import pydantic
 from thingies import shell_command
 
 from ..monitoring.Logger import get_logger
+from .decorators import single_use_method
 from .exceptions import ExpectedException
 from .options import FzfEvent, Hotkey, Options, Position
 
@@ -47,15 +48,14 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
     server.start()
     server_setup_finished.wait()
 
-    options = prompt_data.resolve_options()
-    logger.debug("\n".join(options.options))
-
     if prompt_data.action_menu.automator.to_execute:
         prompt_data.action_menu.automator.start()
 
     # TODO: catch 130 in mods.exit_round_on_no_selection (rename it appropriately)
-    # TODO: 🧊 Use subprocess.run without shell=True (need to change Options)
+    # TODO: 🧊 Use subprocess.run without shell=True as [executable_path, *options] (need to change Options)
     try:
+        options = prompt_data.resolve_options()
+        logger.debug("\n".join(options.options))
         subprocess.run(
             f"{executable_path} {options}",
             shell=True,
@@ -466,6 +466,7 @@ class PromptData:
     def add_preview(self, preview: Preview):
         self.previewer.add(preview, self.action_menu)
 
+    @single_use_method
     def resolve_options(self) -> Options:
         return self.options + self.previewer.resolve_options() + self.action_menu.resolve_options()
 
