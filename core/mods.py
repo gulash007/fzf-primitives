@@ -5,6 +5,7 @@ import functools
 from typing import Callable, Generic, Literal, ParamSpec, Protocol, Self
 
 import clipboard
+from copy import deepcopy
 
 from .FzfPrompt.constants import SHELL_COMMAND
 from .FzfPrompt.exceptions import ExitLoop, ExitRound
@@ -94,15 +95,16 @@ class on_event:
 
     def __init__(self, event: Hotkey | FzfEvent):
         self.event: Hotkey | FzfEvent = event
-        self.bindings: list[Binding] = []
+        self.binding_constructors: list[Callable[[], Binding]] = []
 
     def run(self, name: str, *actions: Action, end_prompt: PromptEndingAction | Literal[False] = False) -> Self:
-        self.bindings.append(Binding(name, *actions, end_prompt=end_prompt))
+        self.binding_constructors.append(lambda: Binding(name, *deepcopy(actions), end_prompt=end_prompt))
         return self
 
     def __call__(self, func: Moddable[P]) -> Moddable[P]:
         def with_added_binding(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-            prompt_data.action_menu.add(self.event, functools.reduce(lambda b1, b2: b1 + b2, self.bindings))
+            bindings = (bc() for bc in self.binding_constructors)
+            prompt_data.action_menu.add(self.event, functools.reduce(lambda b1, b2: b1 + b2, bindings))
             return func(prompt_data, *args, **kwargs)
 
         return with_added_binding
