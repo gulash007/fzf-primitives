@@ -420,7 +420,7 @@ class Previewer:
         self.previews: dict[str, Preview] = {}
         self.current_preview: Preview | None = None
 
-    def add(self, preview: Preview, action_menu: ActionMenu, main: bool = False):
+    def add(self, preview: Preview, action_menu: ActionMenu, *, main: bool = False):
         if main or self.current_preview is None:
             self.current_preview = preview
         self.previews[preview.name] = preview
@@ -466,8 +466,8 @@ class PromptData:
             raise RuntimeError("No current preview")
         return self.previewer.current_preview.output
 
-    def add_preview(self, preview: Preview):
-        self.previewer.add(preview, self.action_menu)
+    def add_preview(self, preview: Preview, *, main: bool = False):
+        self.previewer.add(preview, self.action_menu, main=main)
 
     @single_use_method
     def resolve_options(self) -> Options:

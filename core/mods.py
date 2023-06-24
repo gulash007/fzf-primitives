@@ -172,8 +172,9 @@ class preview:
     basic = preview_preset("basic", preview_basic)
     basic_indexed = preview_preset("basic indexed", preview_basic_indexed)
 
-    def __init__(self, hotkey: Hotkey):
+    def __init__(self, hotkey: Hotkey, *, main: bool = False):
         self.hotkey: Hotkey = hotkey
+        self.main = main
 
     def file(self, language: str = "python", theme: str = "Solarized (light)"):
         def view_file(
@@ -203,7 +204,8 @@ class preview:
         def decorator(func: Moddable[P]) -> Moddable[P]:
             def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
                 prompt_data.add_preview(
-                    Preview(name, command, self.hotkey, window_size, window_position, preview_label, store_output)
+                    Preview(name, command, self.hotkey, window_size, window_position, preview_label, store_output),
+                    main=self.main,
                 )
                 return func(prompt_data, *args, **kwargs)
 
