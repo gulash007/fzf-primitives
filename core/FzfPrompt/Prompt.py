@@ -526,6 +526,7 @@ class ServerCall(ShellCommand):
         self.resolved = False
         super().__init__(Template(get_json_creating_command(function)).safe_substitute({"server_call_name": self.name}))
 
+    @single_use_method
     def resolve(self, socket_number: int) -> None:
         self.value = f"{self.value} | nc localhost {socket_number}"
         self.resolved = True
