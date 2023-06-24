@@ -189,11 +189,9 @@ class Binding:
         actions = [f"'{str(action)}'" for action in self.actions]
         return f"{self.name}: {' -> '.join(actions)}"
 
+    # TODO: Combine post_processors
     def __add__(self, other: Self) -> Self:
-        self.actions.extend(other.actions)
-        self.name = f"{self.name}+{other.name}"
-        self.end_prompt = self.end_prompt
-        return self
+        return self.__class__(f"{self.name}+{other.name}", *self.actions + other.actions, end_prompt=other.end_prompt)
 
 
 PromptEndingAction = Literal["accept", "abort"]
@@ -303,7 +301,12 @@ class Automator(Thread):
         try:
             self.starting_signal.wait()
             for binding in [x if isinstance(x, Binding) else self._action_menu.bindings[x] for x in self.to_execute]:
-                self.execute_binding(binding + Binding("move to next binding", self.move_to_next_binding_server_call))
+                self.execute_binding(
+                    binding
+                    + Binding(
+                        "move to next binding", self.move_to_next_binding_server_call, end_prompt=binding.end_prompt
+                    )
+                )
         except Exception as e:
             logger.exception(e)
             raise
