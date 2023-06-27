@@ -35,6 +35,7 @@ FZF_URL = "https://github.com/junegunn/fzf"
 # TODO: Unbind some default fzf hotkeys (add bind 'hk:ignore' options from left)
 # TODO: Solve other expected hotkeys
 # TODO: Use tempfile
+# TODO: Allow propagation of exceptions through nested prompts (relevant for quit_app)
 # ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable specified in vscode-insiders://file/Users/honza/.dotfiles/.zshforfzf:4
 def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
     if not which("fzf") and not executable_path:
@@ -42,14 +43,15 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
     else:
         executable_path = "fzf"
 
+    if (automator := prompt_data.action_menu.automator).should_run:
+        automator.add_port_resolution()
+        automator.start()
+
     server_setup_finished = Event()
     server_should_close = Event()
     server = Server(prompt_data, server_setup_finished, server_should_close)
     server.start()
     server_setup_finished.wait()
-
-    if prompt_data.action_menu.automator.to_execute:
-        prompt_data.action_menu.automator.start()
 
     # TODO: catch 130 in mods.exit_round_on_no_selection (rename it appropriately)
     # TODO: 🧊 Use subprocess.run without shell=True as [executable_path, *options] (need to change Options)
@@ -217,7 +219,6 @@ class ActionMenu:
         self.add("enter", Binding("accept", end_prompt="accept"))
         self.add("esc", Binding("abort", end_prompt="abort"))
         self.automator = Automator(self)
-        self.add("start", Binding("get automator port", ServerCall(self.automator.get_port_number)))
 
     @property
     def actions(self) -> list[Action]:
@@ -288,18 +289,24 @@ class Automator(Thread):
         self.__port = value
         logger.info(f"Automator listening on port {self.port}")
 
+    @property
+    def should_run(self) -> bool:
+        return bool(self.to_execute)
+
     def __init__(self, action_menu: ActionMenu) -> None:
         self.__port: str | None = None
         self._action_menu = action_menu
         self.to_execute: list[Binding | Hotkey] = []
-        self.starting_signal = Event()
+        self.port_resolved = Event()
         self.binding_executed = Event()
         self.move_to_next_binding_server_call = ServerCall(self.move_to_next_binding)
         super().__init__()
 
     def run(self):
         try:
-            self.starting_signal.wait()
+            while not self.port_resolved.is_set():
+                if not self.port_resolved.wait(timeout=5):
+                    logger.warning("Waiting for port to be resolved…")
             for binding in [x if isinstance(x, Binding) else self._action_menu.bindings[x] for x in self.to_execute]:
                 self.execute_binding(
                     binding
@@ -331,12 +338,15 @@ class Automator(Thread):
     def resolve_options(self) -> Options:
         return Options().listen()
 
+    def add_port_resolution(self):
+        self._action_menu.add("start", Binding("get automator port", ServerCall(self.get_port_number)))
+
     def get_port_number(self, prompt_data: PromptData, FZF_PORT: str):
         """Utilizes the $FZF_PORT variable containing the port assigned to --listen option
         (or the one generated automatically when --listen=0)"""
         self.port = FZF_PORT
         clipboard.copy(FZF_PORT)
-        self.starting_signal.set()
+        self.port_resolved.set()
 
 
 class PreviewFunction(Protocol):
@@ -473,6 +483,16 @@ class PromptData:
     def resolve_options(self) -> Options:
         return self.options + self.previewer.resolve_options() + self.action_menu.resolve_options()
 
+    @property
+    def server_calls(self) -> list[ServerCall]:
+        server_calls = [action for action in self.action_menu.actions if isinstance(action, ServerCall)]
+        server_calls.extend(
+            preview.command for preview in self.previewer.previews.values() if isinstance(preview.command, ServerCall)
+        )
+        if self.action_menu.automator.should_run:
+            server_calls.append(self.action_menu.automator.move_to_next_binding_server_call)
+        return server_calls
+
 
 class Request(pydantic.BaseModel):
     server_call_name: str
@@ -548,17 +568,7 @@ class Server(Thread):
         self.prompt_data = prompt_data
         self.server_setup_finished = server_setup_finished
         self.server_should_close = server_should_close
-        self.server_calls: dict[str, ServerCall] = (
-            {action.name: action for action in prompt_data.action_menu.actions if isinstance(action, ServerCall)}
-            | {
-                preview.command.name: preview.command
-                for preview in prompt_data.previewer.previews.values()
-                if isinstance(preview.command, ServerCall)
-            }
-            | {
-                prompt_data.action_menu.automator.move_to_next_binding_server_call.name: prompt_data.action_menu.automator.move_to_next_binding_server_call
-            }
-        )
+        self.server_calls: dict[str, ServerCall] = {sc.name: sc for sc in prompt_data.server_calls}
 
     def run(self):
         try:

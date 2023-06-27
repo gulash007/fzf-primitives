@@ -4,7 +4,7 @@ from typing import Iterable
 from ..core import BasePrompt, mods
 from ..core.BasicLoop import BasicLoop
 from ..core.FzfPrompt.exceptions import ExitLoop
-from ..core.FzfPrompt.Prompt import Action, Binding, PostProcessAction, PromptData, Result, ServerCall
+from ..core.FzfPrompt.Prompt import Action, Binding, PromptEndingAction, PromptData, Result, ServerCall
 from ..core.monitoring import Logger
 from .Recording import Recording
 
