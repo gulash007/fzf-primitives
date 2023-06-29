@@ -11,6 +11,8 @@ from .Recording import Recording
 HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
 
 # TEST ALL KINDS OF STUFF
+# TODO: test getting preview output
+# TODO: test mods.on_event preset bindings chaining
 
 
 def hello(prompt_data):
@@ -34,17 +36,17 @@ def quit_app_without_saving_recording(prompt_data: PromptData):
 # @mods.on_event("ctrl-c").run("whatever", ServerCall())
 # @mods.on_event("ctrl-c").run("whatever", )
 # @mods.action.clip_current_preview("ctrl-c")
-@mods.on_event("ctrl-q").run("quit", PostProcessAction(quit_app), end_prompt="abort")
+@mods.on_event("ctrl-q").run("quit", PromptEndingAction("abort", quit_app))
 # @mods.on_event("ctrl-q").quit
 @mods.on_event("ctrl-alt-q").run(
-    "quit without saving recording", PostProcessAction(quit_app_without_saving_recording), end_prompt="abort"
+    "quit without saving recording", PromptEndingAction("abort", quit_app_without_saving_recording)
 )
 @mods.preview("ctrl-h").basic
 @mods.preview("ctrl-6").basic_indexed
 @mods.preview("ctrl-y")(name="basic2", command="echo hello", window_size="50%", window_position="up")
 @mods.multiselect
 @mods.exit_round_when_aborted("Aborted!")
-@mods.on_event("ctrl-c").clip_current_preview.run("abort", end_prompt="abort")
+@mods.on_event("ctrl-c").clip_current_preview.accept
 def run(prompt_data: PromptData):
     prompt_data.choices = [x for x in HOLLY_VAULT.iterdir() if x.is_file()][:10]
     return BasePrompt.run(prompt_data)

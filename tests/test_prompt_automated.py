@@ -13,6 +13,7 @@ from .Recording import Recording
 
 HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
 
+# TODO: test resolved options (need to control for variables)
 
 @mods.automate_actions("up")
 @mods.automate_actions("down")

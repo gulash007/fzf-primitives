@@ -8,7 +8,7 @@ import loguru
 import pydantic
 
 from ..core.FzfPrompt.options import FzfEvent, Hotkey
-from ..core.FzfPrompt.Prompt import PromptEndingAction, Result
+from ..core.FzfPrompt.Prompt import EndStatus, Result
 from ..core.monitoring.Logger import get_logger
 
 RECORDINGS_DIR = Path(__file__).parent.joinpath("recordings/")
@@ -24,7 +24,7 @@ class Event(pydantic.BaseModel):
 class Recording(pydantic.BaseModel):
     name: str
     events: list[Event] = []
-    end_status: PromptEndingAction = None
+    end_status: EndStatus = None
     event: Hotkey | FzfEvent = None
     query: str = None
     selections: list[str] = None

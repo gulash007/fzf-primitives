@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import functools
-from typing import Callable, Generic, Literal, ParamSpec, Protocol, Self
+from typing import Callable, Generic, ParamSpec, Protocol, Self
 
 import clipboard
-from copy import deepcopy
+from thingies import shell_command
 
 from .FzfPrompt.constants import SHELL_COMMAND
 from .FzfPrompt.exceptions import ExitLoop, ExitRound
@@ -13,17 +13,15 @@ from .FzfPrompt.options import FzfEvent, Hotkey, Options, Position
 from .FzfPrompt.Prompt import (
     Action,
     Binding,
-    PostProcessAction,
     Preview,
     PromptData,
     PromptEndingAction,
     Result,
     ServerCall,
-    ServerCallFunction,
+    PreviewFunction,
     ShellCommand,
 )
 from .monitoring.Logger import get_logger
-from thingies import shell_command
 
 P = ParamSpec("P")
 logger = get_logger()
@@ -76,29 +74,30 @@ def clip_current_preview(prompt_data: PromptData):
     clipboard.copy(prompt_data.get_current_preview())
 
 
-class event_preset:
-    def __init__(self, name: str, *actions: Action, end_prompt: PromptEndingAction | Literal[False] = False) -> None:
+class binding_preset:
+    def __init__(self, name: str, *actions: Action | ShellCommand) -> None:
         self._name = name
         self._actions = actions
-        self._end_prompt: PromptEndingAction | Literal[False] = end_prompt
 
     def __get__(self, obj: on_event, objtype=None) -> on_event:
-        return obj.run(self._name, *self._actions, end_prompt=self._end_prompt)
+        return obj.run(self._name, *self._actions)
 
 
 class on_event:
-    clip = event_preset("clip selections", ShellCommand(SHELL_COMMAND.clip_selections))
-    toggle_all = event_preset("toggle all", "toggle-all")
-    select_all = event_preset("select all", "select-all")
-    quit = event_preset("quit", PostProcessAction(quit_app), end_prompt="abort")
-    clip_current_preview = event_preset("clip current preview", ServerCall(clip_current_preview))
+    accept = binding_preset("accept", "accept")
+    abort = binding_preset("abort", "abort")
+    clip = binding_preset("clip selections", ShellCommand(SHELL_COMMAND.clip_selections))
+    toggle_all = binding_preset("toggle all", "toggle-all")
+    select_all = binding_preset("select all", "select-all")
+    quit = binding_preset("quit", PromptEndingAction("abort", quit_app))
+    clip_current_preview = binding_preset("clip current preview", ServerCall(clip_current_preview))
 
     def __init__(self, event: Hotkey | FzfEvent):
         self.event: Hotkey | FzfEvent = event
         self.binding_constructors: list[Callable[[], Binding]] = []
 
-    def run(self, name: str, *actions: Action, end_prompt: PromptEndingAction | Literal[False] = False) -> Self:
-        self.binding_constructors.append(lambda: Binding(name, *deepcopy(actions), end_prompt=end_prompt))
+    def run(self, name: str, *actions: Action | ShellCommand) -> Self:
+        self.binding_constructors.append(lambda: Binding(name, *actions))
         return self
 
     def __call__(self, func: Moddable[P]) -> Moddable[P]:
@@ -149,7 +148,7 @@ class preview_preset:
     def __init__(
         self,
         name: str,
-        command: str | ServerCallFunction,
+        command: str | PreviewFunction,
         window_size: int | str = "50%",
         window_position: Position = "right",
         preview_label: str | None = None,
@@ -195,7 +194,7 @@ class preview:
     def __call__(
         self,
         name: str,
-        command: str | ServerCallFunction,
+        command: str | PreviewFunction,
         window_size: int | str = "50%",
         window_position: Position = "right",
         preview_label: str | None = None,

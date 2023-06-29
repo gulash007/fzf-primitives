@@ -3,18 +3,17 @@ from __future__ import annotations
 
 import inspect
 import json
+import re
 import shlex
 import socket
 import subprocess
 import time
 import traceback
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from shutil import which
-from string import Template
 from threading import Event, Thread
-from typing import Any, Callable, Concatenate, Generic, Literal, NoReturn, ParamSpec, Protocol, Self, TypeVar
+from typing import Callable, Concatenate, Generic, Literal, ParamSpec, Protocol, Self, Type, TypeVar
 
 import clipboard
 import pydantic
@@ -23,7 +22,9 @@ from thingies import shell_command
 from ..monitoring.Logger import get_logger
 from .decorators import single_use_method
 from .exceptions import ExpectedException
-from .options import FzfEvent, Hotkey, Options, Position
+from .options import FzfEvent, Hotkey, Options, ParametrizedOptionString, Position
+
+T = TypeVar("T")
 
 logger = get_logger()
 ACCEPT_HOTKEY: Hotkey = "enter"
@@ -72,12 +73,11 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
     server.join()
     if isinstance(e := prompt_data.result.exception, ExpectedException):
         raise e
-    return prompt_data.action_menu.get_result(prompt_data)
-    # result = Result(FzfPrompt(executable_path).prompt(prompt_data.choices, str(options), delimiter))
-    # return prompt_data.action_menu.process_result(result)
+    prompt_data.action_menu.apply_post_processor(prompt_data)
+    return prompt_data.result
 
 
-T = TypeVar("T")
+EndStatus = Literal["accept", "abort"]
 
 
 class ResultAttr(Generic[T]):
@@ -97,6 +97,19 @@ class ResultAttr(Generic[T]):
     def __set__(self, obj: Result, value: T):
         self._is_set = True
         self._value = value
+
+
+class Result(list[str]):
+    end_status = ResultAttr[EndStatus]()
+    event = ResultAttr[Hotkey | FzfEvent]()
+    query = ResultAttr[str]()
+
+    def __init__(self) -> None:
+        self.exception: ExpectedException | None = None
+        super().__init__()
+
+    def __str__(self) -> str:
+        return json.dumps({"status": self.end_status, "event": self.event, "query": self.query, "selections": self})
 
 
 # TODO: Ability to output preview in Result (or anything else)
@@ -129,143 +142,23 @@ class ResultAttr(Generic[T]):
 # TODO: enforce post-process actions to end prompt
 
 
-class ShellCommand:
-    def __init__(self, value: str) -> None:
-        self.value = value
-
-    # TODO: check finalization for easier testing
-    def safe_substitute(self, mapping: dict) -> None:
-        """replaces $key present in .command with value"""
-        self.value = Template(self.value).safe_substitute(mapping)
-
-    def __str__(self) -> str:
-        return self.value
+class ShellCommand(ParametrizedOptionString):
+    ...
 
 
-class ParametrizedAction(ABC):
-    @abstractmethod
-    def __str__(self) -> str:
-        """To resolve into fzf options"""
+class ParametrizedAction(ParametrizedOptionString):
+    ...
 
 
-class PostProcessor(Protocol):
-    __name__: str
-
-    @staticmethod
-    def __call__(prompt_data: PromptData) -> Result | NoReturn:
-        ...
+ShellCommandActionType = Literal["execute", "execute-silent", "change-preview"]
+AnyShellCommand = TypeVar("AnyShellCommand", bound=ShellCommand)
+AnyParametrizedAction = TypeVar("AnyParametrizedAction", bound=ParametrizedAction)
 
 
-class PostProcessAction:
-    """Requires program to know what event happened (what hotkey was pressed)"""
-
-    def __init__(self, post_processor: PostProcessor) -> None:
-        self.post_processor = post_processor
-
-    def __str__(self) -> str:
-        return self.post_processor.__name__
-
-
-class Binding:
-    def __init__(self, name: str, /, *actions: Action, end_prompt: PromptEndingAction | Literal[False] = False):
-        self.name = name
-        self.actions: list[Action] = list(actions)
-        self.end_prompt: PromptEndingAction | Literal[False] = end_prompt
-        post_process_action_count = sum(isinstance(action, PostProcessAction) for action in actions)
-        if post_process_action_count > 0 and not self.end_prompt:
-            raise RuntimeError("Post-process action needs prompt to end")
-        if post_process_action_count > 1:
-            raise RuntimeError(f"Multiple post-process actions disallowed ({post_process_action_count})")
-
-    def resolve(self) -> str:
-        action_strings = [
-            f"execute({action})" if isinstance(action, ShellCommand) else str(action)
-            for action in self.actions
-            if not isinstance(action, PostProcessAction)
-        ]
-        if self.end_prompt:
-            action_strings.append("abort")
-        return "+".join(action_strings)
-
-    def __str__(self) -> str:
-        actions = [f"'{str(action)}'" for action in self.actions]
-        return f"{self.name}: {' -> '.join(actions)}"
-
-    # TODO: Combine post_processors
-    def __add__(self, other: Self) -> Self:
-        return self.__class__(f"{self.name}+{other.name}", *self.actions + other.actions, end_prompt=other.end_prompt)
-
-
-PromptEndingAction = Literal["accept", "abort"]
-
-
-class Result(list[str]):
-    end_status = ResultAttr[PromptEndingAction]()
-    event = ResultAttr[Hotkey | FzfEvent]()
-    query = ResultAttr[str]()
-
-    def __init__(self) -> None:
-        self.exception: ExpectedException | None = None
-        super().__init__()
-
-    def __str__(self) -> str:
-        return json.dumps({"status": self.end_status, "event": self.event, "query": self.query, "selections": self})
-
-
-class ActionMenu:
-    def __init__(self) -> None:
-        self.bindings: dict[Hotkey | FzfEvent, Binding] = {}
-        self.post_processors: dict[Hotkey | FzfEvent, PostProcessor] = {}
-        self.add("enter", Binding("accept", end_prompt="accept"))
-        self.add("esc", Binding("abort", end_prompt="abort"))
-        self.automator = Automator(self)
-
-    @property
-    def actions(self) -> list[Action]:
-        return [action for binding in self.bindings.values() for action in binding.actions]
-
-    def add(self, event: Hotkey | FzfEvent, binding: Binding):
-        if event in self.bindings:
-            raise RuntimeError(f"Hotkey conflict ({event}): {binding.name} vs {self.bindings[event].name}")
-        self.bindings[event] = binding
-        for action in binding.actions:
-            if isinstance(action, PostProcessAction):
-                self.post_processors[event] = action.post_processor
-        if binding.end_prompt:
-            end_status = binding.end_prompt
-
-            def pipe_results(prompt_data: PromptData, query: str, selections: list[str]):
-                prompt_data.result.query = query
-                prompt_data.result.event = event
-                prompt_data.result.end_status = end_status
-                prompt_data.result.extend(selections)
-                logger.debug("Piping results")
-                logger.debug(prompt_data.result)
-
-            server_call_name = f"pipe results ({event})"
-            binding.actions.append(ServerCall(pipe_results, server_call_name))
-
-    def resolve_options(self) -> Options:
-        options = Options()
-        for event, binding in self.bindings.items():
-            options.bind(event, binding.resolve())
-        header_help = "\n".join(f"{event}\t{action.name}" for event, action in self.bindings.items())
-        return options.header(header_help).header_first + self.automator.resolve_options()
-
-    def get_result(self, prompt_data: PromptData):
-        post_processor = self.post_processors.get(prompt_data.result.event)
-        return post_processor(prompt_data) if post_processor else prompt_data.result
-
-    def automate(self, *to_execute: Binding | Hotkey):
-        self.automator.add_bindings(*to_execute)
-
-    def automate_actions(self, *actions: Action):
-        self.automate(Binding("anonymous actions", *actions))
-
-
-PRESET_ACTIONS = {}
 # raw fzf actions that aren't parametrized or name of preset action
 BaseAction = Literal[
+    "accept",
+    "abort",
     "up",
     "down",
     "clear-query",
@@ -274,9 +167,137 @@ BaseAction = Literal[
     "refresh-preview",
 ]
 # Action can just be a string if you know what you're doing (look in `man fzf` for what can be assigned to '--bind')
-Action = BaseAction | ParametrizedAction | PostProcessAction | ShellCommand
+Action = BaseAction | ParametrizedAction | tuple[ShellCommand, ShellCommandActionType]
+
+# native fzf options may be overwritten here
+PRESET_ACTIONS = {
+    "accept": lambda: PromptEndingAction("accept"),
+    "abort": lambda: PromptEndingAction("abort"),
+}
 
 
+class Binding:
+    def __init__(self, name: str, /, *actions: Action | ShellCommand):
+        """❗ Careful about mutating actions before they're passed into Binding constructor as those mutations are lost"""
+        self.name = name  # only descriptive function
+        # Ensure a new binding also has new unresolved actions
+        self.actions: list[Action] = []
+        for action in actions:
+            if isinstance(action, ShellCommand):
+                action = (action, "execute")
+            if isinstance(action, tuple):
+                self.actions.append((action[0].new_copy(), action[1]))
+            elif isinstance(action, ParametrizedAction):
+                self.actions.append(action.new_copy())
+            elif isinstance(action, str) and (preset_action_factory := PRESET_ACTIONS.get(action)):
+                self.actions.append(preset_action_factory())
+            else:
+                self.actions.append(action)
+
+    @property
+    def prompt_ending_action_count(self) -> int:
+        return len(self.parametrized_actions(PromptEndingAction))
+
+    def to_action_string(self) -> str:
+        if self.prompt_ending_action_count > 1:
+            # TODO: Allow multiple prompt-ending actions
+            raise RuntimeError(f"Multiple prompt-ending actions disallowed ({self.prompt_ending_action_count})")
+        try:
+            action_strings = [
+                f"{action[1]}({action[0].to_action_string()})"
+                if isinstance(action, tuple)
+                else action.to_action_string()
+                if isinstance(action, (ParametrizedAction))
+                else action
+                for action in self.actions
+            ]
+        except RuntimeError as e:
+            raise RuntimeError(f"{self.name}: {e}") from e
+        return "+".join(action_strings)
+
+    # TODO: Combine post_processors
+    def __add__(self, other: Self) -> Self:
+        return self.__class__(f"{self.name}+{other.name}", *(self.actions + other.actions))
+
+    def __str__(self) -> str:
+        actions = [f"'{str(action)}'" for action in self.actions]
+        return f"{self.name}: {' -> '.join(actions)}"
+
+    def shell_command_actions(
+        self, shell_command_type: Type[AnyShellCommand]
+    ) -> list[tuple[AnyShellCommand, ShellCommandActionType]]:
+        return [
+            (action[0], action[1])
+            for action in self.actions
+            if isinstance(action, tuple) and isinstance(action[0], shell_command_type)
+        ]
+
+    def parametrized_actions(
+        self, parametrized_action_type: Type[AnyParametrizedAction]
+    ) -> list[AnyParametrizedAction]:
+        return [action for action in self.actions if isinstance(action, parametrized_action_type)]
+
+
+class ActionMenu:
+    def __init__(self) -> None:
+        self.bindings: dict[Hotkey | FzfEvent, Binding] = {}
+        self.post_processors: dict[Hotkey | FzfEvent, PostProcessor] = {}
+        self.add("enter", Binding("accept", "accept"))
+        self.add("esc", Binding("abort", "accept"))
+        self.automator = Automator(self)
+
+    @property
+    def actions(self) -> list[Action]:
+        return [action for binding in self.bindings.values() for action in binding.actions]
+
+    def shell_command_actions(
+        self, shell_command_type: Type[AnyShellCommand]
+    ) -> list[tuple[AnyShellCommand, ShellCommandActionType]]:
+        return [
+            action for binding in self.bindings.values() for action in binding.shell_command_actions(shell_command_type)
+        ]
+
+    def parametrized_actions(
+        self, parametrized_action_type: Type[AnyParametrizedAction]
+    ) -> list[AnyParametrizedAction]:
+        return [
+            action
+            for binding in self.bindings.values()
+            for action in binding.parametrized_actions(parametrized_action_type)
+        ]
+
+    def add(self, event: Hotkey | FzfEvent, binding: Binding):
+        if event in self.bindings:
+            raise RuntimeError(f"Hotkey conflict ({event}): {binding.name} vs {self.bindings[event].name}")
+        self.bindings[event] = binding
+        for action in binding.actions:
+            if isinstance(action, PromptEndingAction):
+                if action.post_processor:
+                    self.post_processors[event] = action.post_processor
+                action.resolve_event(event)
+
+    # TODO: silent binding (doesn't appear in header help)?
+    def resolve_options(self) -> Options:
+        options = Options()
+        for event, binding in self.bindings.items():
+            options.bind(event, binding.to_action_string())
+        header_help = "\n".join(f"{event}\t{action.name}" for event, action in self.bindings.items())
+        return options.header(header_help).header_first + self.automator.resolve_options()
+
+    @single_use_method
+    def apply_post_processor(self, prompt_data: PromptData):
+        if post_processor := self.post_processors.get(prompt_data.result.event):
+            post_processor(prompt_data)
+
+    def automate(self, *to_execute: Binding | Hotkey):
+        self.automator.add_bindings(*to_execute)
+
+    def automate_actions(self, *actions: Action):
+        self.automate(Binding("anonymous actions", *actions))
+
+
+# TODO: Can be invoked as prompt (like old action menu) in a subshell
+# TODO: Custom automation can be used to invoke customized commands such as put(...)
 class Automator(Thread):
     @property
     def port(self) -> str:
@@ -307,13 +328,12 @@ class Automator(Thread):
             while not self.port_resolved.is_set():
                 if not self.port_resolved.wait(timeout=5):
                     logger.warning("Waiting for port to be resolved…")
-            for binding in [x if isinstance(x, Binding) else self._action_menu.bindings[x] for x in self.to_execute]:
-                self.execute_binding(
-                    binding
-                    + Binding(
-                        "move to next binding", self.move_to_next_binding_server_call, end_prompt=binding.end_prompt
-                    )
-                )
+            for binding_to_automate in [
+                x if isinstance(x, Binding) else self._action_menu.bindings[x] for x in self.to_execute
+            ]:
+                binding = Binding(f"{binding_to_automate.name}+move to next binding")
+                binding.actions = binding_to_automate.actions + [(self.move_to_next_binding_server_call, "execute")]
+                self.execute_binding(binding)
         except Exception as e:
             logger.exception(e)
             raise
@@ -323,7 +343,7 @@ class Automator(Thread):
 
     def execute_binding(self, binding: Binding):
         logger.debug(f"Automating {binding}")
-        action_str = binding.resolve()
+        action_str = binding.to_action_string()
         self.binding_executed.clear()
         if response := shell_command(shlex.join(["curl", "-XPOST", f"localhost:{self.port}", "-d", action_str])):
             if not response.startswith("unknown action:"):
@@ -336,7 +356,7 @@ class Automator(Thread):
         self.binding_executed.set()
 
     def resolve_options(self) -> Options:
-        return Options().listen()
+        return Options().listen() if self.should_run else Options()
 
     def add_port_resolution(self):
         self._action_menu.add("start", Binding("get automator port", ServerCall(self.get_port_number)))
@@ -349,151 +369,6 @@ class Automator(Thread):
         self.port_resolved.set()
 
 
-class PreviewFunction(Protocol):
-    @staticmethod
-    def __call__(query: str, selection: str, selections: list[str]) -> str:
-        ...
-
-
-@dataclass
-class Preview:
-    # TODO: | Event
-    # TODO: implement ServerCall commands
-    def __init__(
-        self,
-        name: str,
-        command: str | ServerCallFunction,
-        hotkey: Hotkey,
-        window_size: int | str = "50%",
-        window_position: Position = "right",
-        preview_label: str | None = None,
-        store_output: bool = True,
-    ):
-        self.name = name
-        self.hotkey: Hotkey = hotkey
-        self.window_size = window_size
-        self.window_position: Position = window_position
-        self.preview_label = preview_label
-        self.output: str
-
-        if isinstance(command, str):
-            if store_output:
-
-                def execute_preview(
-                    prompt_data: PromptData,
-                    preview_output: str = CommandOutput("echo $preview_output"),
-                ):
-                    prompt_data.previewer.current_preview = prompt_data.previewer.previews[name]
-                    prompt_data.previewer.previews[name].output = preview_output
-                    logger.trace(f"Changing preview to '{name}'", preview=name)
-
-                self.command = ServerCall(execute_preview, f"Execute preview {self.name}")
-                self.command.value = f"preview_output=$({command}) && echo $preview_output && {self.command.value}"
-            else:
-                self.command = command
-        else:
-
-            def execute_preview_with_enclosed_function(prompt_data: PromptData, **kwargs):
-                prompt_data.previewer.current_preview = prompt_data.previewer.previews[name]
-                logger.trace(f"Changing preview to '{name}'", preview=name)
-                preview_output = command(prompt_data, **kwargs)
-                if store_output:
-                    prompt_data.previewer.previews[name].output = preview_output
-                return prompt_data.previewer.previews[name].output
-
-            self.command = ServerCall(command, f"Execute preview {self.name}")
-            self.command.function = execute_preview_with_enclosed_function  # HACK
-            self.command.safe_substitute({"preview_name": self.name})
-
-
-class PreviewChange(ParametrizedAction):
-    def __init__(self, preview: Preview) -> None:
-        self.shell_command = preview.command
-
-    def __str__(self) -> str:
-        return f"change-preview({self.shell_command})"
-
-
-class PreviewWindowChange(ParametrizedAction):
-    def __init__(self, window_size: int | str, window_position: Position) -> None:
-        self.window_size = window_size
-        self.window_position = window_position
-
-    def __str__(self) -> str:
-        return f"change-preview-window({self.window_size},{self.window_position})"
-
-
-class Previewer:
-    """Handles passing right preview options"""
-
-    def __init__(self) -> None:
-        self.previews: dict[str, Preview] = {}
-        self.current_preview: Preview | None = None
-
-    def add(self, preview: Preview, action_menu: ActionMenu, *, main: bool = False):
-        if main or self.current_preview is None:
-            self.current_preview = preview
-        self.previews[preview.name] = preview
-        action_menu.add(
-            preview.hotkey,
-            # It's crucial that window change happens before preview change (see )
-            Binding(
-                f"Change preview to '{preview.name}'",
-                PreviewWindowChange(preview.window_size, preview.window_position),
-                PreviewChange(preview),
-                "refresh-preview",
-            ),
-        )
-
-    def resolve_options(self) -> Options:
-        if self.current_preview is None:  # Meaning no preview was added
-            return Options()
-
-        options = (
-            Options()
-            .preview(str(self.current_preview.command))
-            .preview_window(self.current_preview.window_position, self.current_preview.window_size)
-        )
-
-        # for preview_name, preview in self.previews.items(): # TODO: attach change preview hotkey
-        #     options.bind(preview.hotkey, f"execute({RequestCommand(preview_name, socket_number)})")
-        return options
-
-
-@dataclass
-class PromptData:
-    """Accessed through socket Server"""
-
-    id: str = field(init=False, default_factory=lambda: datetime.now().isoformat())
-    choices: list = field(default_factory=list)
-    previewer: Previewer = field(default_factory=Previewer)
-    action_menu: ActionMenu = field(default_factory=ActionMenu)
-    options: Options = field(default_factory=Options)
-    result: Result = field(init=False, default_factory=Result)
-
-    def get_current_preview(self) -> str:
-        if not self.previewer.current_preview:
-            raise RuntimeError("No current preview")
-        return self.previewer.current_preview.output
-
-    def add_preview(self, preview: Preview, *, main: bool = False):
-        self.previewer.add(preview, self.action_menu, main=main)
-
-    @single_use_method
-    def resolve_options(self) -> Options:
-        return self.options + self.previewer.resolve_options() + self.action_menu.resolve_options()
-
-    @property
-    def server_calls(self) -> list[ServerCall]:
-        server_calls = [action for action in self.action_menu.actions if isinstance(action, ServerCall)]
-        server_calls.extend(
-            preview.command for preview in self.previewer.previews.values() if isinstance(preview.command, ServerCall)
-        )
-        if self.action_menu.automator.should_run:
-            server_calls.append(self.action_menu.automator.move_to_next_binding_server_call)
-        return server_calls
-
-
 class Request(pydantic.BaseModel):
     server_call_name: str
     args: list = []
@@ -501,11 +376,11 @@ class Request(pydantic.BaseModel):
 
 
 PLACEHOLDERS = {
-    "query": "--arg query {q}",
-    "selection": "--arg selection {}",
-    "selections": "--argjson selections \"$(jq --compact-output --null-input '$ARGS.positional' --args {+})\"",
-    "index": "--argjson index {n}",
-    "indices": "--argjson indices \"$(jq --compact-output --null-input '[$ARGS.positional[] | tonumber]' --args {+n})\"",
+    "query": "--arg query {q}",  # type str
+    "selection": "--arg selection {}",  # type str
+    "selections": "--argjson selections \"$(jq --compact-output --null-input '$ARGS.positional' --args {+})\"",  # type list[str]
+    "index": "--argjson index {n}",  # type int
+    "indices": "--argjson indices \"$(jq --compact-output --null-input '[$ARGS.positional[] | tonumber]' --args {+n})\"",  # type list[int]
 }
 
 
@@ -513,63 +388,94 @@ class CommandOutput(str):
     ...
 
 
-def get_json_creating_command(function: Callable) -> str:
-    parameters = list(inspect.signature(function).parameters.values())[1:]  # excludes prompt_data
-    jq_args = []
-    for parameter in parameters:
-        if placeholder := PLACEHOLDERS.get(parameter.name):
-            jq_args.append(placeholder)
-        elif isinstance(parameter.default, CommandOutput):
-            jq_args.append(f'--arg {parameter.name} "$({parameter.default})"')
-        else:
-            # to be replaced using string.Template.safe_substitute or is an environment variable
-            jq_args.append(f'--arg {parameter.name} "${parameter.name}"')
-
-    return (
-        'jq --null-input --compact-output \'{"server_call_name":"$server_call_name", "kwargs":$ARGS.named}\' '
-        + " ".join(jq_args)
-    )
-
-
 P = ParamSpec("P")
-ServerCallFunction = Callable[Concatenate[PromptData, P], Any]
+R = TypeVar("R", bound=str | None)
+# means it requires first paramketer to be of type PromptData but other parameters can be anything
+ServerCallFunction = Callable[Concatenate["PromptData", P], R]
 
 
 # TODO: Add support for index {n} and indices {+n}
 # TODO: Will logging slow it down too much?
+# TODO: Allow seeing output of server call and wait for key press to return to prompt
 class ServerCall(ShellCommand):
-    """❗ custom name mustn't have single quotes in it. It only serves to distinguish functions anyway"""
+    """❗ custom name mustn't have single nor double quotes in it. It only has informative purpose anyway"""
 
-    def __init__(self, function: ServerCallFunction, name: str | None = None) -> None:
+    def __init__(self, function: ServerCallFunction, custom_name: str | None = None) -> None:
         self.function = function
-        self.name = name or function.__name__
-        self.resolved = False
-        super().__init__(Template(get_json_creating_command(function)).safe_substitute({"server_call_name": self.name}))
+        self.name = f"{custom_name or function.__name__} ({id(self)})"
+        self.socket_number: int
+
+        parameters = list(inspect.signature(function).parameters.values())[1:]  # excludes prompt_data
+        jq_args = []
+        placeholders_to_resolve = []
+        for parameter in parameters:
+            if placeholder := PLACEHOLDERS.get(parameter.name):
+                jq_args.append(placeholder)
+            elif isinstance(parameter.default, CommandOutput):
+                jq_args.append(f'--arg {parameter.name} "$({parameter.default})"')
+            else:
+                # to be replaced using .resolve or is an environment variable
+                jq_args.append(f'--arg {parameter.name} "${parameter.name}"')
+                # environmental variables are recognized by being all uppercase
+                if not re.match("^[A-Z_]*$", parameter.name):
+                    placeholders_to_resolve.append(parameter.name)
+        template = (
+            'jq --null-input --compact-output \'{"server_call_name":"'
+            + self.name
+            + '","kwargs":$ARGS.named}\' '
+            + " ".join(jq_args)
+            + " | nc localhost $socket_number"
+        )
+        placeholders_to_resolve.append("socket_number")
+        super().__init__(template, placeholders_to_resolve)
 
     @single_use_method
-    def resolve(self, socket_number: int) -> None:
-        self.value = f"{self.value} | nc localhost {socket_number}"
-        self.resolved = True
+    def resolve_socket_number(self, socket_number: int) -> None:
+        self.socket_number = socket_number
+        self.resolve(socket_number=socket_number)
 
-    def __str__(self) -> str:
-        if not self.resolved:
-            raise RuntimeError(f"{self.name} not resolved")
-        return super().__str__()
+
+class PostProcessor(Protocol):
+    __name__: str
+
+    @staticmethod
+    def __call__(prompt_data: PromptData) -> None:
+        ...
+
+
+class PromptEndingAction(ParametrizedAction):
+    def __init__(self, end_status: EndStatus, post_processor: PostProcessor | None = None) -> None:
+        self.end_status: EndStatus = end_status
+        self.post_processor = post_processor
+        self.event: Hotkey | FzfEvent
+        self.pipe_call = ServerCall(self.pipe_results)
+
+    def pipe_results(self, prompt_data: PromptData, event: Hotkey | FzfEvent, query: str, selections: list[str]):
+        prompt_data.result.query = query
+        prompt_data.result.event = event
+        prompt_data.result.end_status = self.end_status
+        prompt_data.result.extend(selections)
+        logger.debug("Piping results")
+        logger.debug(prompt_data.result)
+
+    @single_use_method
+    def resolve_event(self, event: Hotkey | FzfEvent):
+        self.event = event
+        self.pipe_call.resolve(event=event)
+
+    def to_action_string(self) -> str:
+        return f"execute-silent({self.pipe_call.to_action_string()})+abort"
 
 
 class Server(Thread):
-    def __init__(
-        self,
-        prompt_data: PromptData,
-        server_setup_finished: Event,
-        server_should_close: Event,
-    ) -> None:
+    def __init__(self, prompt_data: PromptData, server_setup_finished: Event, server_should_close: Event) -> None:
         super().__init__(name="Server")
         self.prompt_data = prompt_data
         self.server_setup_finished = server_setup_finished
         self.server_should_close = server_should_close
-        self.server_calls: dict[str, ServerCall] = {sc.name: sc for sc in prompt_data.server_calls}
+        self.server_calls: dict[str, ServerCall] = {sc.name: sc for sc in prompt_data.server_calls()}
 
+    # TODO: Use automator to end running prompt and propagate errors
     def run(self):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
@@ -595,6 +501,8 @@ class Server(Thread):
         except Exception as e:
             logger.exception(e)
             raise
+        finally:
+            self.server_setup_finished.set()
 
     def handle_request(self, client_socket: socket.socket, prompt_data: PromptData):
         payload = bytearray()
@@ -602,9 +510,9 @@ class Server(Thread):
             payload.extend(r)
         try:
             request = pydantic.parse_raw_as(Request, payload.decode("utf-8").strip())
-            f = self.server_calls[request.server_call_name].function
             logger.debug(request.server_call_name)
-            response = f(prompt_data, *request.args, **request.kwargs)
+            function = self.server_calls[request.server_call_name].function
+            response = function(prompt_data, *request.args, **request.kwargs)
         except ExpectedException as e:
             prompt_data.result.exception = e
             self.server_should_close.set()
@@ -617,7 +525,137 @@ class Server(Thread):
 
     def resolve_all_server_calls(self, socket_number: int):
         for server_call in self.server_calls.values():
-            server_call.resolve(socket_number)
+            server_call.resolve_socket_number(socket_number)
+
+
+PreviewFunction = ServerCallFunction[P, str]
+
+
+@dataclass
+class Preview:
+    # TODO: | Event
+    # TODO: implement ServerCall commands
+    def __init__(
+        self,
+        name: str,
+        command: str | PreviewFunction,
+        hotkey: Hotkey,
+        window_size: int | str = "50%",
+        window_position: Position = "right",
+        preview_label: str | None = None,
+        store_output: bool = True,
+    ):
+        self.name = name
+        self.command = (
+            ShellCommand(command)
+            if isinstance(command, str) and not store_output
+            else PreviewChangeServerCall(command, name, store_output)
+        )
+        self.hotkey: Hotkey = hotkey
+        self.window_size = window_size
+        self.window_position: Position = window_position
+        self.preview_label = preview_label
+        self.output: str
+
+
+class PreviewChangeServerCall(ServerCall):
+    def __init__(self, command: str | PreviewFunction, name: str, store_output: bool) -> None:
+        if isinstance(command, str):
+
+            def execute_preview(prompt_data: PromptData, preview_output: str = CommandOutput("echo $preview_output")):
+                prompt_data.previewer.current_preview = prompt_data.previewer.previews[name]
+                if store_output:
+                    prompt_data.previewer.previews[name].output = preview_output
+                logger.trace(f"Changing preview to '{name}'", preview=name)
+
+            super().__init__(execute_preview, f"Execute preview {name}")
+            self.template = f"preview_output=$({command}) && echo $preview_output && {self.template}"
+        else:
+
+            def execute_preview_with_enclosed_function(prompt_data: PromptData, **kwargs):
+                prompt_data.previewer.current_preview = prompt_data.previewer.previews[name]
+                logger.trace(f"Changing preview to '{name}'", preview=name)
+                preview_output = command(prompt_data, **kwargs)
+                if store_output:
+                    prompt_data.previewer.previews[name].output = preview_output
+                return preview_output
+
+            super().__init__(command, f"Execute preview {name}")
+            self.function = execute_preview_with_enclosed_function  # HACK
+
+
+class PreviewWindowChange(ParametrizedAction):
+    def __init__(self, window_size: int | str, window_position: Position) -> None:
+        """Window size: int - absolute, str - relative and should be in '<int>%' format"""
+        self.window_size = window_size
+        self.window_position = window_position
+        super().__init__(f"change-preview-window({self.window_size},{self.window_position})")
+
+
+class Previewer:
+    """Handles passing right preview options"""
+
+    def __init__(self) -> None:
+        self.previews: dict[str, Preview] = {}
+        self.current_preview: Preview | None = None
+
+    def add(self, preview: Preview, action_menu: ActionMenu, *, main: bool = False):
+        if main or self.current_preview is None:
+            self.current_preview = preview
+        self.previews[preview.name] = preview
+        action_menu.add(
+            preview.hotkey,
+            # It's crucial that window change happens before preview change (see )
+            Binding(
+                f"Change preview to '{preview.name}'",
+                PreviewWindowChange(preview.window_size, preview.window_position),
+                (preview.command, "change-preview"),
+                "refresh-preview",
+            ),
+        )
+
+    def resolve_options(self) -> Options:
+        if self.current_preview is None:  # Meaning no preview was added
+            return Options()
+        return (
+            Options()
+            .preview(self.current_preview.command.to_action_string())
+            .preview_window(self.current_preview.window_position, self.current_preview.window_size)
+        )
+
+
+@dataclass
+class PromptData:
+    """Accessed from fzf process through socket Server"""
+
+    id: str = field(init=False, default_factory=lambda: datetime.now().isoformat())
+    choices: list = field(default_factory=list)
+    previewer: Previewer = field(default_factory=Previewer)
+    action_menu: ActionMenu = field(default_factory=ActionMenu)
+    options: Options = field(default_factory=Options)
+    result: Result = field(init=False, default_factory=Result)
+
+    def get_current_preview(self) -> str:
+        if not self.previewer.current_preview:
+            raise RuntimeError("No current preview")
+        return self.previewer.current_preview.output
+
+    def add_preview(self, preview: Preview, *, main: bool = False):
+        self.previewer.add(preview, self.action_menu, main=main)
+
+    @single_use_method
+    def resolve_options(self) -> Options:
+        return self.options + self.previewer.resolve_options() + self.action_menu.resolve_options()
+
+    def server_calls(self) -> list[ServerCall]:
+        server_calls = [action[0] for action in self.action_menu.shell_command_actions(ServerCall)]
+        server_calls.extend(action.pipe_call for action in self.action_menu.parametrized_actions(PromptEndingAction))
+        server_calls.extend(
+            preview.command for preview in self.previewer.previews.values() if isinstance(preview.command, ServerCall)
+        )
+        if self.action_menu.automator.should_run:
+            server_calls.append(self.action_menu.automator.move_to_next_binding_server_call)
+        return server_calls
 
 
 if __name__ == "__main__":
