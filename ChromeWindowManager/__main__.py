@@ -9,10 +9,10 @@ from pydantic import BaseModel, parse_file_as
 from thingies import shell_command
 
 from ..core import DefaultPrompt, mods
-from ..core.BasicLoop import BasicLoop
-from ..core.FzfPrompt.exceptions import ExitLoop, ExitRound
-from ..core.FzfPrompt.Prompt import ActionMenu, Preview, PromptData, Result, ServerCall, ShellCommand, PostProcessAction
-from ..core.monitoring.Logger import get_logger, remove_handler
+from ..core import BasicLoop
+from ..core.FzfPrompt.exceptions import ExitRound
+from ..core.FzfPrompt.Prompt import ActionMenu, PromptData, Result, ShellCommand, PromptEndingAction
+from ..core.monitoring.Logger import get_logger
 
 logger = get_logger()
 
@@ -22,6 +22,7 @@ logger = get_logger()
 # TODO: Convenient window naming (ctrl-n hotkey?)
 # TODO: Highlight active window
 # TODO: Highlight active tab
+# TODO: open windows.json in given window
 
 
 class WindowIdRegexNoMatch(Exception):
@@ -161,7 +162,7 @@ def close_window(prompt_data: PromptData):
     "List tabs",
     "source ~/.zshforchrome 2>/dev/null && echo {} | awk '{ print $1 }' | read -r window_id && brotab query -windowId ${window_id:2} | brotab_format_better_line",
 )
-@mods.on_event("ctrl-w").run("Close window", PostProcessAction(close_window), end_prompt="accept")
+@mods.on_event("ctrl-w").run("Close window", PromptEndingAction("accept", close_window))
 @mods.on_event("ctrl-o").run("Open windows.json", ShellCommand(f"code-insiders '{STORED_WINDOWS_PATH}'"))
 def run_window_selection_prompt(prompt_data: PromptData) -> Result:
     return DefaultPrompt.run(prompt_data=prompt_data)
@@ -182,4 +183,4 @@ def run():
 
 
 if __name__ == "__main__":
-    BasicLoop(run).run_in_loop()
+    BasicLoop.run_in_loop(run)

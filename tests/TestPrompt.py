@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Iterable
 
 from ..core import BasePrompt, mods
-from ..core.BasicLoop import BasicLoop
+from ..core import BasicLoop
 from ..core.FzfPrompt.exceptions import ExitLoop
 from ..core.FzfPrompt.Prompt import Action, Binding, PromptEndingAction, PromptData, Result, ServerCall
 from ..core.monitoring import Logger

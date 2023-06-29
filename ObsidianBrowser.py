@@ -7,23 +7,24 @@ import typer
 from thingies import shell_command, url_encode
 
 from .core import DefaultPrompt, mods
-from .core.BasicLoop import BasicLoop
+from .core import BasicLoop
 from .core.FzfPrompt.options import Options
 from .core.FzfPrompt.Prompt import PromptData, ServerCall
 
+DEFAULT_VAULT_NAME = "HOLLY"
 DEFAULT_VAULT_PATH = Path("/Users/honza/Documents/HOLLY")
 
 
 app = typer.Typer()
 
 
-def obsidian_open_files(prompt_data: PromptData, query: str, selections: list[str], vault_name: str = "HOLLY"):
+def obsidian_open_files(prompt_data: PromptData, query: str, selections: list[str]):
     for selection in selections:
         note_name = url_encode(Path(selection).stem)
         command = [
             "open",
-            f"obsidian://advanced-uri?vault={vault_name}&commandid=workspace%253Anew-tab",
-            f"obsidian://open?vault={vault_name}&file={note_name}",
+            f"obsidian://advanced-uri?vault={DEFAULT_VAULT_NAME}&commandid=workspace%253Anew-tab",
+            f"obsidian://open?vault={DEFAULT_VAULT_NAME}&file={note_name}",
         ]
         shell_command(command)
 
@@ -64,7 +65,7 @@ def run(vault_path: Path = DEFAULT_VAULT_PATH):
 def main(path: Optional[Path] = None):
     path = path or DEFAULT_VAULT_PATH
     with contextlib.chdir(path):
-        BasicLoop(functools.partial(run, path)).run_in_loop()
+        BasicLoop.run_in_loop(functools.partial(run, path))
 
 
 if __name__ == "__main__":
