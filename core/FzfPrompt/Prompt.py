@@ -243,7 +243,7 @@ class ActionMenu:
         self.bindings: dict[Hotkey | FzfEvent, Binding] = {}
         self.post_processors: dict[Hotkey | FzfEvent, PostProcessor] = {}
         self.add("enter", Binding("accept", "accept"))
-        self.add("esc", Binding("abort", "accept"))
+        self.add("esc", Binding("abort", "abort"))
         self.automator = Automator(self)
 
     @property
