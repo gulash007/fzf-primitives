@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from ..core import mods
-from ..core.FzfPrompt.exceptions import ExitLoop
-from ..core.FzfPrompt.Prompt import Binding, PromptData
+from ..core.FzfPrompt.exceptions import ExitLoop, ExitRound
+from ..core.FzfPrompt.Prompt import ABORT_HOTKEY, Binding, PromptData
 from ..core.monitoring import Logger
 from . import TestPrompt
 from .Recording import Recording
@@ -46,14 +46,21 @@ def test_prompt():
 
 
 @mods.automate("ctrl-q")
-def run_and_exit(prompt_data: PromptData):
+def run_and_quit(prompt_data: PromptData):
     return TestPrompt.run(prompt_data)
 
 
-def test_exit():
+def test_quit():
     with pytest.raises(ExitLoop) as exc:
-        run_and_exit(PromptData())
+        run_and_quit(PromptData())
 
+@mods.automate(ABORT_HOTKEY)
+def run_and_abort(prompt_data: PromptData):
+    return TestPrompt.run(prompt_data)
+
+def test_abort():
+    with pytest.raises(ExitRound) as exc:
+        run_and_abort(PromptData())
 
 if __name__ == "__main__":
     test_prompt()
