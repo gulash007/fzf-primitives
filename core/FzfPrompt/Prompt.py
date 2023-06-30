@@ -27,8 +27,6 @@ from .options import FzfEvent, Hotkey, Options, ParametrizedOptionString, Positi
 T = TypeVar("T")
 
 logger = get_logger()
-ACCEPT_HOTKEY: Hotkey = "enter"
-ABORT_HOTKEY: Hotkey = "esc"
 
 FZF_URL = "https://github.com/junegunn/fzf"
 
@@ -238,12 +236,16 @@ class Binding:
         return [action for action in self.actions if isinstance(action, parametrized_action_type)]
 
 
+ACCEPT_HOTKEY: Hotkey = "enter"
+ABORT_HOTKEY: Hotkey = "esc"
+
+
 class ActionMenu:
     def __init__(self) -> None:
         self.bindings: dict[Hotkey | FzfEvent, Binding] = {}
         self.post_processors: dict[Hotkey | FzfEvent, PostProcessor] = {}
-        self.add("enter", Binding("accept", "accept"))
-        self.add("esc", Binding("abort", "abort"))
+        self.add(ACCEPT_HOTKEY, Binding("accept", "accept"))
+        self.add(ABORT_HOTKEY, Binding("abort", "abort"))
         self.automator = Automator(self)
         self.to_automate: list[Binding | Hotkey] = []
 
