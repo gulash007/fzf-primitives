@@ -44,9 +44,9 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
     else:
         executable_path = "fzf"
 
-    if (automator := prompt_data.action_menu.automator).should_run:
-        automator.add_port_resolution()
-        automator.start()
+    if (action_menu := prompt_data.action_menu).should_run_automator:
+        action_menu.automator.resolve(action_menu)
+        action_menu.automator.start()
 
     server_setup_finished = Event()
     server_should_close = Event()
@@ -245,6 +245,7 @@ class ActionMenu:
         self.add("enter", Binding("accept", "accept"))
         self.add("esc", Binding("abort", "abort"))
         self.automator = Automator(self)
+        self.to_automate: list[Binding | Hotkey] = []
 
     @property
     def actions(self) -> list[Action]:
@@ -282,18 +283,24 @@ class ActionMenu:
         for event, binding in self.bindings.items():
             options.bind(event, binding.to_action_string())
         header_help = "\n".join(f"{event}\t{action.name}" for event, action in self.bindings.items())
-        return options.header(header_help).header_first + self.automator.resolve_options()
+        if self.should_run_automator:
+            options.listen()
+        return options.header(header_help).header_first
 
     @single_use_method
     def apply_post_processor(self, prompt_data: PromptData):
         if post_processor := self.post_processors.get(prompt_data.result.event):
             post_processor(prompt_data)
 
-    def automate(self, *to_execute: Binding | Hotkey):
-        self.automator.add_bindings(*to_execute)
+    def automate(self, *to_automate: Binding | Hotkey):
+        self.to_automate.extend(to_automate)
 
     def automate_actions(self, *actions: Action):
         self.automate(Binding("anonymous actions", *actions))
+
+    @property
+    def should_run_automator(self) -> bool:
+        return bool(self.to_automate)
 
 
 # TODO: Can be invoked as prompt (like old action menu) in a subshell
@@ -310,14 +317,9 @@ class Automator(Thread):
         self.__port = value
         logger.info(f"Automator listening on port {self.port}")
 
-    @property
-    def should_run(self) -> bool:
-        return bool(self.to_execute)
-
     def __init__(self, action_menu: ActionMenu) -> None:
         self.__port: str | None = None
-        self._action_menu = action_menu
-        self.to_execute: list[Binding | Hotkey] = []
+        self.bindings: list[Binding] = []
         self.port_resolved = Event()
         self.binding_executed = Event()
         self.move_to_next_binding_server_call = ServerCall(self.move_to_next_binding)
@@ -328,9 +330,7 @@ class Automator(Thread):
             while not self.port_resolved.is_set():
                 if not self.port_resolved.wait(timeout=5):
                     logger.warning("Waiting for port to be resolved…")
-            for binding_to_automate in [
-                x if isinstance(x, Binding) else self._action_menu.bindings[x] for x in self.to_execute
-            ]:
+            for binding_to_automate in self.bindings:
                 binding = Binding(f"{binding_to_automate.name}+move to next binding")
                 # HACK: PromptEndingAction won't allow move_to_next_binding_server_call to be called but that doesn't
                 # matter because PromptEndingAction ends prompt anyway
@@ -340,8 +340,8 @@ class Automator(Thread):
             logger.exception(e)
             raise
 
-    def add_bindings(self, *bindings: Binding | Hotkey):
-        self.to_execute.extend(bindings)
+    def add_bindings(self, *bindings: Binding):
+        self.bindings.extend(bindings)
 
     def execute_binding(self, binding: Binding):
         logger.debug(f"Automating {binding}")
@@ -357,11 +357,9 @@ class Automator(Thread):
     def move_to_next_binding(self, prompt_data: PromptData):
         self.binding_executed.set()
 
-    def resolve_options(self) -> Options:
-        return Options().listen() if self.should_run else Options()
-
-    def add_port_resolution(self):
-        self._action_menu.add("start", Binding("get automator port", ServerCall(self.get_port_number)))
+    def resolve(self, action_menu: ActionMenu):
+        action_menu.add("start", Binding("get automator port", ServerCall(self.get_port_number)))
+        self.add_bindings(*[x if isinstance(x, Binding) else action_menu.bindings[x] for x in action_menu.to_automate])
 
     def get_port_number(self, prompt_data: PromptData, FZF_PORT: str):
         """Utilizes the $FZF_PORT variable containing the port assigned to --listen option
@@ -633,7 +631,7 @@ class Previewer:
 class PromptData:
     """Accessed from fzf process through socket Server"""
 
-    id: str = field(init=False, default_factory=lambda: datetime.now().isoformat())
+    id: str = field(init=False, default_factory=lambda: datetime.now().isoformat())  # TODO: use or remove
     choices: list = field(default_factory=list)
     previewer: Previewer = field(default_factory=Previewer)
     action_menu: ActionMenu = field(default_factory=ActionMenu)
@@ -658,7 +656,7 @@ class PromptData:
         server_calls.extend(
             preview.command for preview in self.previewer.previews.values() if isinstance(preview.command, ServerCall)
         )
-        if self.action_menu.automator.should_run:
+        if self.action_menu.should_run_automator:
             server_calls.append(self.action_menu.automator.move_to_next_binding_server_call)
         return server_calls
 
