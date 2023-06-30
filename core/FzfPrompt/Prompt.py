@@ -514,7 +514,7 @@ class Server(Thread):
         while r := client_socket.recv(1024):
             payload.extend(r)
         try:
-            request = pydantic.parse_raw_as(Request, payload.decode("utf-8").strip())
+            request = Request.model_validate_json(payload.decode("utf-8").strip())
             logger.debug(request.server_call_name)
             function = self.server_calls[request.server_call_name].function
             response = function(prompt_data, *request.args, **request.kwargs)
