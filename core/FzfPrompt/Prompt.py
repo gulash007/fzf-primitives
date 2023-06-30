@@ -449,6 +449,7 @@ class PromptEndingAction(ParametrizedAction):
         self.post_processor = post_processor
         self.event: Hotkey | FzfEvent
         self.pipe_call = ServerCall(self.pipe_results)
+        super().__init__("execute-silent($pipe_call)+abort", ["pipe_call"])
 
     def pipe_results(self, prompt_data: PromptData, event: Hotkey | FzfEvent, query: str, selections: list[str]):
         prompt_data.result.query = query
@@ -464,7 +465,9 @@ class PromptEndingAction(ParametrizedAction):
         self.pipe_call.resolve(event=event)
 
     def to_action_string(self) -> str:
-        return f"execute-silent({self.pipe_call.to_action_string()})+abort"
+        if not self.resolved:
+            self.resolve(pipe_call=self.pipe_call.to_action_string())
+        return super().to_action_string()
 
 
 class Server(Thread):
