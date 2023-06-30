@@ -332,6 +332,8 @@ class Automator(Thread):
                 x if isinstance(x, Binding) else self._action_menu.bindings[x] for x in self.to_execute
             ]:
                 binding = Binding(f"{binding_to_automate.name}+move to next binding")
+                # HACK: PromptEndingAction won't allow move_to_next_binding_server_call to be called but that doesn't
+                # matter because PromptEndingAction ends prompt anyway
                 binding.actions = binding_to_automate.actions + [(self.move_to_next_binding_server_call, "execute")]
                 self.execute_binding(binding)
         except Exception as e:
