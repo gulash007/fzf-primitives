@@ -638,6 +638,7 @@ class PromptData:
     previewer: Previewer = field(default_factory=Previewer)
     action_menu: ActionMenu = field(default_factory=ActionMenu)
     options: Options = field(default_factory=Options)
+    data: dict = field(default_factory=dict)  # arbitrary data to be accessed
     result: Result = field(init=False, default_factory=Result)
 
     def get_current_preview(self) -> str:
