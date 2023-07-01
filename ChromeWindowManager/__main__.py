@@ -5,7 +5,7 @@ import traceback
 from pathlib import Path
 from typing import Self
 
-from pydantic import BaseModel, parse_file_as
+from pydantic import BaseModel
 from thingies import shell_command
 
 from ..core import DefaultPrompt, mods
@@ -93,7 +93,8 @@ class Windows(BaseModel):
     @classmethod
     def get_saved_windows(cls) -> Self:
         try:
-            return parse_file_as(cls, STORED_WINDOWS_PATH)
+            with open(STORED_WINDOWS_PATH, "r", encoding="utf8") as f:
+                return cls.model_validate_json(f.read())
         except Exception:
             print(traceback.format_exc())
             return Windows(windows={})
@@ -101,7 +102,7 @@ class Windows(BaseModel):
     def save(self):
         Path(os.path.dirname(STORED_WINDOWS_PATH)).mkdir(parents=True, exist_ok=True)
         with open(STORED_WINDOWS_PATH, "w", encoding="utf-8") as f:
-            f.write(self.json(indent=2))
+            f.write(self.model_dump_json(indent=2))
 
     def update(self, other_windows: Self):
         for other_window in other_windows.windows.values():
