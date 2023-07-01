@@ -44,6 +44,7 @@ class Options:
 
     def __init__(self, *fzf_options: str) -> None:
         self.__options: list[str] = list(fzf_options)
+        self._header_strings: list[str] = []
 
     @property
     def options(self) -> list[str]:
@@ -80,34 +81,26 @@ class Options:
         return self.add(shlex.join(["--pointer", pointer]))
 
     def header(self, header: str) -> Self:
-        return self.add(shlex.join(["--header", header]))
+        self._header_strings.append(header)
+        return self
 
     def listen(self, port_number: int = 0):
         return self.add(f"--listen={port_number}")
 
     def __str__(self) -> str:
+        if self._header_strings:
+            self.options.append(shlex.join(["--header", "\n".join(self._header_strings)]))
         return " ".join(self.options)
 
     def __add__(self, __other: Options) -> Self:
-        return self.add(*__other.options)
+        options = self.add(*__other.options)
+        options._header_strings += __other._header_strings
+        return options
 
     # TODO: __sub__ for removing options?
 
     def __eq__(self, __other: Self) -> bool:
         return self.options == __other.options
-
-    def __le__(self, __other: Self) -> bool:
-        return self.options == __other.options[: len(self.options)]
-
-    # Could've used functools.total_ordering here
-    def __ge__(self, __other: Self) -> bool:
-        return __other <= self
-
-    def __lt__(self, __other: Self) -> bool:
-        return self <= __other and len(self.options) < len(__other.options)
-
-    def __gt__(self, __other: Self) -> bool:
-        return __other < self
 
 
 T = TypeVar("T")
