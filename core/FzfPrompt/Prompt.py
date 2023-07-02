@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from shutil import which
 from threading import Event, Thread
-from typing import Callable, Concatenate, Generic, Literal, ParamSpec, Protocol, Self, Type, TypeVar
+from typing import Callable, Concatenate, Generic, Iterable, Literal, ParamSpec, Protocol, Self, Type, TypeVar
 
 import clipboard
 import pydantic
@@ -634,7 +634,7 @@ class PromptData:
     """Accessed from fzf process through socket Server"""
 
     id: str = field(init=False, default_factory=lambda: datetime.now().isoformat())  # TODO: use or remove
-    choices: list = field(default_factory=list)
+    choices: Iterable = field(default_factory=list)
     previewer: Previewer = field(default_factory=Previewer)
     action_menu: ActionMenu = field(default_factory=ActionMenu)
     options: Options = field(default_factory=Options)
