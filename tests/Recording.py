@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from logging import Logger
 from pathlib import Path
 from typing import Self
 
@@ -63,11 +62,12 @@ class Recording(pydantic.BaseModel):
 
     def save(self):
         with open(self.get_path(self.name), "w", encoding="utf8") as f:
-            f.write(self.json(indent=2))
+            f.write(self.model_dump_json(indent=2))
 
     @classmethod
     def load(cls, name: str):
-        return pydantic.parse_file_as(cls, cls.get_path(name))
+        with open(cls.get_path(name), "r", encoding="utf8") as f:
+            return cls.model_validate_json(f.read())
 
     @staticmethod
     def get_path(name: str) -> Path:
