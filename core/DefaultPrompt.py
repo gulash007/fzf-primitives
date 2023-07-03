@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import typer
-from thingies import color
 
 from . import BasePrompt, mods
 from .FzfPrompt.exceptions import ExitLoop
@@ -30,7 +29,7 @@ def main(options: list[str] = typer.Argument(None, help="fzf options passed as s
         prompt_data = PromptData(choices=BasePrompt.read_choices(), options=Options(*options))
         output = run(prompt_data)
     except ExitLoop as e:
-        print(f"{color('Exiting loop').red.bold}: {e}")
+        print(f"Exiting loop: {e}")
         exit(0)
     typer.echo(output, color=True)
 

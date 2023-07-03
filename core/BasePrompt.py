@@ -1,7 +1,7 @@
 import pyperclip
 import typer
 
-from thingies import read_from_pipe, color
+from thingies import read_from_pipe
 
 from .FzfPrompt.exceptions import ExitLoop
 from .FzfPrompt.Prompt import run_fzf_prompt, PromptData
@@ -27,7 +27,7 @@ def main(options: list[str] = typer.Argument(None, help="fzf options passed as s
     try:
         output = run(prompt_data=PromptData(choices=read_choices(), options=Options(*options)))
     except ExitLoop as e:
-        print(f"{color('Exiting loop').red.bold}: {e}")
+        print(f"Exiting loop: {e}")
         exit(0)
     typer.echo(output, color=True)
 

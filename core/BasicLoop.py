@@ -3,7 +3,6 @@ from typing import Callable, ParamSpec, TypeVar
 from .monitoring import Logger
 from .FzfPrompt.exceptions import ExitLoop, ExitRound
 from .FzfPrompt.Prompt import Result
-from thingies import color
 
 logger = Logger.get_logger()
 
@@ -28,5 +27,5 @@ def run_once(run: Callable[[], R]) -> R:
     try:
         return run()
     except ExitLoop as e:
-        logger.info(f"{color('Exiting loop').red.bold}: {e}")
+        print(f"Exiting loop: {e}")
         exit(0)
