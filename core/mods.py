@@ -33,20 +33,15 @@ class Moddable(Protocol, Generic[P]):
         ...
 
 
-def add_options(added_options: Options):
-    def decorator(func: Moddable[P]) -> Moddable[P]:
-        def adding_options(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-            prompt_data.options = prompt_data.options + added_options
-            return func(prompt_data, *args, **kwargs)
-
-        return adding_options
-
-    return decorator
-
-
-multiselect = add_options(Options().multiselect)
-ansi = add_options(Options().ansi)
-no_sort = add_options(Options().no_sort)
+defaults = Options().defaults
+multiselect = Options().multiselect
+ansi = Options().ansi
+no_sort = Options().no_sort
+cycle = Options().cycle
+no_mouse = Options().no_mouse
+multiselect = Options().multiselect
+header_first = Options().header_first
+disable_search = Options().disable_search
 
 
 def exit_round_when_aborted(message: str = ""):

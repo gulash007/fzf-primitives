@@ -3,8 +3,13 @@ from __future__ import annotations
 
 import shlex
 from string import Template
-from typing import Iterable, Literal, Self, Any, Type, TypeVar
+from typing import Iterable, Literal, Self, Any, Type, TypeVar, TYPE_CHECKING, ParamSpec
 
+if TYPE_CHECKING:
+    from .Prompt import PromptData
+    from ..mods import Moddable
+
+P = ParamSpec("P")
 
 DEFAULT_OPTS = [
     "--layout=reverse",
@@ -46,6 +51,13 @@ class Options:
     def __init__(self, *fzf_options: str) -> None:
         self.__options: list[str] = list(fzf_options)
         self._header_strings: list[str] = []
+
+    def __call__(self, func: Moddable[P]) -> Moddable[P]:
+        def adding_options(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+            prompt_data.options = prompt_data.options + self
+            return func(prompt_data, *args, **kwargs)
+
+        return adding_options
 
     @property
     def options(self) -> list[str]:
