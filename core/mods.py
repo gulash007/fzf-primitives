@@ -87,6 +87,10 @@ class on_event:
     quit = binding_preset("quit", PromptEndingAction("abort", quit_app))
     clip_current_preview = binding_preset("clip current preview", ServerCall(clip_current_preview))
 
+    def view_logs_in_terminal(self, log_file_path: str | Path):
+        command = f"less +F '{log_file_path}'"
+        return self.run("copy command to view logs in terminal", ServerCall(lambda pd: clipboard.copy(command)))
+
     def __init__(self, event: Hotkey | FzfEvent):
         self.event: Hotkey | FzfEvent = event
         self.binding_constructors: list[Callable[[], Binding]] = []
