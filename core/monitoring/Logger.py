@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 from functools import partialmethod
 from pathlib import Path
-from typing import Literal
+from typing import Literal, overload
 
 import loguru
 from loguru import logger
@@ -24,14 +24,62 @@ LOG_FORMAT = (
 LOG_FILE_FOLDER = Path(__file__).parents[2].joinpath("_logs/")
 
 
-def add_file_handler(file_name: str, level="DEBUG", format=LOG_FORMAT, colorize=True, **kwargs):
-    return logger.add(
-        LOG_FILE_FOLDER.joinpath(f"{file_name}.log"), level=level, format=format, colorize=colorize, **kwargs
-    )
+@overload
+def add_file_handler(
+    file_name: str,
+    file_path: None = None,
+    *,
+    level="DEBUG",
+    format=LOG_FORMAT,
+    colorize=True,
+    **kwargs,
+):
+    ...
 
 
-def clear_log_file(file_name: str):
-    with open(LOG_FILE_FOLDER.joinpath(f"{file_name}.log"), "r+") as f:
+@overload
+def add_file_handler(
+    file_name: None = None,
+    file_path: str | Path = "",
+    *,
+    level="DEBUG",
+    format=LOG_FORMAT,
+    colorize=True,
+    **kwargs,
+):
+    ...
+
+
+def add_file_handler(
+    file_name: str | None = None,
+    file_path: str | Path | None = None,
+    *,
+    level="DEBUG",
+    format=LOG_FORMAT,
+    colorize=True,
+    **kwargs,
+):
+    if not file_path and not file_name:
+        raise ValueError("At least on of file_path and file_name has to be filled")
+    file_path = file_path or LOG_FILE_FOLDER.joinpath(f"{file_name}.log")
+    return logger.add(file_path, level=level, format=format, colorize=colorize, **kwargs)
+
+
+@overload
+def clear_log_file(file_name: str, file_path: None = None):
+    ...
+
+
+@overload
+def clear_log_file(file_name: None = None, file_path: str | Path = ""):
+    ...
+
+
+def clear_log_file(file_name: str | None = None, file_path: str | Path | None = None):
+    if not file_path and not file_name:
+        raise ValueError("At least on of file_path and file_name has to be filled")
+    file_path = file_path or LOG_FILE_FOLDER.joinpath(f"{file_name}.log")
+    with open(file_path, "r+", encoding="utf8") as f:
         f.truncate(0)
 
 
