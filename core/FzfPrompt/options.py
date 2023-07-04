@@ -208,7 +208,6 @@ Hotkey = Literal[
     "ctrl-j",
     "ctrl-k",
     "ctrl-l",
-    "ctrl-m",
     "ctrl-n",
     "ctrl-o",
     "ctrl-p",
