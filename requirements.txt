@@ -4,4 +4,4 @@ clipboard
 loguru
 dill
 typer
-pydantic
+pydantic >= 2.0
