@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import inspect
 import json
+import os
 import re
 import shlex
 import socket
@@ -62,6 +63,7 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
             shell=True,
             input="\n".join(str(choice) for choice in prompt_data.choices).encode(),
             check=True,
+            env=os.environ | {JSON_ENV_VAR_NAME: json.dumps(prompt_data.data)} if prompt_data.data_as_env_var else None,
         )
     except subprocess.CalledProcessError as err:
         if err.returncode != 130:  # 130 means aborted
@@ -629,6 +631,9 @@ class Previewer:
         )
 
 
+JSON_ENV_VAR_NAME = "PROMPT_DATA"
+
+
 @dataclass
 class PromptData:
     """Accessed from fzf process through socket Server"""
@@ -639,6 +644,7 @@ class PromptData:
     action_menu: ActionMenu = field(default_factory=ActionMenu)
     options: Options = field(default_factory=Options)
     data: dict = field(default_factory=dict)  # arbitrary data to be accessed
+    data_as_env_var: bool = False
     result: Result = field(init=False, default_factory=Result)
 
     def get_current_preview(self) -> str:
