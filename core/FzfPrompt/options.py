@@ -113,7 +113,7 @@ class Options:
     # TODO: __sub__ for removing options?
 
     def __eq__(self, __other: Self) -> bool:
-        return self.options == __other.options
+        return self.options == __other.options and self._header_strings == __other._header_strings
 
 
 T = TypeVar("T")
