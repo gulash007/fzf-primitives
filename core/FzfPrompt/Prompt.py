@@ -447,6 +447,9 @@ class PostProcessor(Protocol):
         ...
 
 
+EMPTY_SELECTIONS = [""]
+
+
 class PromptEndingAction(ParametrizedAction):
     def __init__(self, end_status: EndStatus, post_processor: PostProcessor | None = None) -> None:
         self.end_status: EndStatus = end_status
@@ -459,7 +462,8 @@ class PromptEndingAction(ParametrizedAction):
         prompt_data.result.query = query
         prompt_data.result.event = event
         prompt_data.result.end_status = self.end_status
-        prompt_data.result.extend(selections)
+        if selections != EMPTY_SELECTIONS:
+            prompt_data.result.extend(selections)
         logger.debug("Piping results")
         logger.debug(prompt_data.result)
 
