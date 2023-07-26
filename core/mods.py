@@ -44,18 +44,26 @@ header_first = Options().header_first
 disable_search = Options().disable_search
 
 
-def exit_round_when_aborted(message: str = ""):
+def exit_round_on(predicate: Callable[[PromptData], bool], message: str = ""):
     def decorator(func: Moddable[P]) -> Moddable[P]:
-        def exiting_round_when_aborted(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+        def exiting_round_on(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
             result = func(prompt_data, *args, **kwargs)
-            if result.end_status == "abort":
+            if predicate(prompt_data):
                 logger.info(message)
                 raise ExitRound(message)
             return result
 
-        return exiting_round_when_aborted
+        return exiting_round_on
 
     return decorator
+
+
+def exit_round_when_aborted(message: str = "Aborted!"):
+    return exit_round_on(lambda prompt_data: prompt_data.result.end_status == "abort", message)
+
+
+def exit_round_on_empty_selections(message: str = "Selection empty!"):
+    return exit_round_on(lambda prompt_data: not prompt_data.result, message)
 
 
 def quit_app(prompt_data: PromptData):
