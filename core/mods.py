@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+from pathlib import Path
 from typing import Callable, Generic, ParamSpec, Protocol, Self
 
 import clipboard
@@ -14,11 +15,11 @@ from .FzfPrompt.Prompt import (
     Action,
     Binding,
     Preview,
+    PreviewFunction,
     PromptData,
     PromptEndingAction,
     Result,
     ServerCall,
-    PreviewFunction,
     ShellCommand,
 )
 from .monitoring.Logger import get_logger
@@ -29,8 +30,7 @@ logger = get_logger()
 
 class Moddable(Protocol, Generic[P]):
     @staticmethod
-    def __call__(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs) -> Result:
-        ...
+    def __call__(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs) -> Result: ...
 
 
 defaults = Options().defaults
