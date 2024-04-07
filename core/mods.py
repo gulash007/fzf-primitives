@@ -41,8 +41,8 @@ disable_search = Options().disable_search
 
 
 # TODO: Check correctness or if it's needed
-def exit_round_on[T, S](predicate: Callable[[PromptData[T, S]], bool], message: str = ""):
-    def decorator(func: Moddable[T, S]) -> Moddable[T, S]:
+def exit_round_on(predicate: Callable[[PromptData], bool], message: str = ""):
+    def decorator[T, S](func: Moddable[T, S]) -> Moddable[T, S]:
         def exiting_round_on(prompt_data: PromptData[T, S]):
             result = func(prompt_data)
             if predicate(prompt_data):
