@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 from pathlib import Path
-from typing import Callable, Generic, ParamSpec, Protocol, Self
+from typing import Callable, Self
 
 import clipboard
 from thingies import shell_command
@@ -14,23 +14,20 @@ from .FzfPrompt.options import FzfEvent, Hotkey, Options, Position
 from .FzfPrompt.Prompt import (
     Action,
     Binding,
+    Result,
     Preview,
     PreviewFunction,
     PromptData,
     PromptEndingAction,
-    Result,
     ServerCall,
     ShellCommand,
 )
 from .monitoring.Logger import get_logger
 
-P = ParamSpec("P")
 logger = get_logger()
 
 
-class Moddable(Protocol, Generic[P]):
-    @staticmethod
-    def __call__(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs) -> Result: ...
+type Moddable[T, S] = Callable[[PromptData[T, S]], Result[T]]
 
 
 defaults = Options().defaults
@@ -39,15 +36,15 @@ ansi = Options().ansi
 no_sort = Options().no_sort
 cycle = Options().cycle
 no_mouse = Options().no_mouse
-multiselect = Options().multiselect
 header_first = Options().header_first
 disable_search = Options().disable_search
 
 
-def exit_round_on(predicate: Callable[[PromptData], bool], message: str = ""):
-    def decorator(func: Moddable[P]) -> Moddable[P]:
-        def exiting_round_on(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-            result = func(prompt_data, *args, **kwargs)
+# TODO: Check correctness or if it's needed
+def exit_round_on[T, S](predicate: Callable[[PromptData[T, S]], bool], message: str = ""):
+    def decorator(func: Moddable[T, S]) -> Moddable[T, S]:
+        def exiting_round_on(prompt_data: PromptData[T, S]):
+            result = func(prompt_data)
             if predicate(prompt_data):
                 logger.info(message)
                 raise ExitRound(message)
@@ -86,7 +83,7 @@ class binding_preset:
         return obj.run(self._name, *self._actions)
 
 
-class on_event:
+class on_event[T, S]:
     accept = binding_preset("accept", "accept")
     abort = binding_preset("abort", "abort")
     clip = binding_preset("clip selections", ShellCommand(SHELL_COMMAND.clip_selections))
@@ -99,39 +96,41 @@ class on_event:
         command = f"less +F '{log_file_path}'"
         return self.run("copy command to view logs in terminal", ServerCall(lambda pd: clipboard.copy(command)))
 
-    def __init__(self, event: Hotkey | FzfEvent):
+    def __init__(self, event: Hotkey | FzfEvent, name: str | None = None):
         self.event: Hotkey | FzfEvent = event
+        self.name = name  # TODO: Use it?
         self.binding_constructors: list[Callable[[], Binding]] = []
 
     def run(self, name: str, *actions: Action | ShellCommand) -> Self:
         self.binding_constructors.append(lambda: Binding(name, *actions))
         return self
 
-    def __call__(self, func: Moddable[P]) -> Moddable[P]:
-        def with_added_binding(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+    def __call__(self, func: Moddable[T, S]) -> Moddable[T, S]:
+        @functools.wraps(func)
+        def with_added_binding(prompt_data: PromptData[T, S]):
             bindings = (bc() for bc in self.binding_constructors)
             prompt_data.action_menu.add(self.event, functools.reduce(lambda b1, b2: b1 + b2, bindings))
-            return func(prompt_data, *args, **kwargs)
+            return func(prompt_data)
 
         return with_added_binding
 
 
-def automate(*to_execute: Binding | Hotkey):
-    def decorator(func: Moddable[P]) -> Moddable[P]:
-        def with_automatization(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+def automate[T, S](*to_execute: Binding | Hotkey):
+    def decorator(func: Moddable[T, S]) -> Moddable[T, S]:
+        def with_automatization(prompt_data: PromptData):
             prompt_data.action_menu.automate(*to_execute)
-            return func(prompt_data, *args, **kwargs)
+            return func(prompt_data)
 
         return with_automatization
 
     return decorator
 
 
-def automate_actions(*actions: Action):
-    def decorator(func: Moddable[P]) -> Moddable[P]:
-        def with_automatization(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+def automate_actions[T, S](*actions: Action):
+    def decorator(func: Moddable[T, S]) -> Moddable[T, S]:
+        def with_automatization(prompt_data: PromptData[T, S]):
             prompt_data.action_menu.automate_actions(*actions)
-            return func(prompt_data, *args, **kwargs)
+            return func(prompt_data)
 
         return with_automatization
 
@@ -174,7 +173,7 @@ class preview_preset:
         )
 
 
-class preview:
+class preview[T, S]:
     basic = preview_preset("basic", preview_basic)
     basic_indexed = preview_preset("basic indexed", preview_basic_indexed)
 
@@ -184,7 +183,7 @@ class preview:
 
     def file(self, language: str = "python", theme: str = "Solarized (light)"):
         def view_file(
-            prompt_data: PromptData,
+            prompt_data: PromptData[T, S],
             selections: list[str],
         ):
             command = ["bat", "--color=always"]
@@ -201,30 +200,30 @@ class preview:
     def __call__(
         self,
         name: str,
-        command: str | PreviewFunction,
+        command: str | PreviewFunction[T, S],
         window_size: int | str = "50%",
         window_position: Position = "right",
         preview_label: str | None = None,
         store_output: bool = True,
     ):
-        def decorator(func: Moddable[P]) -> Moddable[P]:
-            def with_preview(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+        def decorator(func: Moddable[T, S]) -> Moddable[T, S]:
+            def with_preview(prompt_data: PromptData[T, S]):
                 prompt_data.add_preview(
                     Preview(name, command, self.hotkey, window_size, window_position, preview_label, store_output),
                     main=self.main,
                 )
-                return func(prompt_data, *args, **kwargs)
+                return func(prompt_data)
 
             return with_preview
 
         return decorator
 
 
-def clip_output(output_processor: Callable[[str], str] | None = None):
-    def decorator(func: Moddable[P]) -> Moddable[P]:
-        def clipping_output(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
-            result = func(prompt_data, *args, **kwargs)
-            to_clip = map(output_processor, result) if output_processor else result
+def clip_output[T, S](output_processor: Callable[[T], str] | None = None):
+    def decorator(func: Moddable[T, S]) -> Moddable[T, S]:
+        def clipping_output(prompt_data: PromptData[T, S]):
+            result = func(prompt_data)
+            to_clip = map(output_processor or str, result)
             clipboard.copy("\n".join(to_clip))
             return result
 

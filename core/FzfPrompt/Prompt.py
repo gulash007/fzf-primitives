@@ -10,11 +10,11 @@ import socket
 import subprocess
 import time
 import traceback
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from shutil import which
 from threading import Event, Thread
-from typing import Any, Callable, Concatenate, Generic, Literal, ParamSpec, Protocol, Self, Type, TypeVar
+from typing import Callable, Concatenate, Literal, ParamSpec, Protocol, Self, Type, TypeVar
 
 import clipboard
 import pydantic
@@ -80,7 +80,7 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
 EndStatus = Literal["accept", "abort"]
 
 
-class ResultAttr(Generic[T]):
+class ResultAttr[T]:
     def __init__(self) -> None:
         self._value: T
         self._is_set = False
@@ -99,7 +99,7 @@ class ResultAttr(Generic[T]):
         self._value = value
 
 
-class Result(list):
+class Result(list[T]):
     end_status = ResultAttr[EndStatus]()
     event = ResultAttr[Hotkey | FzfEvent]()
     query = ResultAttr[str]()
@@ -144,12 +144,10 @@ class Result(list):
 # TODO: enforce post-process actions to end prompt
 
 
-class ShellCommand(ParametrizedOptionString):
-    ...
+class ShellCommand(ParametrizedOptionString): ...
 
 
-class ParametrizedAction(ParametrizedOptionString):
-    ...
+class ParametrizedAction(ParametrizedOptionString): ...
 
 
 ShellCommandActionType = Literal["execute", "execute-silent", "change-preview"]
@@ -206,11 +204,11 @@ class Binding:
             raise RuntimeError(f"Multiple prompt-ending actions disallowed ({self.prompt_ending_action_count})")
         try:
             action_strings = [
-                f"{action[1]}({action[0].to_action_string()})"
-                if isinstance(action, tuple)
-                else action.to_action_string()
-                if isinstance(action, (ParametrizedAction))
-                else action
+                (
+                    f"{action[1]}({action[0].to_action_string()})"
+                    if isinstance(action, tuple)
+                    else action.to_action_string() if isinstance(action, (ParametrizedAction)) else action
+                )
                 for action in self.actions
             ]
         except RuntimeError as e:
@@ -244,7 +242,7 @@ ACCEPT_HOTKEY: Hotkey = "enter"
 ABORT_HOTKEY: Hotkey = "esc"
 
 
-class ActionMenu:
+class ActionMenu[T, S]:
     def __init__(self) -> None:
         self.bindings: dict[Hotkey | FzfEvent, Binding] = {}
         self.post_processors: dict[Hotkey | FzfEvent, PostProcessor] = {}
@@ -294,7 +292,7 @@ class ActionMenu:
         return options.header(header_help).header_first
 
     @single_use_method
-    def apply_post_processor(self, prompt_data: PromptData):
+    def apply_post_processor(self, prompt_data: PromptData[T, S]):
         if post_processor := self.post_processors.get(prompt_data.result.event):
             post_processor(prompt_data)
 
@@ -390,23 +388,22 @@ PLACEHOLDERS = {
 }
 
 
-class CommandOutput(str):
-    ...
+class CommandOutput(str): ...
 
 
 P = ParamSpec("P")
 R = TypeVar("R", bound=str | None)
-# means it requires first paramketer to be of type PromptData but other parameters can be anything
-ServerCallFunction = Callable[Concatenate["PromptData", P], R]
+# means it requires first parameter to be of type PromptData but other parameters can be anything
+type ServerCallFunction[T, S] = Callable[Concatenate[PromptData[T, S], ...], str | None]
 
 
 # TODO: Add support for index {n} and indices {+n}
 # TODO: Will logging slow it down too much?
 # TODO: Allow seeing output of server call and wait for key press to return to prompt
-class ServerCall(ShellCommand):
+class ServerCall[T, S](ShellCommand):
     """❗ custom name mustn't have single nor double quotes in it. It only has informative purpose anyway"""
 
-    def __init__(self, function: ServerCallFunction, custom_name: str | None = None) -> None:
+    def __init__(self, function: ServerCallFunction[T, S], custom_name: str | None = None) -> None:
         self.function = function
         self.name = f"{custom_name or function.__name__} ({id(self)})"
         self.socket_number: int
@@ -445,8 +442,7 @@ class PostProcessor(Protocol):
     __name__: str
 
     @staticmethod
-    def __call__(prompt_data: PromptData) -> None:
-        ...
+    def __call__(prompt_data: PromptData) -> None: ...
 
 
 EMPTY_SELECTIONS = [""]
@@ -482,13 +478,13 @@ class PromptEndingAction(ParametrizedAction):
         return super().to_action_string()
 
 
-class Server(Thread):
-    def __init__(self, prompt_data: PromptData, server_setup_finished: Event, server_should_close: Event) -> None:
+class Server[T, S](Thread):
+    def __init__(self, prompt_data: PromptData[T, S], server_setup_finished: Event, server_should_close: Event) -> None:
         super().__init__(name="Server")
         self.prompt_data = prompt_data
         self.server_setup_finished = server_setup_finished
         self.server_should_close = server_should_close
-        self.server_calls: dict[str, ServerCall] = {sc.name: sc for sc in prompt_data.server_calls()}
+        self.server_calls: dict[str, ServerCall[T, S]] = {sc.name: sc for sc in prompt_data.server_calls()}
 
     # TODO: Use automator to end running prompt and propagate errors
     def run(self):
@@ -519,7 +515,7 @@ class Server(Thread):
         finally:
             self.server_setup_finished.set()
 
-    def handle_request(self, client_socket: socket.socket, prompt_data: PromptData):
+    def handle_request(self, client_socket: socket.socket, prompt_data: PromptData[T, S]):
         payload = bytearray()
         while r := client_socket.recv(1024):
             payload.extend(r)
@@ -535,7 +531,7 @@ class Server(Thread):
         except Exception:
             response = traceback.format_exc()
         if response:
-            client_socket.sendall(response.encode("utf-8"))
+            client_socket.sendall(str(response).encode("utf-8"))
         client_socket.close()
 
     def resolve_all_server_calls(self, socket_number: int):
@@ -543,17 +539,18 @@ class Server(Thread):
             server_call.resolve_socket_number(socket_number)
 
 
-PreviewFunction = ServerCallFunction[P, str]
+type PreviewFunction[T, S] = Callable[Concatenate[PromptData[T, S], ...], str]
 
 
 @dataclass
-class Preview:
+class Preview[T, S]:
     # TODO: | Event
     # TODO: implement ServerCall commands
+    # TODO: line wrap
     def __init__(
         self,
         name: str,
-        command: str | PreviewFunction,
+        command: str | PreviewFunction[T, S],
         hotkey: Hotkey,
         window_size: int | str = "50%",
         window_position: Position = "right",
@@ -573,11 +570,13 @@ class Preview:
         self.output: str
 
 
-class PreviewChangeServerCall(ServerCall):
-    def __init__(self, command: str | PreviewFunction, name: str, store_output: bool) -> None:
+class PreviewChangeServerCall[T, S](ServerCall):
+    def __init__(self, command: str | PreviewFunction[T, S], name: str, store_output: bool) -> None:
         if isinstance(command, str):
 
-            def execute_preview(prompt_data: PromptData, preview_output: str = CommandOutput("echo $preview_output")):
+            def execute_preview(
+                prompt_data: PromptData[T, S], preview_output: str = CommandOutput("echo $preview_output")
+            ):
                 prompt_data.previewer.current_preview = prompt_data.previewer.previews[name]
                 if store_output:
                     prompt_data.previewer.previews[name].output = preview_output
@@ -587,7 +586,7 @@ class PreviewChangeServerCall(ServerCall):
             self.template = f"preview_output=$({command}) && echo $preview_output && {self.template}"
         else:
 
-            def execute_preview_with_enclosed_function(prompt_data: PromptData, **kwargs):
+            def execute_preview_with_enclosed_function(prompt_data: PromptData[T, S], **kwargs):
                 prompt_data.previewer.current_preview = prompt_data.previewer.previews[name]
                 logger.trace(f"Changing preview to '{name}'", preview=name)
                 preview_output = command(prompt_data, **kwargs)
@@ -607,14 +606,14 @@ class PreviewWindowChange(ParametrizedAction):
         super().__init__(f"change-preview-window({self.window_size},{self.window_position})")
 
 
-class Previewer:
+class Previewer[T, S]:
     """Handles passing right preview options"""
 
     def __init__(self) -> None:
-        self.previews: dict[str, Preview] = {}
-        self.current_preview: Preview | None = None
+        self.previews: dict[str, Preview[T, S]] = {}
+        self.current_preview: Preview[T, S] | None = None
 
-    def add(self, preview: Preview, action_menu: ActionMenu, *, main: bool = False):
+    def add(self, preview: Preview[T, S], action_menu: ActionMenu[T, S], *, main: bool = False):
         if main or self.current_preview is None:
             self.current_preview = preview
         self.previews[preview.name] = preview
@@ -642,19 +641,30 @@ class Previewer:
 JSON_ENV_VAR_NAME = "PROMPT_DATA"
 
 
-@dataclass
-class PromptData:
+class PromptData[T, S]:
     """Accessed from fzf process through socket Server"""
 
-    id: str = field(init=False, default_factory=lambda: datetime.now().isoformat())  # TODO: use or remove
-    choices: list = field(default_factory=list)
-    presenter: Callable[[Any], str] = str
-    previewer: Previewer = field(default_factory=Previewer)
-    action_menu: ActionMenu = field(default_factory=ActionMenu)
-    options: Options = field(default_factory=Options)
-    data: dict = field(default_factory=dict)  # arbitrary data to be accessed
-    data_as_env_var: bool = False
-    result: Result = field(init=False, default_factory=Result)
+    def __init__(
+        self,
+        choices: list[T] | None = None,
+        presenter: Callable[[T], str] = str,
+        obj: S = None,
+        data: dict | None = None,  # arbitrary data to be passed to fzf process
+        previewer: Previewer[T, S] | None = None,
+        action_menu: ActionMenu[T, S] | None = None,
+        options: Options | None = None,
+        data_as_env_var: bool = False,
+    ):
+        self.choices = choices or []
+        self.presenter = presenter
+        self.obj = obj
+        self.data = data or {}
+        self.previewer = previewer or Previewer()
+        self.action_menu = action_menu or ActionMenu()
+        self.options = options or Options()
+        self.data_as_env_var = data_as_env_var
+        self.result: Result[T] = Result()
+        self.id = datetime.now().isoformat()  # TODO: Use it?
 
     @property
     def choices_string(self) -> str:

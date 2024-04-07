@@ -52,10 +52,10 @@ class Options:
         self.__options: list[str] = list(fzf_options)
         self._header_strings: list[str] = []
 
-    def __call__(self, func: Moddable[P]) -> Moddable[P]:
-        def adding_options(prompt_data: PromptData, *args: P.args, **kwargs: P.kwargs):
+    def __call__[T, S](self, func: Moddable[T, S]) -> Moddable[T, S]:
+        def adding_options(prompt_data: PromptData[T, S]):
             prompt_data.options = prompt_data.options + self
-            return func(prompt_data, *args, **kwargs)
+            return func(prompt_data)
 
         return adding_options
 
@@ -166,8 +166,7 @@ class ParametrizedOptionString(metaclass=RemembersHowItWasConstructed):
         return getattr(self, "_new_copy")()
 
 
-class NotResolved(RuntimeError):
-    ...
+class NotResolved(RuntimeError): ...
 
 
 Layout = Literal[
