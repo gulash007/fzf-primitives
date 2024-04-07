@@ -25,6 +25,7 @@ def run(prompt_data: PromptData) -> Result:
 
 @app.command()
 def main(options: list[str] = typer.Argument(None, help="fzf options passed as string. Pass them after --")):
+    options = options or []
     try:
         prompt_data = PromptData(choices=BasePrompt.read_choices(), options=Options(*options))
         output = run(prompt_data)

@@ -24,6 +24,7 @@ def read_choices():
 
 @app.command()
 def main(options: list[str] = typer.Argument(None, help="fzf options passed as string. Pass them after --")):
+    options = options or []
     try:
         output = run(prompt_data=PromptData(choices=read_choices(), options=Options(*options)))
     except ExitLoop as e:
