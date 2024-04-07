@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from shutil import which
 from threading import Event, Thread
-from typing import Callable, Concatenate, Generic, Iterable, Literal, ParamSpec, Protocol, Self, Type, TypeVar
+from typing import Any, Callable, Concatenate, Generic, Literal, ParamSpec, Protocol, Self, Type, TypeVar
 
 import clipboard
 import pydantic
@@ -61,7 +61,7 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
         subprocess.run(
             f"{executable_path} {options}",
             shell=True,
-            input="\n".join(str(choice) for choice in prompt_data.choices).encode(),
+            input=prompt_data.choices_string.encode(),
             check=True,
             env=os.environ | {JSON_ENV_VAR_NAME: json.dumps(prompt_data.data)} if prompt_data.data_as_env_var else None,
         )
@@ -99,7 +99,7 @@ class ResultAttr(Generic[T]):
         self._value = value
 
 
-class Result(list[str]):
+class Result(list):
     end_status = ResultAttr[EndStatus]()
     event = ResultAttr[Hotkey | FzfEvent]()
     query = ResultAttr[str]()
@@ -109,7 +109,9 @@ class Result(list[str]):
         super().__init__()
 
     def __str__(self) -> str:
-        return json.dumps({"status": self.end_status, "event": self.event, "query": self.query, "selections": self})
+        return json.dumps(
+            {"status": self.end_status, "event": self.event, "query": self.query, "selections": [str(x) for x in self]}
+        )
 
 
 # TODO: Ability to output preview in Result (or anything else)
@@ -458,12 +460,14 @@ class PromptEndingAction(ParametrizedAction):
         self.pipe_call = ServerCall(self.pipe_results)
         super().__init__("execute-silent($pipe_call)+abort", ["pipe_call"])
 
-    def pipe_results(self, prompt_data: PromptData, event: Hotkey | FzfEvent, query: str, selections: list[str]):
+    def pipe_results(
+        self, prompt_data: PromptData, event: Hotkey | FzfEvent, query: str, indices: list[int], selections: list[str]
+    ):
         prompt_data.result.query = query
         prompt_data.result.event = event
         prompt_data.result.end_status = self.end_status
         if selections != EMPTY_SELECTIONS:
-            prompt_data.result.extend(selections)
+            prompt_data.result.extend([prompt_data.choices[i] for i in indices])
         logger.debug("Piping results")
         logger.debug(prompt_data.result)
 
@@ -643,13 +647,18 @@ class PromptData:
     """Accessed from fzf process through socket Server"""
 
     id: str = field(init=False, default_factory=lambda: datetime.now().isoformat())  # TODO: use or remove
-    choices: Iterable = field(default_factory=list)
+    choices: list = field(default_factory=list)
+    presenter: Callable[[Any], str] = str
     previewer: Previewer = field(default_factory=Previewer)
     action_menu: ActionMenu = field(default_factory=ActionMenu)
     options: Options = field(default_factory=Options)
     data: dict = field(default_factory=dict)  # arbitrary data to be accessed
     data_as_env_var: bool = False
     result: Result = field(init=False, default_factory=Result)
+
+    @property
+    def choices_string(self) -> str:
+        return "\n".join(self.presenter(choice) for choice in self.choices)
 
     def get_current_preview(self) -> str:
         if not self.previewer.current_preview:
