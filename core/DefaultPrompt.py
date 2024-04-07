@@ -24,7 +24,12 @@ def run(prompt_data: PromptData) -> Result:
 
 
 @app.command()
-def main(options: list[str] = typer.Argument(None, help="fzf options passed as string. Pass them after --")):
+def main(
+    options: list[str] = typer.Argument(None, help="fzf options passed as string. Pass them after --"),
+    log: bool = False,
+):
+    if log:
+        logger.enable("")
     options = options or []
     try:
         prompt_data = PromptData(choices=BasePrompt.read_choices(), options=Options(*options))
@@ -36,5 +41,4 @@ def main(options: list[str] = typer.Argument(None, help="fzf options passed as s
 
 
 if __name__ == "__main__":
-    logger.enable("")
     app()
