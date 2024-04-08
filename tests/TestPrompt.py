@@ -8,7 +8,7 @@ from ..core.FzfPrompt.Prompt import Action, Binding, PromptEndingAction, PromptD
 from ..core.monitoring import Logger
 from .Recording import Recording
 
-HOLLY_VAULT = Path("/Users/honza/Documents/HOLLY")
+HOLLY_VAULT = Path("~/Documents/HOLLY").expanduser()
 
 # TEST ALL KINDS OF STUFF
 # TODO: test getting preview output
