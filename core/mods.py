@@ -153,6 +153,7 @@ class preview[T, S]:
 
         self.custom("View File", view_file)
 
+    # TODO: Add option to change back to main preview automatically after changing selection
     def custom(
         self,
         name: str,

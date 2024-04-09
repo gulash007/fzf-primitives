@@ -30,5 +30,6 @@ class Prompt[T, S]:
         return self._prompt_data.get_current_preview()
 
     def run(self) -> Result[T]:
+        # FIXME: only mod.options modifications are applied this late; all other mods are applied immediately
         self.mod.apply_options()
         return run_fzf_prompt(self._prompt_data)

@@ -173,7 +173,7 @@ BaseAction = Literal[
     "refresh-preview",
 ]
 # Action can just be a string if you know what you're doing (look in `man fzf` for what can be assigned to '--bind')
-Action = BaseAction | ParametrizedAction | tuple[ShellCommand, ShellCommandActionType]
+Action = BaseAction | ParametrizedAction | tuple[ShellCommand | str, ShellCommandActionType]
 
 # native fzf options may be overwritten here
 PRESET_ACTIONS = {
@@ -192,7 +192,7 @@ class Binding:
             if isinstance(action, ShellCommand):
                 action = (action, "execute")
             if isinstance(action, tuple):
-                self.actions.append((action[0].new_copy(), action[1]))
+                self.actions.append((x if isinstance(x := action[0], str) else x.new_copy(), action[1]))
             elif isinstance(action, ParametrizedAction):
                 self.actions.append(action.new_copy())
             elif isinstance(action, str) and (preset_action_factory := PRESET_ACTIONS.get(action)):
@@ -211,7 +211,7 @@ class Binding:
         try:
             action_strings = [
                 (
-                    f"{action[1]}({action[0].to_action_string()})"
+                    f"{action[1]}({(ShellCommand(x) if isinstance(x:=action[0], str) else x).to_action_string()})"
                     if isinstance(action, tuple)
                     else action.to_action_string() if isinstance(action, (ParametrizedAction)) else action
                 )
@@ -449,7 +449,7 @@ class ServerCall[T, S](ShellCommand):
 type PostProcessor = Callable[[PromptData], None]
 
 
-EMPTY_SELECTIONS = [""] # these are injected instead of an empty list when nothing in prompt is selected
+EMPTY_SELECTIONS = [""]  # these are injected instead of an empty list when nothing in prompt is selected
 
 
 class PromptEndingAction(ParametrizedAction):
