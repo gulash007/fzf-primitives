@@ -27,10 +27,7 @@ logger = get_logger()
 
 
 def quit_app(prompt_data: PromptData):
-    sep = "\n\t"
-    raise ExitLoop(
-        f"Exiting app with\nquery: {prompt_data.result.query}\nselections:{sep}{sep.join(map(str, prompt_data.result))}"
-    )
+    raise ExitLoop(f"Exiting app with\n{prompt_data.result}")
 
 
 def clip_current_preview(prompt_data: PromptData):

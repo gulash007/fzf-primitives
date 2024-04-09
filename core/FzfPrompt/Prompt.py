@@ -113,7 +113,9 @@ class Result(list[T]):
 
     def __str__(self) -> str:
         return json.dumps(
-            {"status": self.end_status, "event": self.event, "query": self.query, "selections": [str(x) for x in self]}
+            {"status": self.end_status, "event": self.event, "query": self.query, "selections": list(self)},
+            indent=4,
+            default=repr,
         )
 
 
