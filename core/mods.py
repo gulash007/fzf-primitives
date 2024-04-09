@@ -218,5 +218,4 @@ class Mod[T, S]:
     def default(self) -> Self:
         self.on_event("ctrl-c").clip
         self.on_event("ctrl-y").clip_options
-        self.lastly.exit_round_when_aborted()
         return self

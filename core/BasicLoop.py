@@ -21,8 +21,8 @@ def run_in_loop[T, S](prompt_builder: PromptBuilder[T, S], result_processor: Res
         try:
             prompt = prompt_builder()
             prompt.mod.on_event("ctrl-q").quit
-            if (result := prompt.run()) is not None:
-                result_processor(result)
+            prompt.mod.lastly.exit_round_when_aborted()
+            result_processor(prompt.run())
         except ExitRound as e:
             logger.info(f"ExitRound: {e}")
         except ExitLoop as e:
