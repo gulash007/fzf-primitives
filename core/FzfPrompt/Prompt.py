@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from shutil import which
 from threading import Event, Thread
-from typing import Callable, Concatenate, Literal, ParamSpec, Protocol, Self, Type, TypeVar
+from typing import Any, Callable, Concatenate, Literal, ParamSpec, Self, Type, TypeVar
 
 import clipboard
 import pydantic
@@ -36,7 +36,7 @@ FZF_URL = "https://github.com/junegunn/fzf"
 # TODO: Solve other expected hotkeys
 # TODO: Use tempfile
 # TODO: Allow propagation of exceptions through nested prompts (relevant for quit_app)
-# ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable specified in vscode-insiders://file/Users/honza/.dotfiles/.zshforfzf:4
+# ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable
 def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
     if not which("fzf") and not executable_path:
         raise SystemError(f"Cannot find 'fzf' installed on PATH. ({FZF_URL})")
@@ -66,14 +66,17 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
             env=os.environ | {JSON_ENV_VAR_NAME: json.dumps(prompt_data.data)} if prompt_data.data_as_env_var else None,
         )
     except subprocess.CalledProcessError as err:
-        if err.returncode != 130:  # 130 means aborted
+        # 130 means aborted or unassigned hotkey was pressed
+        # TODO: Disable those hotkeys instead
+        if err.returncode != 130:
             raise
     finally:
         server_should_close.set()
     server.join()
     if isinstance(e := prompt_data.result.exception, ExpectedException):
         raise e
-    prompt_data.action_menu.apply_post_processor(prompt_data)
+    prompt_data.action_menu.apply_prompt_ending_action_specific_post_processor(prompt_data)
+    prompt_data.apply_common_post_processors(prompt_data)
     return prompt_data.result
 
 
@@ -272,17 +275,20 @@ class ActionMenu[T, S]:
         ]
 
     def add(self, event: Hotkey | FzfEvent, binding: Binding):
-        if event in self.bindings:
-            raise RuntimeError(f"Hotkey conflict ({event}): {binding.name} vs {self.bindings[event].name}")
-        self.bindings[event] = binding
-        for action in binding.actions:
-            if isinstance(action, PromptEndingAction):
-                if action.post_processor:
-                    self.post_processors[event] = action.post_processor
-                action.resolve_event(event)
+        if event not in self.bindings:
+            self.bindings[event] = binding
+        else:
+            self.bindings[event] += binding
 
     # TODO: silent binding (doesn't appear in header help)?
+    @single_use_method
     def resolve_options(self) -> Options:
+        for event, binding in self.bindings.items():
+            for action in binding.actions:
+                if isinstance(action, PromptEndingAction):
+                    if action.post_processor:
+                        self.post_processors[event] = action.post_processor
+                    action.resolve_event(event)
         options = Options()
         for event, binding in self.bindings.items():
             options.bind(event, binding.to_action_string())
@@ -292,7 +298,7 @@ class ActionMenu[T, S]:
         return options.header(header_help).header_first
 
     @single_use_method
-    def apply_post_processor(self, prompt_data: PromptData[T, S]):
+    def apply_prompt_ending_action_specific_post_processor(self, prompt_data: PromptData[T, S]):
         if post_processor := self.post_processors.get(prompt_data.result.event):
             post_processor(prompt_data)
 
@@ -394,7 +400,7 @@ class CommandOutput(str): ...
 P = ParamSpec("P")
 R = TypeVar("R", bound=str | None)
 # means it requires first parameter to be of type PromptData but other parameters can be anything
-type ServerCallFunction[T, S] = Callable[Concatenate[PromptData[T, S], ...], str | None]
+type ServerCallFunction[T, S] = Callable[Concatenate[PromptData[T, S], ...], Any]
 
 
 # TODO: Add support for index {n} and indices {+n}
@@ -438,11 +444,7 @@ class ServerCall[T, S](ShellCommand):
         self.resolve(socket_number=socket_number)
 
 
-class PostProcessor(Protocol):
-    __name__: str
-
-    @staticmethod
-    def __call__(prompt_data: PromptData) -> None: ...
+type PostProcessor = Callable[[PromptData], None]
 
 
 EMPTY_SELECTIONS = [""]
@@ -539,9 +541,6 @@ class Server[T, S](Thread):
             server_call.resolve_socket_number(socket_number)
 
 
-type PreviewFunction[T, S] = Callable[Concatenate[PromptData[T, S], ...], str]
-
-
 @dataclass
 class Preview[T, S]:
     # TODO: | Event
@@ -550,8 +549,8 @@ class Preview[T, S]:
     def __init__(
         self,
         name: str,
-        command: str | PreviewFunction[T, S],
-        hotkey: Hotkey,
+        command: str | ServerCallFunction[T, S],
+        hotkey: Hotkey | None = None,
         window_size: int | str = "50%",
         window_position: Position = "right",
         preview_label: str | None = None,
@@ -563,7 +562,7 @@ class Preview[T, S]:
             if isinstance(command, str) and not store_output
             else PreviewChangeServerCall(command, name, store_output)
         )
-        self.hotkey: Hotkey = hotkey
+        self.hotkey: Hotkey | None = hotkey
         self.window_size = window_size
         self.window_position: Position = window_position
         self.preview_label = preview_label
@@ -571,7 +570,7 @@ class Preview[T, S]:
 
 
 class PreviewChangeServerCall[T, S](ServerCall):
-    def __init__(self, command: str | PreviewFunction[T, S], name: str, store_output: bool) -> None:
+    def __init__(self, command: str | ServerCallFunction[T, S], name: str, store_output: bool) -> None:
         if isinstance(command, str):
 
             def execute_preview(
@@ -613,21 +612,12 @@ class Previewer[T, S]:
         self.previews: dict[str, Preview[T, S]] = {}
         self.current_preview: Preview[T, S] | None = None
 
-    def add(self, preview: Preview[T, S], action_menu: ActionMenu[T, S], *, main: bool = False):
+    def add(self, preview: Preview[T, S], *, main: bool = False):
         if main or self.current_preview is None:
             self.current_preview = preview
         self.previews[preview.name] = preview
-        action_menu.add(
-            preview.hotkey,
-            # It's crucial that window change happens before preview change (see )
-            Binding(
-                f"Change preview to '{preview.name}'",
-                PreviewWindowChange(preview.window_size, preview.window_position),
-                (preview.command, "change-preview"),
-                "refresh-preview",
-            ),
-        )
 
+    @single_use_method
     def resolve_options(self) -> Options:
         if self.current_preview is None:  # Meaning no preview was added
             return Options()
@@ -664,6 +654,7 @@ class PromptData[T, S]:
         self.options = options or Options()
         self.data_as_env_var = data_as_env_var
         self.result: Result[T] = Result()
+        self.post_processors: list[PostProcessor] = []
         self.id = datetime.now().isoformat()  # TODO: Use it?
 
     @property
@@ -676,7 +667,25 @@ class PromptData[T, S]:
         return self.previewer.current_preview.output
 
     def add_preview(self, preview: Preview, *, main: bool = False):
-        self.previewer.add(preview, self.action_menu, main=main)
+        self.previewer.add(preview, main=main)
+        if preview.hotkey:
+            self.action_menu.add(
+                preview.hotkey,
+                # ❗ It's crucial that window change happens before preview change
+                Binding(
+                    f"Change preview to '{preview.name}'",
+                    PreviewWindowChange(preview.window_size, preview.window_position),
+                    (preview.command, "change-preview"),
+                    "refresh-preview",
+                ),
+            )
+
+    def add_post_processor(self, post_processor: PostProcessor):
+        self.post_processors.append(post_processor)
+
+    def apply_common_post_processors(self, prompt_data: PromptData[T, S]):
+        for post_processor in self.post_processors:
+            post_processor(prompt_data)
 
     @single_use_method
     def resolve_options(self) -> Options:

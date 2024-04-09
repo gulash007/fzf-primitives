@@ -33,8 +33,7 @@ def add_file_handler(
     format=LOG_FORMAT,
     colorize=True,
     **kwargs,
-):
-    ...
+): ...
 
 
 @overload
@@ -46,8 +45,7 @@ def add_file_handler(
     format=LOG_FORMAT,
     colorize=True,
     **kwargs,
-):
-    ...
+): ...
 
 
 def add_file_handler(
@@ -60,19 +58,17 @@ def add_file_handler(
     **kwargs,
 ):
     if not file_path and not file_name:
-        raise ValueError("At least on of file_path and file_name has to be filled")
+        raise ValueError("At least one of file_path and file_name has to be filled")
     file_path = file_path or LOG_FILE_FOLDER.joinpath(f"{file_name}.log")
     return logger.add(file_path, level=level, format=format, colorize=colorize, **kwargs)
 
 
 @overload
-def clear_log_file(file_name: str, file_path: None = None):
-    ...
+def clear_log_file(file_name: str, file_path: None = None): ...
 
 
 @overload
-def clear_log_file(file_name: None = None, file_path: str | Path = ""):
-    ...
+def clear_log_file(file_name: None = None, file_path: str | Path = ""): ...
 
 
 def clear_log_file(file_name: str | None = None, file_path: str | Path | None = None):

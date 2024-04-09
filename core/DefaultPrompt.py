@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import typer
 
-from . import BasePrompt, mods
+from ..core import BasePrompt
+from ..main import Prompt
 from .FzfPrompt.exceptions import ExitLoop
-from .FzfPrompt.options import Options
-from .FzfPrompt.Prompt import Result, PromptData
 from .monitoring.Logger import get_logger
 
 logger = get_logger()
@@ -14,13 +13,6 @@ app = typer.Typer()
 
 
 # TODO: add support for outputting from all available info (including preview)
-
-
-@mods.on_event("ctrl-c").clip
-@mods.on_event("ctrl-q").quit
-@mods.exit_round_when_aborted()
-def run(prompt_data: PromptData) -> Result:
-    return BasePrompt.run(prompt_data=prompt_data)
 
 
 @app.command()
@@ -32,8 +24,10 @@ def main(
         logger.enable("")
     options = options or []
     try:
-        prompt_data = PromptData(choices=BasePrompt.read_choices(), options=Options(*options))
-        output = run(prompt_data)
+        prompt = Prompt(choices=BasePrompt.read_choices())
+        prompt.mod.default
+        prompt.mod.options.add(*options)
+        output = prompt.run()
     except ExitLoop as e:
         print(f"Exiting loop: {e}")
         exit(0)

@@ -3,11 +3,8 @@ from __future__ import annotations
 
 import shlex
 from string import Template
-from typing import Iterable, Literal, Self, Any, Type, TypeVar, TYPE_CHECKING, ParamSpec
+from typing import Iterable, Literal, Self, Any, Type, TypeVar, ParamSpec
 
-if TYPE_CHECKING:
-    from .Prompt import PromptData
-    from ..mods import Moddable
 
 P = ParamSpec("P")
 
@@ -52,13 +49,6 @@ class Options:
         self.__options: list[str] = list(fzf_options)
         self._header_strings: list[str] = []
 
-    def __call__[T, S](self, func: Moddable[T, S]) -> Moddable[T, S]:
-        def adding_options(prompt_data: PromptData[T, S]):
-            prompt_data.options = prompt_data.options + self
-            return func(prompt_data)
-
-        return adding_options
-
     @property
     def options(self) -> list[str]:
         return self.__options
@@ -100,10 +90,14 @@ class Options:
     def listen(self, port_number: int = 0):
         return self.add(f"--listen={port_number}")
 
+    # FIXME: __str__ shouldn't mutate this object
     def __str__(self) -> str:
         if self._header_strings:
             self.options.append(shlex.join(["--header", "\n".join(self._header_strings)]))
         return " ".join(self.options)
+
+    def pretty(self) -> str:
+        return "\n".join(self.options)
 
     def __add__(self, __other: Options) -> Self:
         options = self.add(*__other.options)
@@ -122,7 +116,7 @@ T = TypeVar("T")
 class RemembersHowItWasConstructed(type):
     def __call__(cls: Type[T], *args, **kwargs) -> T:
         instance = super().__call__(*args, **kwargs)
-        instance._new_copy = lambda: cls(*args, **kwargs)
+        setattr(instance, "_new_copy", lambda: cls(*args, **kwargs))
         return instance
 
 
@@ -194,6 +188,7 @@ Position = Literal[
     "right",
 ]
 FzfEvent = Literal["start", "load", "change", "focus", "one", "backward-eof"]
+# TODO: Add more available keys
 Hotkey = Literal[
     "ctrl-a",
     "ctrl-b",

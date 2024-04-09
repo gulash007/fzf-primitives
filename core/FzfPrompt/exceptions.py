@@ -1,3 +1,4 @@
+# rename exception to signal its use to end prompt
 class ExpectedException(Exception):
     ...
 

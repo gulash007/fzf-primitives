@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Self
 
@@ -61,7 +62,9 @@ class Recording(pydantic.BaseModel):
         logger.enable("")
 
     def save(self):
-        with open(self.get_path(self.name), "w", encoding="utf8") as f:
+        path = self.get_path(self.name)
+        Path(os.path.dirname(path)).mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf8") as f:
             f.write(self.model_dump_json(indent=2))
 
     @classmethod
