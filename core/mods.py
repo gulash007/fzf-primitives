@@ -20,6 +20,7 @@ from .FzfPrompt.Prompt import (
     ServerCall,
     ServerCallFunction,
     ShellCommand,
+    ShellCommandActionType,
 )
 from .monitoring.Logger import get_logger
 
@@ -71,6 +72,9 @@ class on_event[T, S]:
 
     def run_server_call(self, name: str, function: ServerCallFunction[T, S]) -> Self:
         return self.run(name, ServerCall(function))
+
+    def run_shell_command(self, name: str, command: str, command_type: ShellCommandActionType = "execute") -> Self:
+        return self.run(name, (ShellCommand(command), command_type))
 
 
 def preview_basic(prompt_data: PromptData, query: str, selection: str, selections: list[str]):
