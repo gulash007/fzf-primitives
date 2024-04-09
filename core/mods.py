@@ -217,5 +217,6 @@ class Mod[T, S]:
     @property
     def default(self) -> Self:
         self.on_event("ctrl-c").clip
+        self.on_event("ctrl-x").clip_current_preview
         self.on_event("ctrl-y").clip_options
         return self
