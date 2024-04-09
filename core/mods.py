@@ -68,7 +68,7 @@ class on_event[T, S]:
 
     def open_files(self, relative_to: str | Path = ".", app: FileBrowser = "VS Code"):
         command = FILE_BROWSERS[app]
-        return self.run_server_call(
+        return self.run_function(
             f"open files in {app}",
             lambda pd, selections: shell_command(
                 [command, *[f"{relative_to}/{selection}" for selection in selections]], shell=False
@@ -83,7 +83,7 @@ class on_event[T, S]:
         self.prompt_data.action_menu.add(self.event, Binding(name, *actions))
         return self
 
-    def run_server_call(self, name: str, function: ServerCallFunction[T, S]) -> Self:
+    def run_function(self, name: str, function: ServerCallFunction[T, S]) -> Self:
         return self.run(name, ServerCall(function))
 
     def run_shell_command(self, name: str, command: str, command_type: ShellCommandActionType = "execute") -> Self:
