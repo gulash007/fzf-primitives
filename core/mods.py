@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Self
+from typing import Callable, Literal, Self
 
 import clipboard
 from thingies import shell_command
@@ -48,6 +48,10 @@ class binding_preset:
         return obj.run(self._name, *self._actions)
 
 
+type FileBrowser = Literal["VS Code", "VS Code - Insiders"]
+FILE_BROWSERS: dict[FileBrowser, str] = {"VS Code": "code", "VS Code - Insiders": "code-insiders"}
+
+
 class on_event[T, S]:
     accept = binding_preset("accept", "accept")
     abort = binding_preset("abort", "abort")
@@ -61,6 +65,15 @@ class on_event[T, S]:
     def view_logs_in_terminal(self, log_file_path: str | Path):
         command = f"less +F '{log_file_path}'"
         return self.run("copy command to view logs in terminal", ServerCall(lambda pd: clipboard.copy(command)))
+
+    def open_files(self, relative_to: str | Path = ".", app: FileBrowser = "VS Code"):
+        command = FILE_BROWSERS[app]
+        return self.run_server_call(
+            f"open files in {app}",
+            lambda pd, selections: shell_command(
+                [command, *[f"{relative_to}/{selection}" for selection in selections]], shell=False
+            ),
+        )
 
     def __init__(self, prompt_data: PromptData[T, S], event: Hotkey | FzfEvent):
         self.prompt_data = prompt_data
