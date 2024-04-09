@@ -106,6 +106,7 @@ class Result(list[T]):
     end_status = ResultAttr[EndStatus]()
     event = ResultAttr[Hotkey | FzfEvent]()
     query = ResultAttr[str]()
+    stripped_selections = ResultAttr[list[str]]()  # as in {+} placeholder; stripped of ANSI codes
 
     def __init__(self) -> None:
         self.exception: ExpectedException | None = None
@@ -449,7 +450,7 @@ class ServerCall[T, S](ShellCommand):
 type PostProcessor = Callable[[PromptData], None]
 
 
-EMPTY_SELECTIONS = [""]
+EMPTY_SELECTIONS = [""] # these are injected instead of an empty list when nothing in prompt is selected
 
 
 class PromptEndingAction(ParametrizedAction):
@@ -466,8 +467,9 @@ class PromptEndingAction(ParametrizedAction):
         prompt_data.result.query = query
         prompt_data.result.event = event
         prompt_data.result.end_status = self.end_status
-        if selections != EMPTY_SELECTIONS:
+        if indices:
             prompt_data.result.extend([prompt_data.choices[i] for i in indices])
+            prompt_data.result.stripped_selections = selections
         logger.debug("Piping results")
         logger.debug(prompt_data.result)
 
