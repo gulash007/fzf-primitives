@@ -388,15 +388,6 @@ class Request(pydantic.BaseModel):
     kwargs: dict = {}
 
 
-PLACEHOLDERS = {
-    "query": "--arg query {q}",  # type str
-    "selection": "--arg selection {}",  # type str
-    "selections": "--argjson selections \"$(jq --compact-output --null-input '$ARGS.positional' --args {+})\"",  # type list[str]
-    "index": "--argjson index {n}",  # type int
-    "indices": "--argjson indices \"$(jq --compact-output --null-input '[$ARGS.positional[] | tonumber]' --args {+n})\"",  # type list[int]
-}
-
-
 class CommandOutput(str): ...
 
 
@@ -404,6 +395,14 @@ P = ParamSpec("P")
 R = TypeVar("R", bound=str | None)
 # means it requires first parameter to be of type PromptData but other parameters can be anything
 type ServerCallFunction[T, S] = Callable[Concatenate[PromptData[T, S], ...], Any]
+# When the function has these parameters, fzf will inject appropriate values into the function
+PLACEHOLDERS = {
+    "query": "--arg query {q}",  # type str
+    "selection": "--arg selection {}",  # type str
+    "selections": "--argjson selections \"$(jq --compact-output --null-input '$ARGS.positional' --args {+})\"",  # type list[str]
+    "index": "--argjson index {n}",  # type int
+    "indices": "--argjson indices \"$(jq --compact-output --null-input '[$ARGS.positional[] | tonumber]' --args {+n})\"",  # type list[int]
+}
 
 
 # TODO: Add support for index {n} and indices {+n}
