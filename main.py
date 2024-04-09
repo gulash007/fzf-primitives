@@ -13,7 +13,7 @@ class Prompt[T, S]:
         self._mod = Mod(self._prompt_data)  # TODO: prevent from using after run
 
     @property
-    def mod(self) -> Mod:
+    def mod(self) -> Mod[T, S]:
         return self._mod
 
     # TODO: should this return immutable sequence? But then you can't adjust them before running unless you want to use a condition to check if prompt is already running
