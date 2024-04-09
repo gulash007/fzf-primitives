@@ -365,7 +365,7 @@ class Automator(Thread):
                 logger.weirdness(response)
             raise RuntimeError(response)
         self.binding_executed.wait()
-        time.sleep(0.3)
+        time.sleep(0.4)
 
     def move_to_next_binding(self, prompt_data: PromptData):
         self.binding_executed.set()
