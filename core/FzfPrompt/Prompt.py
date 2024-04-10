@@ -541,9 +541,13 @@ class Server[T, S](Thread):
             self.server_should_close.set()
             return
         except Exception:
-            response = traceback.format_exc()
-        if response:
+            logger.error(trb := traceback.format_exc())
+            response = trb
             client_socket.sendall(str(response).encode("utf-8"))
+            input()
+        else:
+            if response:
+                client_socket.sendall(str(response).encode("utf-8"))
         client_socket.close()
 
     def resolve_all_server_calls(self, socket_number: int):
