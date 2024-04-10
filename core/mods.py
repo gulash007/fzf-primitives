@@ -13,6 +13,7 @@ from .FzfPrompt.options import FzfEvent, Hotkey, Options, Position
 from .FzfPrompt.Prompt import (
     Action,
     Binding,
+    EndStatus,
     Preview,
     PromptData,
     PromptEndingAction,
@@ -88,6 +89,11 @@ class on_event[T, S]:
 
     def run_shell_command(self, name: str, command: str, command_type: ShellCommandActionType = "execute") -> Self:
         return self.run(name, (ShellCommand(command), command_type))
+
+    def end_prompt(
+        self, name: str, end_status: EndStatus, post_processor: Callable[[PromptData[T, S]], None] | None = None
+    ):
+        return self.run(name, PromptEndingAction(end_status, post_processor))
 
 
 def preview_basic(prompt_data: PromptData, query: str, selection: str, selections: list[str]):
