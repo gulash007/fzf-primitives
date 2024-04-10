@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from shutil import which
 from threading import Event, Thread
-from typing import Any, Callable, Concatenate, Literal, ParamSpec, Self, Type, TypeVar
+from typing import Any, Callable, Concatenate, Iterable, Literal, ParamSpec, Self, Type, TypeVar
 
 import clipboard
 import pydantic
@@ -150,7 +150,15 @@ class Result(list[T]):
 # TODO: enforce post-process actions to end prompt
 
 
-class ShellCommand(ParametrizedOptionString): ...
+class ShellCommand(ParametrizedOptionString):
+    def __init__(
+        self,
+        template: str,
+        placeholders_to_resolve: Iterable[str] = (),
+        command_type: ShellCommandActionType = "execute",
+    ) -> None:
+        self.command_type: ShellCommandActionType = command_type
+        super().__init__(template, placeholders_to_resolve)
 
 
 class ParametrizedAction(ParametrizedOptionString): ...
@@ -190,7 +198,7 @@ class Binding:
         self.actions: list[Action] = []
         for action in actions:
             if isinstance(action, ShellCommand):
-                action = (action, "execute")
+                action = (action, action.command_type)
             if isinstance(action, tuple):
                 self.actions.append((x if isinstance(x := action[0], str) else x.new_copy(), action[1]))
             elif isinstance(action, ParametrizedAction):
@@ -382,12 +390,6 @@ class Automator(Thread):
         self.port_resolved.set()
 
 
-class Request(pydantic.BaseModel):
-    server_call_name: str
-    args: list = []
-    kwargs: dict = {}
-
-
 class CommandOutput(str): ...
 
 
@@ -414,7 +416,12 @@ PLACEHOLDERS = {
 class ServerCall[T, S](ShellCommand):
     """❗ custom name mustn't have single nor double quotes in it. It only has informative purpose anyway"""
 
-    def __init__(self, function: ServerCallFunction[T, S], custom_name: str | None = None) -> None:
+    def __init__(
+        self,
+        function: ServerCallFunction[T, S],
+        custom_name: str | None = None,
+        command_type: ShellCommandActionType = "execute",
+    ) -> None:
         self.function = function
         self.name = f"{custom_name or function.__name__} ({id(self)})"
         self.socket_number: int
@@ -436,12 +443,13 @@ class ServerCall[T, S](ShellCommand):
         template = (
             'jq --null-input --compact-output \'{"server_call_name":"'
             + self.name
+            + f'","command_type":"{command_type}'
             + '","kwargs":$ARGS.named}\' '
             + " ".join(jq_args)
             + " | nc localhost $socket_number"
         )
         placeholders_to_resolve.append("socket_number")
-        super().__init__(template, placeholders_to_resolve)
+        super().__init__(template, placeholders_to_resolve, command_type)
 
     @single_use_method
     def resolve_socket_number(self, socket_number: int) -> None:
@@ -460,7 +468,8 @@ class PromptEndingAction(ParametrizedAction):
         self.end_status: EndStatus = end_status
         self.post_processor = post_processor
         self.event: Hotkey | FzfEvent
-        self.pipe_call = ServerCall(self.pipe_results)
+        # ❗ Needs to be silent, otherwise program can get stuck when waiting for user input on error in Server
+        self.pipe_call = ServerCall(self.pipe_results, command_type="execute-silent")
         super().__init__("execute-silent($pipe_call)+abort", ["pipe_call"])
 
     def pipe_results(
@@ -488,6 +497,13 @@ class PromptEndingAction(ParametrizedAction):
         if not self.resolved:
             self.resolve(pipe_call=self.pipe_call.to_action_string())
         return super().to_action_string()
+
+
+class Request(pydantic.BaseModel):
+    server_call_name: str
+    command_type: ShellCommandActionType
+    args: list = []
+    kwargs: dict = {}
 
 
 class Server[T, S](Thread):
@@ -544,7 +560,8 @@ class Server[T, S](Thread):
             logger.error(trb := traceback.format_exc())
             response = trb
             client_socket.sendall(str(response).encode("utf-8"))
-            input()
+            if request.command_type != "execute-silent":
+                input()
         else:
             if response:
                 client_socket.sendall(str(response).encode("utf-8"))
