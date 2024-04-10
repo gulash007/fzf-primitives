@@ -114,7 +114,13 @@ class Result(list[T]):
 
     def __str__(self) -> str:
         return json.dumps(
-            {"status": self.end_status, "event": self.event, "query": self.query, "selections": list(self)},
+            {
+                "status": self.end_status,
+                "event": self.event,
+                "query": self.query,
+                "selections": list(self),
+                "stripped selections": self.stripped_selections,
+            },
             indent=4,
             default=repr,
         )
@@ -460,9 +466,6 @@ class ServerCall[T, S](ShellCommand):
 type PostProcessor = Callable[[PromptData], None]
 
 
-EMPTY_SELECTIONS = [""]  # these are injected instead of an empty list when nothing in prompt is selected
-
-
 class PromptEndingAction(ParametrizedAction):
     def __init__(self, end_status: EndStatus, post_processor: PostProcessor | None = None) -> None:
         self.end_status: EndStatus = end_status
@@ -478,13 +481,8 @@ class PromptEndingAction(ParametrizedAction):
         prompt_data.result.query = query
         prompt_data.result.event = event
         prompt_data.result.end_status = self.end_status
-        if indices:
-            prompt_data.result.extend([prompt_data.choices[i] for i in indices])
-            prompt_data.result.stripped_selections = selections
-        elif selections == EMPTY_SELECTIONS:
-            prompt_data.result.stripped_selections = []
-        else:
-            raise RuntimeError(f"Unexpected selections value when no indices: {selections}")
+        prompt_data.result.extend([prompt_data.choices[i] for i in indices])
+        prompt_data.result.stripped_selections = selections
         logger.debug("Piping results")
         logger.debug(prompt_data.result)
 
