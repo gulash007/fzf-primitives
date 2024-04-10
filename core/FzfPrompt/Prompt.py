@@ -563,10 +563,11 @@ class Preview[T, S]:
         store_output: bool = True,
     ):
         self.name = name
+        self.id = f"{name} ({id(self)})"
         self.command = (
             ShellCommand(command)
             if isinstance(command, str) and not store_output
-            else PreviewChangeServerCall(command, name, store_output)
+            else PreviewChangeServerCall(command, self, store_output)
         )
         self.hotkey: Hotkey | None = hotkey
         self.window_size = window_size
@@ -576,30 +577,30 @@ class Preview[T, S]:
 
 
 class PreviewChangeServerCall[T, S](ServerCall):
-    def __init__(self, command: str | ServerCallFunction[T, S], name: str, store_output: bool) -> None:
+    def __init__(self, command: str | ServerCallFunction[T, S], preview: Preview[T, S], store_output: bool) -> None:
         if isinstance(command, str):
 
             def execute_preview(
                 prompt_data: PromptData[T, S], preview_output: str = CommandOutput("echo $preview_output")
             ):
-                prompt_data.previewer.current_preview = prompt_data.previewer.previews[name]
+                prompt_data.previewer.current_preview = prompt_data.previewer.get_preview(preview.id)
                 if store_output:
-                    prompt_data.previewer.previews[name].output = preview_output
-                logger.trace(f"Changing preview to '{name}'", preview=name)
+                    prompt_data.previewer.get_preview(preview.id).output = preview_output
+                logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
 
-            super().__init__(execute_preview, f"Execute preview {name}")
+            super().__init__(execute_preview, f"Execute preview {preview.name}")
             self.template = f"preview_output=$({command}) && echo $preview_output && {self.template}"
         else:
 
             def execute_preview_with_enclosed_function(prompt_data: PromptData[T, S], **kwargs):
-                prompt_data.previewer.current_preview = prompt_data.previewer.previews[name]
-                logger.trace(f"Changing preview to '{name}'", preview=name)
+                prompt_data.previewer.current_preview = prompt_data.previewer.get_preview(preview.id)
+                logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
                 preview_output = command(prompt_data, **kwargs)
                 if store_output:
-                    prompt_data.previewer.previews[name].output = preview_output
+                    prompt_data.previewer.get_preview(preview.id).output = preview_output
                 return preview_output
 
-            super().__init__(command, f"Execute preview {name}")
+            super().__init__(command, f"Execute preview {preview.name}")
             self.function = execute_preview_with_enclosed_function  # HACK
 
 
@@ -615,13 +616,20 @@ class Previewer[T, S]:
     """Handles passing right preview options"""
 
     def __init__(self) -> None:
-        self.previews: dict[str, Preview[T, S]] = {}
+        self._previews: dict[str, Preview[T, S]] = {}
         self.current_preview: Preview[T, S] | None = None
+
+    @property
+    def previews(self) -> list[Preview[T, S]]:
+        return list(self._previews.values())
 
     def add(self, preview: Preview[T, S], *, main: bool = False):
         if main or self.current_preview is None:
             self.current_preview = preview
-        self.previews[preview.name] = preview
+        self._previews[preview.id] = preview
+
+    def get_preview(self, preview_id: str) -> Preview[T, S]:
+        return self._previews[preview_id]
 
     @single_use_method
     def resolve_options(self) -> Options:
@@ -701,7 +709,7 @@ class PromptData[T, S]:
         server_calls = [action[0] for action in self.action_menu.shell_command_actions(ServerCall)]
         server_calls.extend(action.pipe_call for action in self.action_menu.parametrized_actions(PromptEndingAction))
         server_calls.extend(
-            preview.command for preview in self.previewer.previews.values() if isinstance(preview.command, ServerCall)
+            preview.command for preview in self.previewer.previews if isinstance(preview.command, ServerCall)
         )
         if self.action_menu.should_run_automator:
             server_calls.append(self.action_menu.automator.move_to_next_binding_server_call)
