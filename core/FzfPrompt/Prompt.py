@@ -463,11 +463,11 @@ class ServerCall[T, S](ShellCommand):
         self.resolve(socket_number=socket_number)
 
 
-type PostProcessor = Callable[[PromptData], None]
+type PostProcessor[T, S] = Callable[[PromptData[T, S]], None]
 
 
-class PromptEndingAction(ParametrizedAction):
-    def __init__(self, end_status: EndStatus, post_processor: PostProcessor | None = None) -> None:
+class PromptEndingAction[T, S](ParametrizedAction):
+    def __init__(self, end_status: EndStatus, post_processor: PostProcessor[T, S] | None = None) -> None:
         self.end_status: EndStatus = end_status
         self.post_processor = post_processor
         self.event: Hotkey | FzfEvent
@@ -476,7 +476,12 @@ class PromptEndingAction(ParametrizedAction):
         super().__init__("execute-silent($pipe_call)+abort", ["pipe_call"])
 
     def pipe_results(
-        self, prompt_data: PromptData, event: Hotkey | FzfEvent, query: str, indices: list[int], selections: list[str]
+        self,
+        prompt_data: PromptData[T, S],
+        event: Hotkey | FzfEvent,
+        query: str,
+        indices: list[int],
+        selections: list[str],
     ):
         prompt_data.result.query = query
         prompt_data.result.event = event
