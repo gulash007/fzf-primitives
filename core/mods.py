@@ -168,6 +168,10 @@ class preview[T, S]:
             main=self.main,
         )
 
+    def simple(self, command: str):
+        """As if just passing --preview 'command' option to fzf with no additional support"""
+        self.prompt_data.options.preview(command)
+
 
 class post_processing[T, S]:
     def __init__(self, prompt_data: PromptData[T, S]) -> None:
