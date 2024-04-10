@@ -583,7 +583,7 @@ class PreviewChangeServerCall[T, S](ServerCall):
             def execute_preview(
                 prompt_data: PromptData[T, S], preview_output: str = CommandOutput("echo $preview_output")
             ):
-                prompt_data.previewer.current_preview = prompt_data.previewer.get_preview(preview.id)
+                prompt_data.previewer.set_current_preview(preview.id)
                 if store_output:
                     prompt_data.previewer.get_preview(preview.id).output = preview_output
                 logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
@@ -593,7 +593,7 @@ class PreviewChangeServerCall[T, S](ServerCall):
         else:
 
             def execute_preview_with_enclosed_function(prompt_data: PromptData[T, S], **kwargs):
-                prompt_data.previewer.current_preview = prompt_data.previewer.get_preview(preview.id)
+                prompt_data.previewer.set_current_preview(preview.id)
                 logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
                 preview_output = command(prompt_data, **kwargs)
                 if store_output:
@@ -617,15 +617,24 @@ class Previewer[T, S]:
 
     def __init__(self) -> None:
         self._previews: dict[str, Preview[T, S]] = {}
-        self.current_preview: Preview[T, S] | None = None
+        self._current_preview: Preview[T, S] | None = None
+
+    @property
+    def current_preview(self) -> Preview[T, S]:
+        if not self._current_preview:
+            raise RuntimeError("No current preview set")
+        return self._current_preview
+
+    def set_current_preview(self, preview_id: str):
+        self._current_preview = self.get_preview(preview_id)
 
     @property
     def previews(self) -> list[Preview[T, S]]:
         return list(self._previews.values())
 
     def add(self, preview: Preview[T, S], *, main: bool = False):
-        if main or self.current_preview is None:
-            self.current_preview = preview
+        if main or not self._previews:
+            self._current_preview = preview
         self._previews[preview.id] = preview
 
     def get_preview(self, preview_id: str) -> Preview[T, S]:
@@ -633,7 +642,7 @@ class Previewer[T, S]:
 
     @single_use_method
     def resolve_options(self) -> Options:
-        if self.current_preview is None:  # Meaning no preview was added
+        if not self._previews:
             return Options()
         return (
             Options()
@@ -676,8 +685,6 @@ class PromptData[T, S]:
         return "\n".join(self.presenter(choice) for choice in self.choices)
 
     def get_current_preview(self) -> str:
-        if not self.previewer.current_preview:
-            raise RuntimeError("No current preview")
         return self.previewer.current_preview.output
 
     def add_preview(self, preview: Preview, *, main: bool = False):
@@ -714,7 +721,3 @@ class PromptData[T, S]:
         if self.action_menu.should_run_automator:
             server_calls.append(self.action_menu.automator.move_to_next_binding_server_call)
         return server_calls
-
-
-if __name__ == "__main__":
-    pass
