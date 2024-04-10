@@ -469,11 +469,13 @@ class PromptEndingAction(ParametrizedAction):
         prompt_data.result.query = query
         prompt_data.result.event = event
         prompt_data.result.end_status = self.end_status
-        if not indices and selections != EMPTY_SELECTIONS:
-            raise RuntimeError(f"Unexpected selections value when no indices: {selections}")
         if indices:
             prompt_data.result.extend([prompt_data.choices[i] for i in indices])
             prompt_data.result.stripped_selections = selections
+        elif selections == EMPTY_SELECTIONS:
+            prompt_data.result.stripped_selections = []
+        else:
+            raise RuntimeError(f"Unexpected selections value when no indices: {selections}")
         logger.debug("Piping results")
         logger.debug(prompt_data.result)
 
