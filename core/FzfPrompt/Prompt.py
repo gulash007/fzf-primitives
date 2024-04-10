@@ -57,7 +57,7 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
     # TODO: 🧊 Use subprocess.run without shell=True as [executable_path, *options] (need to change Options)
     try:
         options = prompt_data.resolve_options()
-        logger.debug("\n".join(options.options))
+        logger.debug("\n" + "\n".join(options.options))
         subprocess.run(
             f"{executable_path} {options}",
             shell=True,
