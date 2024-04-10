@@ -596,7 +596,20 @@ class Preview[T, S]:
         self.window_size = window_size
         self.window_position: Position = window_position
         self.preview_label = preview_label
-        self.output: str
+        self.store_output = store_output
+        self._output: str | None = None
+
+    @property
+    def output(self) -> str:
+        if self._output is None:
+            if self.store_output:
+                raise RuntimeError("Output not set")
+            raise Warning("Output not stored for this preview")
+        return self._output
+
+    @output.setter
+    def output(self, value: str):
+        self._output = value
 
 
 class PreviewChangeServerCall[T, S](ServerCall):
