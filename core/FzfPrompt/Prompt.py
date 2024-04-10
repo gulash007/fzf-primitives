@@ -399,7 +399,10 @@ type ServerCallFunction[T, S] = Callable[Concatenate[PromptData[T, S], ...], Any
 PLACEHOLDERS = {
     "query": "--arg query {q}",  # type str
     "selection": "--arg selection {}",  # type str
-    "selections": "--argjson selections \"$(jq --compact-output --null-input '$ARGS.positional' --args {+})\"",  # type list[str]
+    "selections": r'--argjson selections "$(arr=({+}); printf '
+    "'%s\\n'"
+    '${arr[@]} | jq -R -s \'split("\\n") '
+    '| map(select(. != ""))\')"',  # type list[str]
     "index": "--argjson index {n}",  # type int
     "indices": "--argjson indices \"$(jq --compact-output --null-input '[$ARGS.positional[] | tonumber]' --args {+n})\"",  # type list[int]
 }
