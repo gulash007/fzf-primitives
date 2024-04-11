@@ -23,7 +23,7 @@ from thingies import shell_command
 from ..monitoring.Logger import get_logger
 from .decorators import single_use_method
 from .exceptions import ExpectedException
-from .options import FzfEvent, Hotkey, Options, ParametrizedOptionString, Position, ShellCommandActionType
+from .options import BaseAction, FzfEvent, Hotkey, Options, ParametrizedOptionString, Position, ShellCommandActionType
 
 T = TypeVar("T")
 
@@ -174,17 +174,6 @@ AnyShellCommand = TypeVar("AnyShellCommand", bound=ShellCommand)
 AnyParametrizedAction = TypeVar("AnyParametrizedAction", bound=ParametrizedAction)
 
 
-# raw fzf actions that aren't parametrized or name of preset action
-BaseAction = Literal[
-    "accept",
-    "abort",
-    "up",
-    "down",
-    "clear-query",
-    "toggle-all",
-    "select-all",
-    "refresh-preview",
-]
 # Action can just be a string if you know what you're doing (look in `man fzf` for what can be assigned to '--bind')
 Action = BaseAction | ParametrizedAction | tuple[ShellCommand | str, ShellCommandActionType]
 

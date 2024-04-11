@@ -69,6 +69,14 @@ class Options:
     def bind(self, event: Hotkey | FzfEvent, action: str) -> Self:
         return self.add(shlex.join(["--bind", f"{event}:{action}"]))
 
+    def bind_base_action(self, event: Hotkey | FzfEvent, action: BaseAction) -> Self:
+        return self.bind(event, action)
+
+    def bind_shell_command(
+        self, event: Hotkey | FzfEvent, command: str, command_type: ShellCommandActionType = "execute"
+    ) -> Self:
+        return self.bind(event, f"{command_type}({command})")
+
     def expect(self, *hotkeys: Hotkey) -> Self:
         return self.add(shlex.join(["--expect", f"{','.join(hotkeys)}"]))
 
@@ -194,6 +202,17 @@ FzfEvent = Literal[
     "focus",
     "one",
     "backward-eof",
+]
+# raw fzf actions that aren't parametrized
+BaseAction = Literal[
+    "accept",
+    "abort",
+    "up",
+    "down",
+    "clear-query",
+    "toggle-all",
+    "select-all",
+    "refresh-preview",
 ]
 ShellCommandActionType = Literal[
     "execute",
