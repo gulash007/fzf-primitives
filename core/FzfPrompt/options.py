@@ -187,7 +187,19 @@ Position = Literal[
     "left",
     "right",
 ]
-FzfEvent = Literal["start", "load", "change", "focus", "one", "backward-eof"]
+FzfEvent = Literal[
+    "start",
+    "load",
+    "change",
+    "focus",
+    "one",
+    "backward-eof",
+]
+ShellCommandActionType = Literal[
+    "execute",
+    "execute-silent",
+    "change-preview",
+]
 # TODO: Add more available keys
 Hotkey = Literal[
     "ctrl-a",

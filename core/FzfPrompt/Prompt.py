@@ -23,7 +23,7 @@ from thingies import shell_command
 from ..monitoring.Logger import get_logger
 from .decorators import single_use_method
 from .exceptions import ExpectedException
-from .options import FzfEvent, Hotkey, Options, ParametrizedOptionString, Position
+from .options import FzfEvent, Hotkey, Options, ParametrizedOptionString, Position, ShellCommandActionType
 
 T = TypeVar("T")
 
@@ -170,7 +170,6 @@ class ShellCommand(ParametrizedOptionString):
 class ParametrizedAction(ParametrizedOptionString): ...
 
 
-ShellCommandActionType = Literal["execute", "execute-silent", "change-preview"]
 AnyShellCommand = TypeVar("AnyShellCommand", bound=ShellCommand)
 AnyParametrizedAction = TypeVar("AnyParametrizedAction", bound=ParametrizedAction)
 
