@@ -256,7 +256,7 @@ class ActionMenu[T, S]:
         self.post_processors: dict[Hotkey | FzfEvent, PostProcessor] = {}
         self.add(ACCEPT_HOTKEY, Binding("accept", "accept"))
         self.add(ABORT_HOTKEY, Binding("abort", "abort"))
-        self.automator = Automator(self)
+        self.automator = Automator()
         self.to_automate: list[Binding | Hotkey] = []
 
     @property
@@ -332,7 +332,7 @@ class Automator(Thread):
         self.__port = value
         logger.info(f"Automator listening on port {self.port}")
 
-    def __init__(self, action_menu: ActionMenu) -> None:
+    def __init__(self) -> None:
         self.__port: str | None = None
         self.bindings: list[Binding] = []
         self.port_resolved = Event()
