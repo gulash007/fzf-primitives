@@ -505,7 +505,6 @@ class PromptEndingAction[T, S](ParametrizedAction):
 class Request(pydantic.BaseModel):
     server_call_name: str
     command_type: ShellCommandActionType
-    args: list = []
     kwargs: dict = {}
 
 
@@ -554,7 +553,7 @@ class Server[T, S](Thread):
             request = Request.model_validate_json(payload.decode("utf-8").strip())
             logger.debug(request.server_call_name)
             function = self.server_calls[request.server_call_name].function
-            response = function(prompt_data, *request.args, **request.kwargs)
+            response = function(prompt_data, **request.kwargs)
         except ExpectedException as e:
             prompt_data.result.exception = e
             self.server_should_close.set()
