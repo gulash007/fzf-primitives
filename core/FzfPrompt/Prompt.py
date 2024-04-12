@@ -18,7 +18,7 @@ from typing import Any, Callable, Concatenate, Iterable, Literal, ParamSpec, Sel
 
 import clipboard
 import pydantic
-from thingies import shell_command
+from thingies.shell import shell_command, MoreInformativeCalledProcessError
 
 from ..monitoring.Logger import get_logger
 from .decorators import single_use_method
@@ -69,7 +69,7 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
         # 130 means aborted or unassigned hotkey was pressed
         # TODO: Disable those hotkeys instead
         if err.returncode != 130:
-            raise
+            raise MoreInformativeCalledProcessError(err)
     finally:
         server_should_close.set()
     server.join()
