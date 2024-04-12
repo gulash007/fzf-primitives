@@ -696,7 +696,7 @@ class PromptData[T, S]:
     def __init__(
         self,
         choices: list[T] | None = None,
-        presenter: Callable[[T], str] = str,
+        presented_choices: list[str] | None = None,
         obj: S = None,
         data: dict | None = None,  # arbitrary data to be passed to fzf process
         previewer: Previewer[T, S] | None = None,
@@ -705,7 +705,7 @@ class PromptData[T, S]:
         data_as_env_var: bool = False,
     ):
         self.choices = choices or []
-        self.presenter = presenter
+        self.presented_choices = presented_choices or [str(choice) for choice in self.choices]
         self.obj = obj
         self.data = data or {}
         self.previewer = previewer or Previewer()
@@ -718,7 +718,7 @@ class PromptData[T, S]:
 
     @property
     def choices_string(self) -> str:
-        return "\n".join(self.presenter(choice) for choice in self.choices)
+        return "\n".join(self.presented_choices)
 
     def get_current_preview(self) -> str:
         return self.previewer.current_preview.output

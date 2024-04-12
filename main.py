@@ -8,8 +8,8 @@ from .core.mods import Mod
 # TODO: Or choose the presets in Mod class as its properties
 # TODO: Maybe replace presenter with displayed_choices ❌ but then you have to make sure their length matches
 class Prompt[T, S]:
-    def __init__(self, choices: list[T] | None = None, presenter: Callable[[T], str] = str, obj: S = None):
-        self._prompt_data = PromptData(choices=choices, presenter=presenter, obj=obj)
+    def __init__(self, choices: list[T] | None = None, presented_choices: list[str] | None = None, obj: S = None):
+        self._prompt_data = PromptData(choices=choices, presented_choices=presented_choices, obj=obj)
         self._mod = Mod(self._prompt_data)  # TODO: prevent from using after run
 
     @property
@@ -20,6 +20,10 @@ class Prompt[T, S]:
     @property
     def choices(self) -> list[T]:
         return self._prompt_data.choices
+
+    @property
+    def presented_choices(self) -> list[str]:
+        return self._prompt_data.presented_choices
 
     @property
     def obj(self) -> S:
