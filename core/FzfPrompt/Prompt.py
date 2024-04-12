@@ -59,8 +59,8 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
         options = prompt_data.resolve_options()
         logger.debug("\n" + "\n".join(options.options))
         subprocess.run(
-            f"{executable_path} {options}",
-            shell=True,
+            [executable_path, *shlex.split(str(options))],
+            shell=False,
             input=prompt_data.choices_string.encode(),
             check=True,
             env=os.environ | {JSON_ENV_VAR_NAME: json.dumps(prompt_data.data)} if prompt_data.data_as_env_var else None,
