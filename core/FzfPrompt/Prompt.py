@@ -390,7 +390,8 @@ class CommandOutput(str): ...
 P = ParamSpec("P")
 R = TypeVar("R", bound=str | None)
 # means it requires first parameter to be of type PromptData but other parameters can be anything
-type ServerCallFunction[T, S] = Callable[Concatenate[PromptData[T, S], ...], Any]
+type ServerCallFunctionGeneric[T, S, R] = Callable[Concatenate[PromptData[T, S], ...], R]
+type ServerCallFunction[T, S] = ServerCallFunctionGeneric[T, S, str | None]
 # When the function has these parameters, fzf will inject appropriate values into the function
 PLACEHOLDERS = {
     "query": "--arg query {q}",  # type str
@@ -562,6 +563,9 @@ class Server[T, S](Thread):
             server_call.resolve_socket_number(socket_number)
 
 
+type PreviewFunction[T, S] = ServerCallFunctionGeneric[T, S, str]
+
+
 @dataclass
 class Preview[T, S]:
     # TODO: | Event
@@ -570,7 +574,7 @@ class Preview[T, S]:
     def __init__(
         self,
         name: str,
-        command: str | ServerCallFunction[T, S],
+        command: str | PreviewFunction[T, S],
         hotkey: Hotkey | None = None,
         window_size: int | str = "50%",
         window_position: Position = "right",
@@ -605,7 +609,7 @@ class Preview[T, S]:
 
 
 class PreviewChangeServerCall[T, S](ServerCall):
-    def __init__(self, command: str | ServerCallFunction[T, S], preview: Preview[T, S], store_output: bool) -> None:
+    def __init__(self, command: str | PreviewFunction[T, S], preview: Preview[T, S], store_output: bool) -> None:
         if isinstance(command, str):
 
             def execute_preview(

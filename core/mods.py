@@ -15,6 +15,7 @@ from .FzfPrompt.Prompt import (
     Binding,
     EndStatus,
     Preview,
+    PreviewFunction,
     PromptData,
     PromptEndingAction,
     Result,
@@ -113,7 +114,7 @@ class preview_preset:
     def __init__(
         self,
         name: str,
-        command: str | ServerCallFunction,
+        command: str | PreviewFunction,
         window_size: int | str = "50%",
         window_position: Position = "right",
         preview_label: str | None = None,
@@ -144,10 +145,7 @@ class preview[T, S]:
     def file(self, language: str = "python", theme: str = "Solarized (light)"):
         """Parametrized preset for viewing files"""
 
-        def view_file(
-            prompt_data: PromptData[T, S],
-            selections: list[str],
-        ):
+        def view_file(prompt_data: PromptData[T, S], selections: list[str]):
             command = ["bat", "--color=always"]
             if language:
                 command.extend(("--language", language))
@@ -163,7 +161,7 @@ class preview[T, S]:
     def custom(
         self,
         name: str,
-        command: str | ServerCallFunction[T, S],
+        command: str | PreviewFunction[T, S],
         window_size: int | str = "50%",
         window_position: Position = "right",
         preview_label: str | None = None,
