@@ -535,11 +535,12 @@ class Server[T, S](Thread):
             self.server_setup_finished.set()
 
     def handle_request(self, client_socket: socket.socket, prompt_data: PromptData[T, S]):
-        payload = bytearray()
+        payload_bytearray = bytearray()
         while r := client_socket.recv(1024):
-            payload.extend(r)
+            payload_bytearray.extend(r)
+        payload = payload_bytearray.decode("utf-8").strip()
         try:
-            request = Request.model_validate_json(payload.decode("utf-8").strip())
+            request = Request.model_validate_json(payload)
             logger.debug(request.server_call_name)
             function = self.server_calls[request.server_call_name].function
             response = function(prompt_data, **request.kwargs)
@@ -547,16 +548,19 @@ class Server[T, S](Thread):
             prompt_data.result.exception = e
             self.server_should_close.set()
             return
-        except Exception:
+        except Exception as err:
             logger.error(trb := traceback.format_exc())
             response = trb
             client_socket.sendall(str(response).encode("utf-8"))
-            if request.command_type != "execute-silent":
+            if isinstance(err, pydantic.ValidationError): 
+                logger.error(f"Payload contents:\n{payload}")
+            elif request.command_type != "execute-silent":
                 input()
         else:
             if response:
                 client_socket.sendall(str(response).encode("utf-8"))
-        client_socket.close()
+        finally:
+            client_socket.close()
 
     def resolve_all_server_calls(self, socket_number: int):
         for server_call in self.server_calls.values():
