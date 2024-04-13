@@ -549,9 +549,8 @@ class Server[T, S](Thread):
             logger.error(trb := traceback.format_exc())
             response = trb
             client_socket.sendall(str(response).encode("utf-8"))
-            if isinstance(err, pydantic.ValidationError): 
-                logger.error(f"Payload contents:\n{payload}")
-            elif request.command_type != "execute-silent":
+            logger.error(f"Payload contents:\n{payload}")
+            if not isinstance(err, pydantic.ValidationError) and request.command_type != "execute-silent":
                 input()
         else:
             if response:
