@@ -14,7 +14,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from shutil import which
 from threading import Event, Thread
-from typing import Any, Callable, Concatenate, Iterable, Literal, ParamSpec, Self, Type, TypeVar
+from typing import Callable, Concatenate, Iterable, Literal, ParamSpec, Self, Type, TypeVar
+from pathlib import Path
 
 import clipboard
 import pydantic
@@ -106,6 +107,9 @@ class Result(list[T]):
     end_status = ResultAttr[EndStatus]()
     event = ResultAttr[Hotkey | FzfEvent]()
     query = ResultAttr[str]()
+    sel_index = ResultAttr[int]()
+    sel_indices = ResultAttr[list[int]]()
+    stripped_selection = ResultAttr[str]()  # as in {} placeholder; stripped of ANSI codes
     stripped_selections = ResultAttr[list[str]]()  # as in {+} placeholder; stripped of ANSI codes
 
     def __init__(self) -> None:
@@ -392,14 +396,6 @@ R = TypeVar("R", bound=str | None)
 # means it requires first parameter to be of type PromptData but other parameters can be anything
 type ServerCallFunctionGeneric[T, S, R] = Callable[Concatenate[PromptData[T, S], ...], R]
 type ServerCallFunction[T, S] = ServerCallFunctionGeneric[T, S, str | None]
-# When the function has these parameters, fzf will inject appropriate values into the function
-PLACEHOLDERS = {
-    "query": "--arg query {q}",  # type str
-    "selection": "--arg selection {}",  # type str
-    "selections": '--argjson selections "$(for sel in {+}; do echo \\$sel; done | jq -R -s \'split("\\n") | map(select(. != ""))\')"',  # type list[str]
-    "index": "--argjson index {n}",  # type int
-    "indices": "--argjson indices \"$(jq --compact-output --null-input '[$ARGS.positional[] | tonumber]' --args {+n})\"",  # type list[int]
-}
 
 
 # TODO: Add support for index {n} and indices {+n}
@@ -418,28 +414,7 @@ class ServerCall[T, S](ShellCommand):
         self.name = f"{custom_name or function.__name__} ({id(self)})"
         self.socket_number: int
 
-        parameters = list(inspect.signature(function).parameters.values())[1:]  # excludes prompt_data
-        jq_args = []
-        placeholders_to_resolve = []
-        for parameter in parameters:
-            if placeholder := PLACEHOLDERS.get(parameter.name):
-                jq_args.append(placeholder)
-            elif isinstance(parameter.default, CommandOutput):
-                jq_args.append(f'--arg {parameter.name} "$({parameter.default})"')
-            else:
-                # to be replaced using .resolve or is an environment variable
-                jq_args.append(f'--arg {parameter.name} "${parameter.name}"')
-                # environmental variables are recognized by being all uppercase
-                if not re.match("^[A-Z_]*$", parameter.name):
-                    placeholders_to_resolve.append(parameter.name)
-        template = (
-            'jq --null-input --compact-output \'{"server_call_name":"'
-            + self.name
-            + f'","command_type":"{command_type}'
-            + '","kwargs":$ARGS.named}\' '
-            + " ".join(jq_args)
-            + " | nc localhost $socket_number"
-        )
+        template, placeholders_to_resolve = Request.create_template(self.name, function, command_type)
         placeholders_to_resolve.append("socket_number")
         super().__init__(template, placeholders_to_resolve, command_type)
 
@@ -461,21 +436,16 @@ class PromptEndingAction[T, S](ParametrizedAction):
         self.pipe_call = ServerCall(self.pipe_results, command_type="execute-silent")
         super().__init__("execute-silent($pipe_call)+abort", ["pipe_call"])
 
-    def pipe_results(
-        self,
-        prompt_data: PromptData[T, S],
-        event: Hotkey | FzfEvent,
-        query: str,
-        indices: list[int],
-        selections: list[str],
-    ):
-        prompt_data.result.query = query
+    def pipe_results(self, prompt_data: PromptData[T, S], event: Hotkey | FzfEvent):
+        prompt_data.result.query = prompt_data.current_state.query
         prompt_data.result.event = event
         prompt_data.result.end_status = self.end_status
-        prompt_data.result.extend([prompt_data.choices[i] for i in indices])
-        prompt_data.result.stripped_selections = selections
-        logger.debug("Piping results")
-        logger.debug(prompt_data.result)
+        prompt_data.result.sel_indices = prompt_data.current_state.indices
+        prompt_data.result.sel_index = prompt_data.current_state.index
+        prompt_data.result.extend([prompt_data.choices[i] for i in prompt_data.current_state.indices])
+        prompt_data.result.stripped_selection = prompt_data.current_state.selection
+        prompt_data.result.stripped_selections = prompt_data.current_state.selections
+        logger.debug(f"Piping results:\n{prompt_data.result}")
 
     @single_use_method
     def resolve_event(self, event: Hotkey | FzfEvent):
@@ -491,7 +461,63 @@ class PromptEndingAction[T, S](ParametrizedAction):
 class Request(pydantic.BaseModel):
     server_call_name: str
     command_type: ShellCommandActionType
+    prompt_state: PromptState
     kwargs: dict = {}
+
+    @staticmethod
+    def create_template(
+        server_call_id: str, function: ServerCallFunction, command_type: ShellCommandActionType
+    ) -> tuple[str, list[str]]:
+
+        parameters = list(inspect.signature(function).parameters.values())[1:]  # excludes prompt_data
+        jq_args = []
+        placeholders_to_resolve = []
+        for parameter in parameters:
+            if isinstance(parameter.default, CommandOutput):
+                jq_args.append(f'--arg {parameter.name} "$({parameter.default})"')
+            else:
+                # to be replaced using .resolve or is an environment variable
+                jq_args.append(f'--arg {parameter.name} "${parameter.name}"')
+                # environmental variables are recognized by being all uppercase
+                if not re.match("^[A-Z_]*$", parameter.name):
+                    placeholders_to_resolve.append(parameter.name)
+        template = (
+            PromptState.create_command()
+            + " | jq --compact-output '{prompt_state:.} + {"
+            + f'server_call_name:"{server_call_id}",command_type:"{command_type}"'
+            + "} + {kwargs:$ARGS.named}' "
+            + " ".join(jq_args)
+            + " | nc localhost $socket_number"
+        )
+        return template, placeholders_to_resolve
+
+
+SHELL_SCRIPT_DIR = Path(__file__).parent.joinpath("shell")
+SHELL_SCRIPT = {
+    "selections": SHELL_SCRIPT_DIR.joinpath("selections_to_json.sh").absolute(),
+    "indices": SHELL_SCRIPT_DIR.joinpath("indices_to_json.sh").absolute(),
+}
+
+
+PLACEHOLDERS = {
+    "query": "--arg query {q}",  # type str
+    "index": "--argjson index {n}",  # type int
+    "selection": "--arg selection {}",  # type str
+    "indices": f'--argjson indices "$({SHELL_SCRIPT["indices"]} {{+n}})"',  # type list[int]
+    "selections": f'--argjson selections "$({SHELL_SCRIPT["selections"]} {{+}})"',  # type list[str]
+}
+
+
+class PromptState(pydantic.BaseModel):
+    query: str
+    index: int
+    indices: list[int]
+    selection: str
+    selections: list[str]
+
+    @staticmethod
+    def create_command() -> str:
+        return f'jq --null-input \'$ARGS.named\' {" ".join(PLACEHOLDERS.values())}'
 
 
 class Server[T, S](Thread):
@@ -539,6 +565,7 @@ class Server[T, S](Thread):
         try:
             request = Request.model_validate_json(payload)
             logger.debug(request.server_call_name)
+            prompt_data.current_state = request.prompt_state
             function = self.server_calls[request.server_call_name].function
             response = function(prompt_data, **request.kwargs)
         except ExpectedException as e:
@@ -621,7 +648,7 @@ class PreviewChangeServerCall[T, S](ServerCall):
                 logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
 
             super().__init__(execute_preview, f"Execute preview {preview.name}")
-            self.template = f"preview_output=$({command}) && echo $preview_output && {self.template}"
+            self.template = f'preview_output="$({command})" && echo $preview_output && {self.template}'
         else:
 
             def execute_preview_with_enclosed_function(prompt_data: PromptData[T, S], **kwargs):
@@ -711,6 +738,7 @@ class PromptData[T, S]:
         self.result: Result[T] = Result()
         self.post_processors: list[PostProcessor] = []
         self.id = datetime.now().isoformat()  # TODO: Use it?
+        self.current_state: PromptState
 
     @property
     def choices_string(self) -> str:
