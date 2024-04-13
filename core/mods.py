@@ -72,8 +72,8 @@ class on_event[T, S]:
         command = FILE_BROWSERS[app]
         return self.run_function(
             f"open files in {app}",
-            lambda pd, selections: shell_command(
-                [command, *[f"{relative_to}/{selection}" for selection in selections]], shell=False
+            lambda pd: shell_command(
+                [command, *[f"{relative_to}/{selection}" for selection in pd.current_state.selections]], shell=False
             ),
         )
 
@@ -97,17 +97,18 @@ class on_event[T, S]:
         return self.run(name, PromptEndingAction(end_status, post_processor))
 
 
-def preview_basic(prompt_data: PromptData, query: str, selection: str, selections: list[str]):
+def preview_basic(prompt_data: PromptData):
     sep = "\n\t"
+    query, selection, selections = (cs := prompt_data.current_state).query, cs.selection, cs.selections
     return f"query: {query}\nselection: {selection}\nselections:\n\t{sep.join(selections)}"
 
 
-def preview_basic_indexed(
-    prompt_data: PromptData, query: str, selection: str, selections: list[str], index: int, indices: list[int]
-):
+def preview_basic_indexed(prompt_data: PromptData):
     sep = "\n\t"
+    cs = prompt_data.current_state
+    query, index, selection, indices, selections = cs.query, cs.index, cs.selection, cs.indices, cs.selections
     indexed_selections = [f"{i}\t{selection}" for i, selection in zip(indices, selections)]
-    return f"query: {query}\nselection: {selection}\nselections:\n\t{sep.join(indexed_selections)}"
+    return f"query: {query}\nselection: {index} {selection}\nselections:\n\t{sep.join(indexed_selections)}"
 
 
 class preview_preset:
@@ -145,14 +146,14 @@ class preview[T, S]:
     def file(self, language: str = "python", theme: str = "Solarized (light)"):
         """Parametrized preset for viewing files"""
 
-        def view_file(prompt_data: PromptData[T, S], selections: list[str]):
+        def view_file(prompt_data: PromptData[T, S]):
             command = ["bat", "--color=always"]
             if language:
                 command.extend(("--language", language))
             if theme:
                 command.extend(("--theme", theme))
             command.append("--")  # Fixes file names starting with a hyphen
-            command.extend(selections)
+            command.extend(prompt_data.current_state.selections)
             return shell_command(command)
 
         self.custom("View File", view_file)
