@@ -15,10 +15,10 @@ from datetime import datetime
 from shutil import which
 from threading import Event, Thread
 from typing import Callable, Concatenate, Iterable, Literal, ParamSpec, Self, Type, TypeVar
-from pathlib import Path
 
 import clipboard
 import pydantic
+from .shell import SHELL_SCRIPTS
 from thingies.shell import shell_command, MoreInformativeCalledProcessError
 
 from ..monitoring.Logger import get_logger
@@ -492,19 +492,12 @@ class Request(pydantic.BaseModel):
         return template, placeholders_to_resolve
 
 
-SHELL_SCRIPT_DIR = Path(__file__).parent.joinpath("shell")
-SHELL_SCRIPT = {
-    "selections": SHELL_SCRIPT_DIR.joinpath("selections_to_json.sh").absolute(),
-    "indices": SHELL_SCRIPT_DIR.joinpath("indices_to_json.sh").absolute(),
-}
-
-
 PLACEHOLDERS = {
     "query": "--arg query {q}",  # type str
     "index": "--argjson index {n}",  # type int
     "selection": "--arg selection {}",  # type str
-    "indices": f'--argjson indices "$({SHELL_SCRIPT["indices"]} {{+n}})"',  # type list[int]
-    "selections": f'--argjson selections "$({SHELL_SCRIPT["selections"]} {{+}})"',  # type list[str]
+    "indices": f'--argjson indices "$({SHELL_SCRIPTS.indices_to_json} {{+n}})"',  # type list[int]
+    "selections": f'--argjson selections "$({SHELL_SCRIPTS.selections_to_json} {{+}})"',  # type list[str]
 }
 
 
