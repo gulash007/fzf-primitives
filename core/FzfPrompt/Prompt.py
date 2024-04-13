@@ -396,10 +396,7 @@ type ServerCallFunction[T, S] = ServerCallFunctionGeneric[T, S, str | None]
 PLACEHOLDERS = {
     "query": "--arg query {q}",  # type str
     "selection": "--arg selection {}",  # type str
-    "selections": r'--argjson selections "$(arr=({+}); printf'
-    " '%s\\n'"
-    ' "${arr[@]}" | jq -R -s \'split("\\n")'
-    ' | map(select(. != ""))\')"',  # type list[str]
+    "selections": '--argjson selections "$(for sel in {+}; do echo \\$sel; done | jq -R -s \'split("\\n") | map(select(. != ""))\')"',  # type list[str]
     "index": "--argjson index {n}",  # type int
     "indices": "--argjson indices \"$(jq --compact-output --null-input '[$ARGS.positional[] | tonumber]' --args {+n})\"",  # type list[int]
 }
