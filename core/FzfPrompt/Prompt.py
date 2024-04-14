@@ -493,9 +493,9 @@ class Request(pydantic.BaseModel):
 
 
 PLACEHOLDERS = {
-    "query": "--arg query {q}",  # type str
-    "index": "--argjson index {n}",  # type int
-    "selection": "--arg selection {}",  # type str
+    "query": '--arg query {q}',  # type str
+    "index": "--argjson index $(x={n}; echo ${x:-null})",  # type int
+    "selection": f'--argjson selection "$({SHELL_SCRIPTS.selection_to_json} {{}})"',  # type str
     "indices": f'--argjson indices "$({SHELL_SCRIPTS.indices_to_json} {{+n}})"',  # type list[int]
     "selections": f'--argjson selections "$({SHELL_SCRIPTS.selections_to_json} {{+}})"',  # type list[str]
 }
@@ -503,9 +503,9 @@ PLACEHOLDERS = {
 
 class PromptState(pydantic.BaseModel):
     query: str
-    index: int
+    index: int | None
     indices: list[int]
-    selection: str
+    selection: str | None
     selections: list[str]
 
     @staticmethod
