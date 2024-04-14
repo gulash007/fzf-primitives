@@ -84,37 +84,28 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
 EndStatus = Literal["accept", "abort"]
 
 
-class ResultAttr[T]:
-    def __init__(self) -> None:
-        self._value: T
-        self._is_set = False
-        self.name: str
-
-    def __set_name__(self, obj: Result, name: str):
-        self.name = name
-
-    def __get__(self, obj: Result, objtype=None) -> T:
-        if not self._is_set:
-            raise RuntimeError(f"{self.name} not set")
-        return self._value
-
-    def __set__(self, obj: Result, value: T):
-        self._is_set = True
-        self._value = value
-
-
 class Result(list[T]):
-    end_status = ResultAttr[EndStatus]()
-    event = ResultAttr[Hotkey | FzfEvent]()
-    query = ResultAttr[str]()
-    sel_index = ResultAttr[int]()
-    sel_indices = ResultAttr[list[int]]()
-    stripped_selection = ResultAttr[str]()  # as in {} placeholder; stripped of ANSI codes
-    stripped_selections = ResultAttr[list[str]]()  # as in {+} placeholder; stripped of ANSI codes
-
-    def __init__(self) -> None:
-        self.exception: ExpectedException | None = None
-        super().__init__()
+    def __init__(
+        self,
+        end_status: EndStatus,
+        event: Hotkey | FzfEvent,
+        choices: list[T],
+        query: str,  # as in {q} placeholder
+        sole_index: int | None,  # as in {n} placeholder
+        indices: list[int],  # as in {+n} placeholder
+        sole_stripped_selection: str | None,  # as in {} placeholder; stripped of ANSI codes
+        stripped_selections: list[str],  # as in {+} placeholder; stripped of ANSI codes
+        exception: Exception | None = None,
+    ):
+        self.end_status = end_status
+        self.event: Hotkey | FzfEvent = event
+        self.query = query
+        self.sole_index = sole_index  # of pointer starting from 0
+        self.indices = indices  # of marked selections or pointer if none are selected
+        self.sole_stripped_selection = sole_stripped_selection  # pointer
+        self.stripped_selections = stripped_selections  # marked selections or pointer if none are selected
+        self.exception = exception
+        super().__init__([choices[i] for i in indices])
 
     def __str__(self) -> str:
         return json.dumps(
@@ -122,8 +113,11 @@ class Result(list[T]):
                 "status": self.end_status,
                 "event": self.event,
                 "query": self.query,
+                "sole_index": self.sole_index,
+                "indices": self.indices,
                 "selections": list(self),
-                "stripped selections": self.stripped_selections,
+                "sole_stripped_selection": self.sole_stripped_selection,
+                "stripped_selections": self.stripped_selections,
             },
             indent=4,
             default=repr,
@@ -437,14 +431,7 @@ class PromptEndingAction[T, S](ParametrizedAction):
         super().__init__("execute-silent($pipe_call)+abort", ["pipe_call"])
 
     def pipe_results(self, prompt_data: PromptData[T, S], event: Hotkey | FzfEvent):
-        prompt_data.result.query = prompt_data.current_state.query
-        prompt_data.result.event = event
-        prompt_data.result.end_status = self.end_status
-        prompt_data.result.sel_indices = prompt_data.current_state.indices
-        prompt_data.result.sel_index = prompt_data.current_state.index
-        prompt_data.result.extend([prompt_data.choices[i] for i in prompt_data.current_state.indices])
-        prompt_data.result.stripped_selection = prompt_data.current_state.selection
-        prompt_data.result.stripped_selections = prompt_data.current_state.selections
+        prompt_data.finish(event, self.end_status)
         logger.debug(f"Piping results:\n{prompt_data.result}")
 
     @single_use_method
@@ -493,7 +480,7 @@ class Request(pydantic.BaseModel):
 
 
 PLACEHOLDERS = {
-    "query": '--arg query {q}',  # type str
+    "query": "--arg query {q}",  # type str
     "index": "--argjson index $(x={n}; echo ${x:-null})",  # type int
     "selection": f'--argjson selection "$({SHELL_SCRIPTS.selection_to_json} {{}})"',  # type str
     "indices": f'--argjson indices "$({SHELL_SCRIPTS.indices_to_json} {{+n}})"',  # type list[int]
@@ -558,7 +545,7 @@ class Server[T, S](Thread):
         try:
             request = Request.model_validate_json(payload)
             logger.debug(request.server_call_name)
-            prompt_data.current_state = request.prompt_state
+            prompt_data.set_current_state(request.prompt_state)
             function = self.server_calls[request.server_call_name].function
             response = function(prompt_data, **request.kwargs)
         except ExpectedException as e:
@@ -728,10 +715,45 @@ class PromptData[T, S]:
         self.action_menu = action_menu or ActionMenu()
         self.options = options or Options()
         self.data_as_env_var = data_as_env_var
-        self.result: Result[T] = Result()
         self.post_processors: list[PostProcessor] = []
+        self._current_state: PromptState | None = None
+        self._result: Result[T] | None = None
         self.id = datetime.now().isoformat()  # TODO: Use it?
-        self.current_state: PromptState
+        self._finished = False
+
+    @property
+    def current_state(self) -> PromptState:
+        if not self._current_state:
+            raise RuntimeError("Current state not set")
+        return self._current_state
+
+    def set_current_state(self, prompt_state: PromptState):
+        self._current_state = prompt_state
+
+    @property
+    def result(self) -> Result[T]:
+        if not self._result:
+            raise RuntimeError("Result not set")
+        if not self._finished:
+            raise RuntimeError("Prompt never finished")
+        return self._result
+
+    @property
+    def finished(self) -> bool:
+        return self._finished
+
+    def finish(self, event: Hotkey | FzfEvent, end_status: EndStatus):
+        self._result = Result(
+            end_status=end_status,
+            event=event,
+            choices=self.choices,
+            query=self.current_state.query,
+            sole_index=self.current_state.index,
+            indices=self.current_state.indices,
+            sole_stripped_selection=self.current_state.selection,
+            stripped_selections=self.current_state.selections,
+        )
+        self._finished = True
 
     @property
     def choices_string(self) -> str:
