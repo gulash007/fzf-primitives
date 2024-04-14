@@ -717,7 +717,7 @@ class PromptData[T, S]:
         self.data_as_env_var = data_as_env_var
         self.post_processors: list[PostProcessor] = []
         self._current_state: PromptState | None = None
-        self._result: Result[T] | None = None
+        self._result: Result[T]
         self.id = datetime.now().isoformat()  # TODO: Use it?
         self._finished = False
 
@@ -732,11 +732,12 @@ class PromptData[T, S]:
 
     @property
     def result(self) -> Result[T]:
-        if not self._result:
-            raise RuntimeError("Result not set")
         if not self._finished:
-            raise RuntimeError("Prompt never finished")
-        return self._result
+            raise RuntimeError("Prompt not finished")
+        try:
+            return self._result
+        except AttributeError:
+            raise RuntimeError("Result not set") from None
 
     @property
     def finished(self) -> bool:
