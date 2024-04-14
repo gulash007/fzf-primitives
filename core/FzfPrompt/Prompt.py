@@ -74,6 +74,8 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
     finally:
         server_should_close.set()
     server.join()
+    if not prompt_data.finished:
+        raise RuntimeError("Prompt not finished")
     if isinstance(e := prompt_data.result.exception, ExpectedException):
         raise e
     prompt_data.action_menu.apply_prompt_ending_action_specific_post_processor(prompt_data)
@@ -732,8 +734,6 @@ class PromptData[T, S]:
 
     @property
     def result(self) -> Result[T]:
-        if not self._finished:
-            raise RuntimeError("Prompt not finished")
         try:
             return self._result
         except AttributeError:
