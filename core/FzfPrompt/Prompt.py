@@ -641,7 +641,7 @@ class PreviewChangeServerCall[T, S](ServerCall):
                 logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
 
             super().__init__(execute_preview, f"Execute preview {preview.name}")
-            self.template = f'preview_output="$({command})" && echo $preview_output && {self.template}'
+            self.template = f'preview_output="$({command})"; echo $preview_output && {self.template}'
         else:
 
             def execute_preview_with_enclosed_function(prompt_data: PromptData[T, S], **kwargs):
