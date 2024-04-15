@@ -57,6 +57,9 @@ class Options:
         self.options.extend(fzf_options)
         return self
 
+    def initial_query(self, query: str) -> Self:
+        return self.add(shlex.join(["--query", query]))
+
     def preview(self, command: str) -> Self:
         return self.add(shlex.join(["--preview", f"{command}"]))
 
