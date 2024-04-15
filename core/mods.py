@@ -80,7 +80,7 @@ class on_event[T, S]:
         return self.run_function(
             f"open files in {app}",
             lambda pd: shell_command(
-                [command, *[f"{relative_to}/{selection}" for selection in pd.current_state.selections]], shell=False
+                [command, *[f"{relative_to}/{selection}" for selection in pd.current_state.lines]], shell=False
             ),
         )
 
@@ -106,16 +106,16 @@ class on_event[T, S]:
 
 def preview_basic(prompt_data: PromptData):
     sep = "\n\t"
-    query, selection, selections = (cs := prompt_data.current_state).query, cs.selection, cs.selections
-    return f"query: {query}\nselection: {selection}\nselections:\n\t{sep.join(selections)}"
+    query, line, lines = (cs := prompt_data.current_state).query, cs.single_line, cs.lines
+    return f"query: {query}\nselection: {line}\nselections:\n\t{sep.join(lines)}"
 
 
 def preview_basic_indexed(prompt_data: PromptData):
     sep = "\n\t"
     cs = prompt_data.current_state
-    query, index, selection, indices, selections = cs.query, cs.index, cs.selection, cs.indices, cs.selections
-    indexed_selections = [f"{i}\t{selection}" for i, selection in zip(indices, selections)]
-    return f"query: {query}\nselection: {index} {selection}\nselections:\n\t{sep.join(indexed_selections)}"
+    query, index, line, indices, lines = cs.query, cs.single_index, cs.single_line, cs.indices, cs.lines
+    indexed_selections = [f"{i}\t{selection}" for i, selection in zip(indices, lines)]
+    return f"query: {query}\nselection: {index} {line}\nselections:\n\t{sep.join(indexed_selections)}"
 
 
 class preview_preset:
@@ -160,7 +160,7 @@ class preview[T, S]:
             if theme:
                 command.extend(("--theme", theme))
             command.append("--")  # Fixes file names starting with a hyphen
-            command.extend(prompt_data.current_state.selections)
+            command.extend(prompt_data.current_state.lines)
             return shell_command(command)
 
         self.custom("View File", view_file)

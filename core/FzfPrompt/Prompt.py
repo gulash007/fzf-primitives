@@ -93,19 +93,19 @@ class Result(list[T]):
         event: Hotkey | FzfEvent,
         choices: list[T],
         query: str,  # as in {q} placeholder
-        sole_index: int | None,  # as in {n} placeholder
+        single_index: int | None,  # as in {n} placeholder
         indices: list[int],  # as in {+n} placeholder
-        sole_stripped_selection: str | None,  # as in {} placeholder; stripped of ANSI codes
-        stripped_selections: list[str],  # as in {+} placeholder; stripped of ANSI codes
+        single_line: str | None,  # as in {} placeholder; stripped of ANSI codes
+        lines: list[str],  # as in {+} placeholder; stripped of ANSI codes
         exception: Exception | None = None,
     ):
         self.end_status = end_status
         self.event: Hotkey | FzfEvent = event
         self.query = query
-        self.sole_index = sole_index  # of pointer starting from 0
+        self.single_index = single_index  # of pointer starting from 0
         self.indices = indices  # of marked selections or pointer if none are selected
-        self.sole_stripped_selection = sole_stripped_selection  # pointer
-        self.stripped_selections = stripped_selections  # marked selections or pointer if none are selected
+        self.single_line = single_line  # pointed at
+        self.lines = lines  # marked selections or pointer if none are selected
         self.exception = exception
         super().__init__([choices[i] for i in indices])
 
@@ -115,11 +115,11 @@ class Result(list[T]):
                 "status": self.end_status,
                 "event": self.event,
                 "query": self.query,
-                "sole_index": self.sole_index,
+                "single_index": self.single_index,
                 "indices": self.indices,
                 "selections": list(self),
-                "sole_stripped_selection": self.sole_stripped_selection,
-                "stripped_selections": self.stripped_selections,
+                "single_line": self.single_line,
+                "lines": self.lines,
             },
             indent=4,
             default=repr,
@@ -465,19 +465,19 @@ class Request(pydantic.BaseModel):
 
 PLACEHOLDERS = {
     "query": "--arg query {q}",  # type str
-    "index": "--argjson index $(x={n}; echo ${x:-null})",  # type int
-    "selection": f'--argjson selection "$({SHELL_SCRIPTS.selection_to_json} {{}})"',  # type str
+    "index": "--argjson single_index $(x={n}; echo ${x:-null})",  # type int
+    "fzf_selection": f'--argjson single_line "$({SHELL_SCRIPTS.selection_to_json} {{}})"',  # type str
     "indices": f'--argjson indices "$({SHELL_SCRIPTS.indices_to_json} {{+n}})"',  # type list[int]
-    "selections": f'--argjson selections "$({SHELL_SCRIPTS.selections_to_json} {{+}})"',  # type list[str]
+    "lines": f'--argjson lines "$({SHELL_SCRIPTS.selections_to_json} {{+}})"',  # type list[str]
 }
 
 
 class PromptState(pydantic.BaseModel):
     query: str
-    index: int | None
+    single_index: int | None
     indices: list[int]
-    selection: str | None
-    selections: list[str]
+    single_line: str | None
+    lines: list[str]
 
     @staticmethod
     def create_command() -> str:
@@ -731,10 +731,10 @@ class PromptData[T, S]:
             event=event,
             choices=self.choices,
             query=self.current_state.query,
-            sole_index=self.current_state.index,
+            single_index=self.current_state.single_index,
             indices=self.current_state.indices,
-            sole_stripped_selection=self.current_state.selection,
-            stripped_selections=self.current_state.selections,
+            single_line=self.current_state.single_line,
+            lines=self.current_state.lines,
         )
         self._finished = True
 
