@@ -98,17 +98,18 @@ class Options:
         self._header_strings.append(header)
         return self
 
+    @property
+    def header_option(self) -> str:
+        return shlex.join(["--header", "\n".join(self._header_strings)])
+
     def listen(self, port_number: int = 0):
         return self.add(f"--listen={port_number}")
 
-    # FIXME: __str__ shouldn't mutate this object
     def __str__(self) -> str:
-        if self._header_strings:
-            self.options.append(shlex.join(["--header", "\n".join(self._header_strings)]))
-        return " ".join(self.options)
+        return " ".join([*self.options, self.header_option])
 
     def pretty(self) -> str:
-        return "\n".join(self.options)
+        return "\n".join([*self.options, self.header_option])
 
     def __add__(self, __other: Options) -> Self:
         options = self.add(*__other.options)

@@ -38,7 +38,7 @@ def clip_current_preview(prompt_data: PromptData):
 
 
 def clip_options(prompt_data: PromptData):
-    clipboard.copy(prompt_data.options.pretty())
+    clipboard.copy(str(prompt_data.options))
 
 
 class binding_preset:
