@@ -213,9 +213,14 @@ BaseAction = Literal[
     "up",
     "down",
     "clear-query",
-    "toggle-all",
+    "select",
     "select-all",
+    "toggle",
+    "toggle-all",
     "refresh-preview",
+    "toggle-preview",
+    "jump",
+    "jump-accept",
 ]
 ShellCommandActionType = Literal[
     "execute",
