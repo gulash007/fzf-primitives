@@ -55,12 +55,12 @@ FILE_BROWSERS: dict[FileBrowser, str] = {"VS Code": "code", "VS Code - Insiders"
 
 
 class on_event[T, S]:
-    accept = binding_preset("accept", "accept")
-    abort = binding_preset("abort", "abort")
+    accept = binding_preset("accept", PromptEndingAction("accept"))
+    abort = binding_preset("abort", PromptEndingAction("abort"))
+    quit = binding_preset("quit", PromptEndingAction("abort", quit_app))
     clip = binding_preset("clip selections", ShellCommand(SHELL_COMMAND.clip_selections))
     toggle_all = binding_preset("toggle all", "toggle-all")
     select_all = binding_preset("select all", "select-all")
-    quit = binding_preset("quit", PromptEndingAction("abort", quit_app))
     clip_current_preview = binding_preset("clip current preview", ServerCall(clip_current_preview))
     clip_options = binding_preset("clip options", ServerCall(clip_options))
 

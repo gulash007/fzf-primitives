@@ -1,5 +1,3 @@
-from typing import Callable
-
 from .core.FzfPrompt.Prompt import PromptData, Result, run_fzf_prompt
 from .core.mods import Mod
 
@@ -8,9 +6,19 @@ from .core.mods import Mod
 # TODO: Or choose the presets in Mod class as its properties
 # TODO: Maybe replace presenter with displayed_choices ❌ but then you have to make sure their length matches
 class Prompt[T, S]:
-    def __init__(self, choices: list[T] | None = None, presented_choices: list[str] | None = None, obj: S = None):
+    def __init__(
+        self,
+        choices: list[T] | None = None,
+        presented_choices: list[str] | None = None,
+        obj: S = None,
+        *,
+        override_basic_hotkeys: bool = False,
+    ):
         self._prompt_data = PromptData(choices=choices, presented_choices=presented_choices, obj=obj)
         self._mod = Mod(self._prompt_data)  # TODO: prevent from using after run
+        if not override_basic_hotkeys:
+            self._mod.on_event("enter").accept
+            self._mod.on_event("esc").abort
 
     @property
     def mod(self) -> Mod[T, S]:

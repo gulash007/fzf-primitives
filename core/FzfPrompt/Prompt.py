@@ -173,12 +173,6 @@ class ParametrizedAction(ParametrizedOptionString): ...
 # Action can just be a string if you know what you're doing (look in `man fzf` for what can be assigned to '--bind')
 Action = BaseAction | ParametrizedAction | tuple[ShellCommand | str, ShellCommandActionType]
 
-# native fzf options may be overwritten here
-PRESET_ACTIONS = {
-    "accept": lambda: PromptEndingAction("accept"),
-    "abort": lambda: PromptEndingAction("abort"),
-}
-
 
 class Binding:
     def __init__(self, name: str, /, *actions: Action | ShellCommand):
@@ -193,8 +187,6 @@ class Binding:
                 self.actions.append((x if isinstance(x := action[0], str) else x.new_copy(), action[1]))
             elif isinstance(action, ParametrizedAction):
                 self.actions.append(action.new_copy())
-            elif isinstance(action, str) and (preset_action_factory := PRESET_ACTIONS.get(action)):
-                self.actions.append(preset_action_factory())
             else:
                 self.actions.append(action)
 
@@ -248,8 +240,6 @@ class ActionMenu[T, S]:
     def __init__(self) -> None:
         self.bindings: dict[Hotkey | FzfEvent, Binding] = {}
         self.post_processors: dict[Hotkey | FzfEvent, PostProcessor] = {}
-        self.add(ACCEPT_HOTKEY, Binding("accept", "accept"))
-        self.add(ABORT_HOTKEY, Binding("abort", "abort"))
         self.automator = Automator()
         self.to_automate: list[Binding | Hotkey] = []
 
