@@ -170,10 +170,6 @@ class ShellCommand(ParametrizedOptionString):
 class ParametrizedAction(ParametrizedOptionString): ...
 
 
-AnyShellCommand = TypeVar("AnyShellCommand", bound=ShellCommand)
-AnyParametrizedAction = TypeVar("AnyParametrizedAction", bound=ParametrizedAction)
-
-
 # Action can just be a string if you know what you're doing (look in `man fzf` for what can be assigned to '--bind')
 Action = BaseAction | ParametrizedAction | tuple[ShellCommand | str, ShellCommandActionType]
 
@@ -231,18 +227,16 @@ class Binding:
         actions = [f"'{str(action)}'" for action in self.actions]
         return f"{self.name}: {' -> '.join(actions)}"
 
-    def shell_command_actions(
-        self, shell_command_type: Type[AnyShellCommand]
-    ) -> list[tuple[AnyShellCommand, ShellCommandActionType]]:
+    def shell_command_actions[
+        R: ShellCommand
+    ](self, shell_command_type: Type[R]) -> list[tuple[R, ShellCommandActionType]]:
         return [
             (action[0], action[1])
             for action in self.actions
             if isinstance(action, tuple) and isinstance(action[0], shell_command_type)
         ]
 
-    def parametrized_actions(
-        self, parametrized_action_type: Type[AnyParametrizedAction]
-    ) -> list[AnyParametrizedAction]:
+    def parametrized_actions[R: ParametrizedAction](self, parametrized_action_type: Type[R]) -> list[R]:
         return [action for action in self.actions if isinstance(action, parametrized_action_type)]
 
 
@@ -263,16 +257,14 @@ class ActionMenu[T, S]:
     def actions(self) -> list[Action]:
         return [action for binding in self.bindings.values() for action in binding.actions]
 
-    def shell_command_actions(
-        self, shell_command_type: Type[AnyShellCommand]
-    ) -> list[tuple[AnyShellCommand, ShellCommandActionType]]:
+    def shell_command_actions[
+        R: ShellCommand
+    ](self, shell_command_type: Type[R]) -> list[tuple[R, ShellCommandActionType]]:
         return [
             action for binding in self.bindings.values() for action in binding.shell_command_actions(shell_command_type)
         ]
 
-    def parametrized_actions(
-        self, parametrized_action_type: Type[AnyParametrizedAction]
-    ) -> list[AnyParametrizedAction]:
+    def parametrized_actions[R: ParametrizedAction](self, parametrized_action_type: Type[R]) -> list[R]:
         return [
             action
             for binding in self.bindings.values()
