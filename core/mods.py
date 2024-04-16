@@ -13,6 +13,7 @@ from .FzfPrompt.options import FzfEvent, Hotkey, Options, Position
 from .FzfPrompt.Prompt import (
     Action,
     Binding,
+    ConflictResolution,
     EndStatus,
     Preview,
     PreviewFunction,
@@ -80,12 +81,21 @@ class on_event[T, S]:
             ),
         )
 
-    def __init__(self, prompt_data: PromptData[T, S], event: Hotkey | FzfEvent):
+    def __init__(
+        self,
+        prompt_data: PromptData[T, S],
+        event: Hotkey | FzfEvent,
+        *,
+        conflict_resolution: ConflictResolution = "raise error",
+    ):
+        self._conflict_resolution: ConflictResolution = conflict_resolution
         self.prompt_data = prompt_data
         self.event: Hotkey | FzfEvent = event
 
     def run(self, name: str, *actions: Action | ShellCommand) -> Self:
-        self.prompt_data.action_menu.add(self.event, Binding(name, *actions))
+        self.prompt_data.action_menu.add(
+            self.event, Binding(name, *actions), conflict_resolution=self._conflict_resolution
+        )
         return self
 
     def run_function(self, name: str, function: ServerCallFunction[T, S]) -> Self:
@@ -141,7 +151,15 @@ class preview[T, S]:
     basic = preview_preset("basic", preview_basic)
     basic_indexed = preview_preset("basic indexed", preview_basic_indexed)
 
-    def __init__(self, prompt_data: PromptData[T, S], hotkey: Hotkey | None = None, main: bool = False):
+    def __init__(
+        self,
+        prompt_data: PromptData[T, S],
+        hotkey: Hotkey | None = None,
+        *,
+        conflict_resolution: ConflictResolution = "raise error",
+        main: bool = False,
+    ):
+        self._conflict_resolution: ConflictResolution = conflict_resolution
         self.prompt_data = prompt_data
         self.hotkey: Hotkey | None = hotkey
         self.main = main
@@ -171,8 +189,10 @@ class preview[T, S]:
         preview_label: str | None = None,
         store_output: bool = True,
     ):
+
         self.prompt_data.add_preview(
             Preview(name, command, self.hotkey, window_size, window_position, preview_label, store_output),
+            conflict_resolution=self._conflict_resolution,
             main=self.main,
         )
 
@@ -208,27 +228,23 @@ class post_processing[T, S]:
         return self
 
 
-class BindingConflict(Exception):
-    pass
-
-
 class Mod[T, S]:
     def __init__(self, prompt_data: PromptData[T, S]):
         self._prompt_data = prompt_data
         self._options = Options()
 
     # TODO: on_event hotkey to cycle through previews
-    def on_event(self, event: Hotkey | FzfEvent, check_for_conflicts: bool = True):
-        if check_for_conflicts:
-            if binding := self._prompt_data.action_menu.bindings.get(event):
-                raise BindingConflict(f"Event {event} already has a binding: {binding}")
-        return on_event(self._prompt_data, event)
+    def on_event(self, event: Hotkey | FzfEvent, *, conflict_resolution: ConflictResolution = "raise error"):
+        return on_event(self._prompt_data, event, conflict_resolution=conflict_resolution)
 
-    def preview(self, hotkey: Hotkey | None = None, check_for_conflicts: bool = True, *, main: bool = False):
-        if hotkey and check_for_conflicts:
-            if binding := self._prompt_data.action_menu.bindings.get(hotkey):
-                raise BindingConflict(f"Event {hotkey} already has a binding: {binding}")
-        return preview(self._prompt_data, hotkey, main=main)
+    def preview(
+        self,
+        hotkey: Hotkey | None = None,
+        *,
+        conflict_resolution: ConflictResolution = "raise error",
+        main: bool = False,
+    ):
+        return preview(self._prompt_data, hotkey, conflict_resolution=conflict_resolution, main=main)
 
     @property
     def lastly(self):

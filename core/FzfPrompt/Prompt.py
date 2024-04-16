@@ -234,6 +234,13 @@ class Binding:
         return [action for action in self.actions if isinstance(action, parametrized_action_type)]
 
 
+ConflictResolution = Literal["raise error", "override", "append", "prepend"]
+
+
+class BindingConflict(Exception):
+    pass
+
+
 class ActionMenu[T, S]:
     def __init__(self) -> None:
         self.bindings: dict[Hotkey | FzfEvent, Binding] = {}
@@ -259,11 +266,23 @@ class ActionMenu[T, S]:
             for action in binding.parametrized_actions(parametrized_action_type)
         ]
 
-    def add(self, event: Hotkey | FzfEvent, binding: Binding):
+    def add(
+        self, event: Hotkey | FzfEvent, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
+    ):
         if event not in self.bindings:
             self.bindings[event] = binding
         else:
-            self.bindings[event] += binding
+            match conflict_resolution:
+                case "raise error":
+                    raise BindingConflict(f"Event {event} already has a binding: {self.bindings[event]}")
+                case "override":
+                    self.bindings[event] = binding
+                case "append":
+                    self.bindings[event] += binding
+                case "prepend":
+                    self.bindings[event] = binding + self.bindings[event]
+                case _:
+                    raise ValueError(f"Invalid conflict resolution: {conflict_resolution}")
 
     # TODO: silent binding (doesn't appear in header help)?
     @single_use_method
@@ -737,8 +756,9 @@ class PromptData[T, S]:
     def get_current_preview(self) -> str:
         return self.previewer.current_preview.output
 
-    def add_preview(self, preview: Preview, *, main: bool = False):
-        self.previewer.add(preview, main=main)
+    def add_preview(
+        self, preview: Preview, *, conflict_resolution: ConflictResolution = "raise error", main: bool = False
+    ):
         if preview.hotkey:
             self.action_menu.add(
                 preview.hotkey,
@@ -748,7 +768,9 @@ class PromptData[T, S]:
                     PreviewWindowChange(preview.window_size, preview.window_position),
                     (preview.command, "change-preview"),
                 ),
+                conflict_resolution=conflict_resolution,
             )
+        self.previewer.add(preview, main=main)
 
     def add_post_processor(self, post_processor: PostProcessor):
         self.post_processors.append(post_processor)
