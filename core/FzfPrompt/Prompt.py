@@ -756,7 +756,6 @@ class PromptData[T, S]:
                     f"Change preview to '{preview.name}'",
                     PreviewWindowChange(preview.window_size, preview.window_position),
                     (preview.command, "change-preview"),
-                    "refresh-preview",
                 ),
             )
 
