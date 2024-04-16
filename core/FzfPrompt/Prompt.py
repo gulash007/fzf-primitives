@@ -39,7 +39,7 @@ FZF_URL = "https://github.com/junegunn/fzf"
 # TODO: Use tempfile
 # TODO: Allow propagation of exceptions through nested prompts (relevant for quit_app)
 # ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable
-def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
+def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None) -> Result[T]:
     if not which("fzf") and not executable_path:
         raise SystemError(f"Cannot find 'fzf' installed on PATH. ({FZF_URL})")
     else:
