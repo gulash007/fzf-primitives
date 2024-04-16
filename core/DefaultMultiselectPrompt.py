@@ -2,26 +2,42 @@ from __future__ import annotations
 
 import typer
 
-from . import BasePrompt, mods
+from ..core import BasePrompt, DefaultPrompt
 from .FzfPrompt.exceptions import ExitLoop
-from .FzfPrompt.options import Options
-from .FzfPrompt.Prompt import Result, PromptData
-from . import DefaultPrompt
+from .monitoring.Logger import get_logger
+
+logger = get_logger()
 
 app = typer.Typer()
 
 
-@mods.on_event("ctrl-a").toggle_all
-@mods.multiselect
-def run(prompt_data: PromptData) -> Result:
-    return DefaultPrompt.run(prompt_data=prompt_data)
+# TODO: add support for outputting from all available info (including preview)
+class DefaultMultiselectPrompt[T, S](DefaultPrompt.DefaultPrompt[T, S]):
+    def __init__(
+        self,
+        choices: list[T] | None = None,
+        presented_choices: list[str] | None = None,
+        obj: S = None,
+        *,
+        override_basic_hotkeys: bool = False,
+    ):
+        super().__init__(choices, presented_choices, obj, override_basic_hotkeys=override_basic_hotkeys)
+        self.mod.options.multiselect
+        self.mod.on_event("ctrl-a").toggle_all
 
 
 @app.command()
-def main(options: list[str] = typer.Argument(None, help="fzf options passed as string. Pass them after --")):
+def main(
+    options: list[str] = typer.Argument(None, help="fzf options passed as string. Pass them after --"),
+    log: bool = False,
+):
+    if log:
+        logger.enable("")
+    options = options or []
     try:
-        prompt_data = PromptData(choices=BasePrompt.read_choices(), options=Options(*options))
-        output = run(prompt_data)
+        prompt = DefaultMultiselectPrompt(choices=BasePrompt.read_choices())
+        prompt.mod.options.add(*options)
+        output = prompt.run()
     except ExitLoop as e:
         print(f"Exiting loop: {e}")
         exit(0)
