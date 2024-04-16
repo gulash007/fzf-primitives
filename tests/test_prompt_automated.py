@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import pytest
 
+from ..core.FzfPrompt.constants import DEFAULT_ABORT_HOTKEY, DEFAULT_ACCEPT_HOTKEY
 from ..core.FzfPrompt.exceptions import ExitLoop, ExitRound
-from ..core.FzfPrompt.Prompt import ABORT_HOTKEY, PromptData
+from ..core.FzfPrompt.Prompt import PromptData
 from ..core.monitoring import Logger
 from . import TestPrompt
 from .Recording import Recording
@@ -24,7 +25,7 @@ def test_prompt():
     prompt.mod.automate("ctrl-y")
     prompt.mod.automate("ctrl-6")
     prompt.mod.automate("ctrl-a")
-    prompt.mod.automate("enter")
+    prompt.mod.automate(DEFAULT_ACCEPT_HOTKEY)
     result = prompt.run()
     recording.save_result(result)
     recording.save()
@@ -49,7 +50,7 @@ def test_quit():
 
 def run_and_abort(prompt_data: PromptData):
     prompt = TestPrompt.prompt_builder()
-    prompt.mod.automate(ABORT_HOTKEY)
+    prompt.mod.automate(DEFAULT_ABORT_HOTKEY)
     return prompt.run()
 
 

@@ -1,3 +1,4 @@
+from .core.FzfPrompt.constants import DEFAULT_ACCEPT_HOTKEY, DEFAULT_ABORT_HOTKEY
 from .core.FzfPrompt.Prompt import PromptData, Result, run_fzf_prompt
 from .core.mods import Mod
 
@@ -17,8 +18,8 @@ class Prompt[T, S]:
         self._prompt_data = PromptData(choices=choices, presented_choices=presented_choices, obj=obj)
         self._mod = Mod(self._prompt_data)  # TODO: prevent from using after run
         if not override_basic_hotkeys:
-            self._mod.on_event("enter").accept
-            self._mod.on_event("esc").abort
+            self._mod.on_event(DEFAULT_ACCEPT_HOTKEY).accept
+            self._mod.on_event(DEFAULT_ABORT_HOTKEY).abort
 
     @property
     def mod(self) -> Mod[T, S]:

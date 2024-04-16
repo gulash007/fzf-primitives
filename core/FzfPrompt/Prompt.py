@@ -234,10 +234,6 @@ class Binding:
         return [action for action in self.actions if isinstance(action, parametrized_action_type)]
 
 
-ACCEPT_HOTKEY: Hotkey = "enter"
-ABORT_HOTKEY: Hotkey = "esc"
-
-
 class ActionMenu[T, S]:
     def __init__(self) -> None:
         self.bindings: dict[Hotkey | FzfEvent, Binding] = {}
