@@ -106,10 +106,16 @@ class Options:
         return self.add(f"--listen={port_number}")
 
     def __str__(self) -> str:
-        return " ".join([*self.options, self.header_option])
+        options = self.options.copy()
+        if self._header_strings:
+            options.append(self.header_option)
+        return " ".join(options)
 
     def pretty(self) -> str:
-        return "\n".join([*self.options, self.header_option])
+        options = self.options.copy()
+        if self._header_strings:
+            options.append(self.header_option)
+        return "\n".join(options)
 
     def __add__(self, __other: Options) -> Self:
         options = self.add(*__other.options)
