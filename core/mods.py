@@ -199,7 +199,7 @@ class post_processing[T, S]:
             if predicate(prompt_data):
                 raise ExitRound(message)
 
-        self.custom(exit_round_on_predicate)
+        return self.custom(exit_round_on_predicate)
 
     def exit_round_when_aborted(self, message: str = "Aborted!"):
         return self.exit_round_on(lambda prompt_data: prompt_data.result.end_status == "abort", message)

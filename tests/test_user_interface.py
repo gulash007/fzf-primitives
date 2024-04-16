@@ -2,7 +2,7 @@ import pytest
 
 from .. import Prompt
 from ..core.FzfPrompt.options import Options
-from ..core.mods import Mod, on_event, preview, BindingConflict
+from ..core.mods import Mod, on_event, post_processing, preview, BindingConflict
 
 
 def test_mod_return_value_types():
@@ -15,6 +15,11 @@ def test_mod_return_value_types():
     # test preview not being chainable
     assert type(prompt.mod.preview()) == preview
     assert prompt.mod.preview().basic is None
+
+    # test chaining post_processing
+    assert type(prompt.mod.lastly.custom(lambda pd: None)) == post_processing
+    assert type(prompt.mod.lastly.exit_round_on(lambda pd: True)) == post_processing
+    assert type(prompt.mod.lastly.exit_round_when_aborted("Aborted!")) == post_processing
 
     # test chaining options
     assert type(prompt.mod.options) == Options
