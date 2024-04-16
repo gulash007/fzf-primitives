@@ -99,7 +99,7 @@ class Result(list[T]):
         lines: list[str],  # as in {+} placeholder; stripped of ANSI codes
         exception: Exception | None = None,
     ):
-        self.end_status = end_status
+        self.end_status: EndStatus = end_status
         self.event: Hotkey | FzfEvent = event
         self.query = query
         self.single_index = single_index  # of pointer starting from 0
