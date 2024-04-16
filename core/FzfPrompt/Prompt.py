@@ -720,8 +720,8 @@ class PromptData[T, S]:
     def result(self) -> Result[T]:
         try:
             return self._result
-        except AttributeError:
-            raise RuntimeError("Result not set") from None
+        except AttributeError as err:
+            raise RuntimeError("Result not set") from err
 
     @property
     def finished(self) -> bool:
