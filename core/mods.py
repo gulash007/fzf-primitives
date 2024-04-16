@@ -8,7 +8,7 @@ import clipboard
 from thingies import shell_command
 
 from .FzfPrompt.constants import SHELL_COMMAND
-from .FzfPrompt.exceptions import ExitLoop, ExitRound
+from .FzfPrompt.exceptions import ExitRound
 from .FzfPrompt.options import FzfEvent, Hotkey, Options, Position
 from .FzfPrompt.Prompt import (
     Action,
@@ -27,10 +27,6 @@ from .FzfPrompt.Prompt import (
 from .monitoring.Logger import get_logger
 
 logger = get_logger()
-
-
-def quit_app(prompt_data: PromptData):
-    raise ExitLoop(f"Exiting app with\n{prompt_data.result}")
 
 
 def clip_current_preview(prompt_data: PromptData):
@@ -57,7 +53,7 @@ FILE_BROWSERS: dict[FileBrowser, str] = {"VS Code": "code", "VS Code - Insiders"
 class on_event[T, S]:
     accept = binding_preset("accept", PromptEndingAction("accept"))
     abort = binding_preset("abort", PromptEndingAction("abort"))
-    quit = binding_preset("quit", PromptEndingAction("abort", quit_app))
+    quit = binding_preset("quit", PromptEndingAction("quit"))
     clip = binding_preset("clip selections", ShellCommand(SHELL_COMMAND.clip_selections))
     select = binding_preset("select", "select")
     select_all = binding_preset("select all", "select-all")

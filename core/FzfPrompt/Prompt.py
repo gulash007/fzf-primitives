@@ -24,7 +24,7 @@ from thingies.shell import MoreInformativeCalledProcessError
 
 from ..monitoring.Logger import get_logger
 from .decorators import single_use_method
-from .exceptions import PromptEnd
+from .exceptions import ExitLoop
 from .options import BaseAction, FzfEvent, Hotkey, Options, ParametrizedOptionString, Position, ShellCommandActionType
 
 T = TypeVar("T")
@@ -76,15 +76,16 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
         server_should_close.set()
     server.join()
     if not prompt_data.finished:
-        raise RuntimeError("Prompt not finished")
-    if isinstance(e := prompt_data.result.exception, PromptEnd):
-        raise e
+        # TODO: This may be explicitly allowed in the future (need to test when it's not)
+        raise RuntimeError("Prompt not finished (you aborted prompt without finishing PromptData)")
+    if prompt_data.result.end_status == "quit":
+        raise ExitLoop(f"Exiting app with\n{prompt_data.result}")
     prompt_data.action_menu.apply_prompt_ending_action_specific_post_processor(prompt_data)
     prompt_data.apply_common_post_processors(prompt_data)
     return prompt_data.result
 
 
-EndStatus = Literal["accept", "abort"]
+EndStatus = Literal["accept", "abort", "quit"]
 
 
 class Result(list[T]):
@@ -98,7 +99,6 @@ class Result(list[T]):
         indices: list[int],  # as in {+n} placeholder
         single_line: str | None,  # as in {} placeholder; stripped of ANSI codes
         lines: list[str],  # as in {+} placeholder; stripped of ANSI codes
-        exception: Exception | None = None,
     ):
         self.end_status: EndStatus = end_status
         self.event: Hotkey | FzfEvent = event
@@ -108,7 +108,6 @@ class Result(list[T]):
         self.single = choices[single_index] if single_index is not None else None
         self.single_line = single_line  # pointed at
         self.lines = lines  # marked selections or pointer if none are selected
-        self.exception = exception
         super().__init__([choices[i] for i in indices])
 
     def __str__(self) -> str:
@@ -535,10 +534,6 @@ class Server[T, S](Thread):
             prompt_data.set_current_state(request.prompt_state)
             function = self.server_calls[request.server_call_name].function
             response = function(prompt_data, **request.kwargs)
-        except PromptEnd as e:
-            prompt_data.result.exception = e
-            self.server_should_close.set()
-            return
         except Exception as err:
             logger.error(trb := traceback.format_exc())
             response = trb
