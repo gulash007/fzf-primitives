@@ -104,6 +104,7 @@ class Result(list[T]):
         self.query = query
         self.single_index = single_index  # of pointer starting from 0
         self.indices = indices  # of marked selections or pointer if none are selected
+        self.single = choices[single_index] if single_index is not None else None
         self.single_line = single_line  # pointed at
         self.lines = lines  # marked selections or pointer if none are selected
         self.exception = exception
@@ -118,6 +119,7 @@ class Result(list[T]):
                 "single_index": self.single_index,
                 "indices": self.indices,
                 "selections": list(self),
+                "single": self.single,
                 "single_line": self.single_line,
                 "lines": self.lines,
             },
