@@ -9,19 +9,18 @@ from .Recording import Recording
 # TODO: test mods.on_event preset bindings chaining
 
 
-def quit_app(prompt_data: PromptData):
-    raise ExitLoop("Quitting app")
+class ExitLoopWithoutSavingRecording(ExitLoop): ...
 
 
 def quit_app_without_saving_recording(prompt_data: PromptData):
-    raise ExitLoop("Don't save recording")
+    raise ExitLoopWithoutSavingRecording
 
 
 def prompt_builder():
     prompt = Prompt(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
     prompt.mod.options.multiselect
     prompt.mod.on_event("ctrl-a").toggle_all
-    prompt.mod.on_event("ctrl-q").run("quit", PromptEndingAction("abort", quit_app))
+    prompt.mod.on_event("ctrl-q").quit
     prompt.mod.on_event("ctrl-n").run(
         "quit without saving recording", PromptEndingAction("abort", quit_app_without_saving_recording)
     )
@@ -43,7 +42,7 @@ if __name__ == "__main__":
     try:
         result = prompt_builder().run()
     except ExitLoop as e:
-        if str(e) == "Don't save recording":
+        if isinstance(e, ExitLoopWithoutSavingRecording):
             save_recording = False
     else:
         recording.save_result(result)
