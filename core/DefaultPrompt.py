@@ -25,6 +25,7 @@ def main(
     options = options or []
     try:
         prompt = Prompt(choices=BasePrompt.read_choices())
+        prompt.mod.preview().basic_indexed
         prompt.mod.default
         prompt.mod.options.add(*options)
         output = prompt.run()
