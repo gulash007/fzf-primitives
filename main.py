@@ -1,4 +1,4 @@
-from .core.FzfPrompt.constants import DEFAULT_ACCEPT_HOTKEY, DEFAULT_ABORT_HOTKEY
+from .config import DEFAULT_ACCEPT_HOTKEY, DEFAULT_ABORT_HOTKEY
 from .core.FzfPrompt.Prompt import PromptData, Result, run_fzf_prompt
 from .core.mods import Mod
 

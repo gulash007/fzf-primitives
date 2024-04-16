@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..core.FzfPrompt.constants import DEFAULT_ABORT_HOTKEY, DEFAULT_ACCEPT_HOTKEY
+from ..config import DEFAULT_ABORT_HOTKEY, DEFAULT_ACCEPT_HOTKEY
 from ..core.FzfPrompt.exceptions import ExitLoop, ExitRound
 from ..core.FzfPrompt.Prompt import PromptData
 from ..core.monitoring import Logger
