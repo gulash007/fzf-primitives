@@ -3,6 +3,7 @@ loguru
 pydantic
 pyperclip
 pytest
+requests
 typer[all]
 
 thingies

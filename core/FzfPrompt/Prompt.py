@@ -18,8 +18,9 @@ from typing import Callable, Concatenate, Iterable, Literal, ParamSpec, Self, Ty
 
 import clipboard
 import pydantic
+import requests
 from .shell import SHELL_SCRIPTS
-from thingies.shell import shell_command, MoreInformativeCalledProcessError
+from thingies.shell import MoreInformativeCalledProcessError
 
 from ..monitoring.Logger import get_logger
 from .decorators import single_use_method
@@ -346,7 +347,7 @@ class Automator(Thread):
         logger.debug(f"Automating {binding}")
         action_str = binding.to_action_string()
         self.binding_executed.clear()
-        if response := shell_command(shlex.join(["curl", "-XPOST", f"localhost:{self.port}", "-d", action_str])):
+        if response := requests.post(f"http://localhost:{self.port}", data=action_str).text:
             if not response.startswith("unknown action:"):
                 logger.weirdness(response)
             raise RuntimeError(response)
@@ -543,8 +544,6 @@ class Server[T, S](Thread):
             response = trb
             client_socket.sendall(str(response).encode("utf-8"))
             logger.error(f"Payload contents:\n{payload}")
-            if not isinstance(err, pydantic.ValidationError) and request.command_type != "execute-silent":
-                input()
         else:
             if response:
                 client_socket.sendall(str(response).encode("utf-8"))
