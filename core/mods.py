@@ -212,6 +212,10 @@ class post_processing[T, S]:
         return self
 
 
+class BindingConflict(Exception):
+    pass
+
+
 class Mod[T, S]:
     def __init__(self, prompt_data: PromptData[T, S]):
         self._prompt_data = prompt_data
@@ -221,13 +225,13 @@ class Mod[T, S]:
     def on_event(self, event: Hotkey | FzfEvent, check_for_conflicts: bool = True):
         if check_for_conflicts:
             if binding := self._prompt_data.action_menu.bindings.get(event):
-                raise RuntimeError(f"Event {event} already has a binding: {binding}")
+                raise BindingConflict(f"Event {event} already has a binding: {binding}")
         return on_event(self._prompt_data, event)
 
     def preview(self, hotkey: Hotkey | None = None, check_for_conflicts: bool = True, *, main: bool = False):
         if hotkey and check_for_conflicts:
             if binding := self._prompt_data.action_menu.bindings.get(hotkey):
-                raise RuntimeError(f"Event {hotkey} already has a binding: {binding}")
+                raise BindingConflict(f"Event {hotkey} already has a binding: {binding}")
         return preview(self._prompt_data, hotkey, main=main)
 
     @property
