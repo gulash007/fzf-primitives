@@ -20,6 +20,7 @@ class Prompt[T, S]:
         if not override_basic_hotkeys:
             self._mod.on_event(DEFAULT_ACCEPT_HOTKEY).accept
             self._mod.on_event(DEFAULT_ABORT_HOTKEY).abort
+            self._mod.apply()
 
     @property
     def mod(self) -> Mod[T, S]:
@@ -43,6 +44,5 @@ class Prompt[T, S]:
         return self._prompt_data.get_current_preview()
 
     def run(self) -> Result[T]:
-        # FIXME: only mod.options modifications are applied this late; all other mods are applied immediately
-        self.mod.apply_options()
+        self.mod.apply()
         return run_fzf_prompt(self._prompt_data)
