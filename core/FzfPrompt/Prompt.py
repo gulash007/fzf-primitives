@@ -24,7 +24,7 @@ from thingies.shell import MoreInformativeCalledProcessError
 
 from ..monitoring.Logger import get_logger
 from .decorators import single_use_method
-from .exceptions import ExpectedException
+from .exceptions import PromptEnd
 from .options import BaseAction, FzfEvent, Hotkey, Options, ParametrizedOptionString, Position, ShellCommandActionType
 
 T = TypeVar("T")
@@ -77,7 +77,7 @@ def run_fzf_prompt(prompt_data: PromptData, *, executable_path=None) -> Result:
     server.join()
     if not prompt_data.finished:
         raise RuntimeError("Prompt not finished")
-    if isinstance(e := prompt_data.result.exception, ExpectedException):
+    if isinstance(e := prompt_data.result.exception, PromptEnd):
         raise e
     prompt_data.action_menu.apply_prompt_ending_action_specific_post_processor(prompt_data)
     prompt_data.apply_common_post_processors(prompt_data)
@@ -535,7 +535,7 @@ class Server[T, S](Thread):
             prompt_data.set_current_state(request.prompt_state)
             function = self.server_calls[request.server_call_name].function
             response = function(prompt_data, **request.kwargs)
-        except ExpectedException as e:
+        except PromptEnd as e:
             prompt_data.result.exception = e
             self.server_should_close.set()
             return

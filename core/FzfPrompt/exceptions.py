@@ -1,11 +1,11 @@
 # rename exception to signal its use to end prompt
-class ExpectedException(Exception):
+class PromptEnd(Exception):
     ...
 
 
-class ExitRound(ExpectedException):
+class ExitRound(PromptEnd):
     pass
 
 
-class ExitLoop(ExpectedException):
+class ExitLoop(PromptEnd):
     pass
