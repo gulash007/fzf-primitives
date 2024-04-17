@@ -27,7 +27,7 @@ class Recording(pydantic.BaseModel):
     end_status: EndStatus = None
     event: Hotkey | FzfEvent = None
     query: str = None
-    selections: list[str] = None
+    lines: list[str] = None
 
     def __call__(self, message: loguru.Message):
         self.events.append(
@@ -43,14 +43,14 @@ class Recording(pydantic.BaseModel):
         self.end_status = result.end_status
         self.event = result.event
         self.query = result.query
-        self.selections = list(result)
+        self.lines = list(result)
 
     def compare_result(self, result: Result) -> bool:
         return (
             self.end_status == result.end_status
             and self.event == result.event
             and self.query == result.query
-            and self.selections == list(result)
+            and self.lines == list(result)
         )
 
     def compare_events(self, other: Self) -> bool:

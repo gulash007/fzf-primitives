@@ -13,7 +13,7 @@ from .Recording import Recording
 
 
 # ❗ Checking events might be non-deterministic. Try running this test multiple times
-def test_prompt():
+def test_general():
     Logger.remove_handler("MAIN_LOG_FILE")
     Logger.remove_handler("STDERR")
     Logger.add_file_handler("AutomatedTestPrompt", level="TRACE")
@@ -33,7 +33,7 @@ def test_prompt():
     assert expected.end_status == result.end_status
     assert expected.event == result.event
     assert expected.query == result.query
-    assert expected.selections == list(result)
+    assert expected.lines == result.lines
     assert recording.compare_events(expected), f"{len(recording.events)=} vs {len(expected.events)=}"
 
 
@@ -50,6 +50,7 @@ def test_quit():
 
 def run_and_abort(prompt_data: PromptData):
     prompt = TestPrompt.prompt_builder()
+    prompt.mod.lastly.exit_round_when_aborted()
     prompt.mod.automate(DEFAULT_ABORT_HOTKEY)
     return prompt.run()
 
@@ -60,4 +61,4 @@ def test_abort():
 
 
 if __name__ == "__main__":
-    test_prompt()
+    test_general()
