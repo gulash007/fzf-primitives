@@ -10,7 +10,7 @@ from thingies import shell_command
 
 from .FzfPrompt.constants import SHELL_COMMAND
 from .FzfPrompt.exceptions import ExitRound
-from .FzfPrompt.options import FzfEvent, Hotkey, Options, Position
+from .FzfPrompt.options import PromptEvent, Hotkey, Options, Position
 from .FzfPrompt.Prompt import (
     Action,
     Binding,

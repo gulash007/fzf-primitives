@@ -27,7 +27,7 @@ from .decorators import single_use_method
 from .exceptions import ExitLoop
 from .options import (
     BaseAction,
-    FzfEvent,
+    PromptEvent,
     Hotkey,
     Options,
     ParametrizedOptionString,
@@ -101,7 +101,7 @@ class Result(list[T]):
     def __init__(
         self,
         end_status: EndStatus,
-        event: Hotkey | FzfEvent,
+        event: Hotkey | PromptEvent,
         choices: list[T],
         query: str,  # as in {q} placeholder
         single_index: int | None,  # as in {n} placeholder
@@ -110,7 +110,7 @@ class Result(list[T]):
         lines: list[str],  # as in {+} placeholder; stripped of ANSI codes
     ):
         self.end_status: EndStatus = end_status
-        self.event: Hotkey | FzfEvent = event
+        self.event: Hotkey | PromptEvent = event
         self.query = query
         self.single_index = single_index  # of pointer starting from 0
         self.indices = indices  # of marked selections or pointer if none are selected
@@ -259,9 +259,9 @@ class UnbindAction(ParametrizedAction):
 
 class ActionMenu[T, S]:
     def __init__(self) -> None:
-        self.bindings: dict[Hotkey | FzfEvent, Binding] = {}
+        self.bindings: dict[Hotkey | PromptEvent, Binding] = {}
         self._free_hotkeys = get_hotkey_set()
-        self.post_processors: dict[Hotkey | FzfEvent, PostProcessor] = {}
+        self.post_processors: dict[Hotkey | PromptEvent, PostProcessor] = {}
         self.automator = Automator()
         self.to_automate: list[Binding | Hotkey] = []
 
@@ -284,7 +284,7 @@ class ActionMenu[T, S]:
         ]
 
     def add(
-        self, event: Hotkey | FzfEvent, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
+        self, event: Hotkey | PromptEvent, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
     ):
         if event not in self.bindings:
             if event in self._free_hotkeys:
@@ -453,17 +453,17 @@ class PromptEndingAction[T, S](ParametrizedAction):
     def __init__(self, end_status: EndStatus, post_processor: PostProcessor[T, S] | None = None) -> None:
         self.end_status: EndStatus = end_status
         self.post_processor = post_processor
-        self.event: Hotkey | FzfEvent
+        self.event: Hotkey | PromptEvent
         # ❗ Needs to be silent, otherwise program can get stuck when waiting for user input on error in Server
         self.pipe_call = ServerCall(self.pipe_results, command_type="execute-silent")
         super().__init__("execute-silent($pipe_call)+abort", ["pipe_call"])
 
-    def pipe_results(self, prompt_data: PromptData[T, S], event: Hotkey | FzfEvent):
+    def pipe_results(self, prompt_data: PromptData[T, S], event: Hotkey | PromptEvent):
         prompt_data.finish(event, self.end_status)
         logger.debug(f"Piping results:\n{prompt_data.result}")
 
     @single_use_method
-    def resolve_event(self, event: Hotkey | FzfEvent):
+    def resolve_event(self, event: Hotkey | PromptEvent):
         self.event = event
         self.pipe_call.resolve(event=event)
 
@@ -763,7 +763,7 @@ class PromptData[T, S]:
     def finished(self) -> bool:
         return self._finished
 
-    def finish(self, event: Hotkey | FzfEvent, end_status: EndStatus):
+    def finish(self, event: Hotkey | PromptEvent, end_status: EndStatus):
         self._result = Result(
             end_status=end_status,
             event=event,

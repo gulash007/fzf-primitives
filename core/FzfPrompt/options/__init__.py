@@ -1,0 +1,143 @@
+from __future__ import annotations
+
+import shlex
+from typing import Self
+
+from .actions import BaseAction, ParametrizedAction_, ShellCommandActionType
+from .events import Hotkey, PromptEvent, get_hotkey_set
+from .values import Position, Layout, Border
+from .ParametrizedOptionString import ParametrizedOptionString
+
+__all__ = [
+    "Options",
+    "BaseAction",
+    "ParametrizedAction_",
+    "ShellCommandActionType",
+    "Hotkey",
+    "PromptEvent",
+    "get_hotkey_set",
+    "Position",
+    "Layout",
+    "Border",
+    "ParametrizedOptionString",
+]
+
+DEFAULT_OPTS = [
+    "--layout=reverse",
+    "--info=inline",
+    "--cycle",
+    "--no-mouse",
+    "--bind=alt-shift-up:preview-half-page-up,alt-shift-down:preview-half-page-down",
+    "--preview-window=wrap",
+]
+
+
+class OptionsAdder:
+    """Does the same thing as a property. It exists to shorten code.
+    It also signals that it might do something unexpected of a property."""
+
+    def __init__(self, *fzf_options: str):
+        self._fzf_options = fzf_options
+
+    def __get__(self, obj: Options, objtype: type[Options] | None = None) -> Options:
+        return obj.add(*self._fzf_options)
+
+
+# TODO: tips formatter
+class Options:
+    defaults = OptionsAdder(*DEFAULT_OPTS)
+    ansi = OptionsAdder("--ansi")
+    no_sort = OptionsAdder("--no-sort")
+    cycle = OptionsAdder("--cycle")
+    no_mouse = OptionsAdder("--no-mouse")
+    multiselect = OptionsAdder("--multi")
+    header_first = OptionsAdder("--header-first")
+    disable_search = OptionsAdder("--disabled")
+
+    # TODO: Make it a dict
+
+    @classmethod
+    def __get_validators__(cls):
+        return ()
+
+    def __init__(self, *fzf_options: str) -> None:
+        self.__options: list[str] = list(fzf_options)
+        self._header_strings: list[str] = []
+
+    @property
+    def options(self) -> list[str]:
+        return self.__options
+
+    def add(self, *fzf_options: str) -> Self:
+        self.options.extend(fzf_options)
+        return self
+
+    def initial_query(self, query: str) -> Self:
+        return self.add(shlex.join(["--query", query]))
+
+    def preview(self, command: str) -> Self:
+        return self.add(shlex.join(["--preview", f"{command}"]))
+
+    def preview_window(self, position: Position, size: int | str) -> Self:
+        return self.add(shlex.join(["--preview-window", f"{position},{size}"]))
+
+    def preview_label(self, label: str) -> Self:
+        return self.add(shlex.join(["--preview-label", label]))
+
+    def bind(self, event: Hotkey | PromptEvent, action: str) -> Self:
+        return self.add(shlex.join(["--bind", f"{event}:{action}"]))
+
+    def bind_base_action(self, event: Hotkey | PromptEvent, action: BaseAction) -> Self:
+        return self.bind(event, action)
+
+    def bind_shell_command(
+        self, event: Hotkey | PromptEvent, command: str, command_type: ShellCommandActionType = "execute"
+    ) -> Self:
+        return self.bind(event, f"{command_type}({command})")
+
+    def expect(self, *hotkeys: Hotkey) -> Self:
+        return self.add(shlex.join(["--expect", f"{','.join(hotkeys)}"]))
+
+    def layout(self, layout: str) -> Self:
+        return self.add(shlex.join(["--layout", layout]))
+
+    def prompt(self, prompt: str) -> Self:
+        return self.add(shlex.join(["--prompt", prompt]))
+
+    def pointer(self, pointer: str) -> Self:
+        if len(pointer) > 2:
+            raise ValueError(f"Pointer too long (should be max 2 chars): {pointer}")
+        return self.add(shlex.join(["--pointer", pointer]))
+
+    def header(self, header: str) -> Self:
+        self._header_strings.append(header)
+        return self
+
+    @property
+    def header_option(self) -> str:
+        return shlex.join(["--header", "\n".join(self._header_strings)])
+
+    def listen(self, port_number: int = 0):
+        return self.add(f"--listen={port_number}")
+
+    def __str__(self) -> str:
+        options = self.options.copy()
+        if self._header_strings:
+            options.append(self.header_option)
+        return " ".join(options)
+
+    def pretty(self) -> str:
+        options = self.options.copy()
+        if self._header_strings:
+            options.append(self.header_option)
+        return "\n".join(options)
+
+    def __add__(self, __other: Options) -> Self:
+        options = self.add(*__other.options)
+        options._header_strings += __other._header_strings
+        return options
+
+    # TODO: __sub__ for removing options?
+
+    def __eq__(self, __other: Self) -> bool:
+        return self.options == __other.options and self._header_strings == __other._header_strings
