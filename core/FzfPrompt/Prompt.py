@@ -33,7 +33,6 @@ from .options import (
     ParametrizedOptionString,
     Position,
     ShellCommandActionType,
-    get_hotkey_set,
 )
 
 T = TypeVar("T")
@@ -260,7 +259,6 @@ class UnbindAction(ParametrizedAction):
 class ActionMenu[T, S]:
     def __init__(self) -> None:
         self.bindings: dict[Hotkey | PromptEvent, Binding] = {}
-        self._free_hotkeys = get_hotkey_set()
         self.post_processors: dict[Hotkey | PromptEvent, PostProcessor] = {}
         self.automator = Automator()
         self.to_automate: list[Binding | Hotkey] = []
@@ -287,8 +285,6 @@ class ActionMenu[T, S]:
         self, event: Hotkey | PromptEvent, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
     ):
         if event not in self.bindings:
-            if event in self._free_hotkeys:
-                self._free_hotkeys.remove(event)
             self.bindings[event] = binding
         else:
             match conflict_resolution:
@@ -306,14 +302,6 @@ class ActionMenu[T, S]:
     # TODO: silent binding (doesn't appear in header help)?
     @single_use_method
     def resolve_options(self) -> Options:
-        # unbind unused hotkeys (to prevent bad exit on pressing them)
-        # logger.debug(self._free_hotkeys)
-        unbind_action = UnbindAction(*self._free_hotkeys)
-        start_binding = self.bindings.get("start")
-        binding = Binding(f"""{f"{start_binding.name}+" if start_binding else ''}unbind unused hotkeys""")
-        binding.actions = (start_binding.actions if start_binding else []) + [unbind_action]
-        self.add("start", binding, conflict_resolution="override")
-
         for event, binding in self.bindings.items():
             for action in binding.actions:
                 if isinstance(action, PromptEndingAction):

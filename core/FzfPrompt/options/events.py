@@ -1,11 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, get_args
-
-
-def get_hotkey_set() -> set[Hotkey]:
-    hotkeys = list(get_args(Hotkey))
-    return set(hotkeys)
+from typing import Literal
 
 
 PromptEvent = Literal[

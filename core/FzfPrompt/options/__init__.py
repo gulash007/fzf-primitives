@@ -4,7 +4,7 @@ import shlex
 from typing import Self
 
 from .actions import BaseAction, ParametrizedAction_, ShellCommandActionType
-from .events import Hotkey, PromptEvent, get_hotkey_set
+from .events import Hotkey, PromptEvent
 from .values import Position, Layout, Border
 from .ParametrizedOptionString import ParametrizedOptionString
 
@@ -15,7 +15,6 @@ __all__ = [
     "ShellCommandActionType",
     "Hotkey",
     "PromptEvent",
-    "get_hotkey_set",
     "Position",
     "Layout",
     "Border",
