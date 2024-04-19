@@ -805,5 +805,5 @@ class PromptData[T, S]:
             preview.command for preview in self.previewer.previews if isinstance(preview.command, ServerCall)
         )
         if self.action_menu.should_run_automator:
-            server_calls.append(self.action_menu.automator.move_to_next_binding_server_call)
+            return [*server_calls, self.action_menu.automator.move_to_next_binding_server_call]
         return server_calls
