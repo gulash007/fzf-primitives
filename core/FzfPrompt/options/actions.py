@@ -69,7 +69,7 @@ BaseAction = Literal[
 ]
 
 # fzf actions that require an extra value
-ParametrizedAction_ = Literal[
+ParametrizedActionType = Literal[
     "change-preview",
     "change-preview-window",
     "change-prompt",

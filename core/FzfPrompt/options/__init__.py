@@ -3,7 +3,7 @@ from __future__ import annotations
 import shlex
 from typing import Self
 
-from .actions import BaseAction, ParametrizedAction_, ShellCommandActionType
+from .actions import BaseAction, ParametrizedActionType, ShellCommandActionType
 from .events import Hotkey, PromptEvent
 from .values import Position, Layout, Border
 from .ParametrizedOptionString import ParametrizedOptionString
@@ -11,7 +11,7 @@ from .ParametrizedOptionString import ParametrizedOptionString
 __all__ = [
     "Options",
     "BaseAction",
-    "ParametrizedAction_",
+    "ParametrizedActionType",
     "ShellCommandActionType",
     "Hotkey",
     "PromptEvent",
