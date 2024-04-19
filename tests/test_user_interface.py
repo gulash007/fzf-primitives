@@ -3,27 +3,27 @@ import pytest
 from .. import Prompt
 from ..core.FzfPrompt.options import Options
 from ..core.FzfPrompt.Prompt import BindingConflict
-from ..core.mods import Mod, on_event, post_processing, preview
+from ..core.mods import Mod, OnEvent, PostProcessing, PreviewMod
 
 
 def test_mod_return_value_types():
     prompt = Prompt()
 
     # test chaining on_events
-    assert type(prompt.mod.on_event("ctrl-a")) == on_event
-    assert type(prompt.mod.on_event("ctrl-a").run("accept", "accept")) == on_event
-    assert type(prompt.mod.on_event("ctrl-a").accept) == on_event
-    assert type(prompt.mod.on_event("ctrl-o").open_files()) == on_event
+    assert type(prompt.mod.on_hotkey().CTRL_A) == OnEvent
+    assert type(prompt.mod.on_hotkey().CTRL_B.run("accept", "accept")) == OnEvent
+    assert type(prompt.mod.on_hotkey().CTRL_C.accept) == OnEvent
+    assert type(prompt.mod.on_hotkey().CTRL_O.open_files()) == OnEvent
 
     # test preview not being chainable
-    assert type(prompt.mod.preview()) == preview
+    assert type(prompt.mod.preview()) == PreviewMod
     assert prompt.mod.preview().custom("some preview", "echo hello") is None
 
     # test chaining post_processing
-    assert type(prompt.mod.lastly) == post_processing
-    assert type(prompt.mod.lastly.custom(lambda pd: None)) == post_processing
-    assert type(prompt.mod.lastly.exit_round_on(lambda pd: True)) == post_processing
-    assert type(prompt.mod.lastly.exit_round_when_aborted("Aborted!")) == post_processing
+    assert type(prompt.mod.lastly) == PostProcessing
+    assert type(prompt.mod.lastly.custom(lambda pd: None)) == PostProcessing
+    assert type(prompt.mod.lastly.exit_round_on(lambda pd: True)) == PostProcessing
+    assert type(prompt.mod.lastly.exit_round_when_aborted("Aborted!")) == PostProcessing
 
     # test chaining options
     assert type(prompt.mod.options) == Options
@@ -37,8 +37,8 @@ def test_mod_return_value_types():
 def test_checking_for_event_conflicts():
     prompt = Prompt()
     with pytest.raises(BindingConflict):
-        prompt.mod.on_event("ctrl-a").accept
-        prompt.mod.on_event("ctrl-a").abort
+        prompt.mod.on_hotkey().CTRL_A.accept
+        prompt.mod.on_hotkey().CTRL_A.abort
         prompt.mod.apply()
 
     # clear mod
@@ -47,9 +47,9 @@ def test_checking_for_event_conflicts():
 
     # no conflict
     ## override previous binding
-    prompt.mod.on_event("ctrl-y").toggle_all.accept
-    prompt.mod.on_event("ctrl-y", conflict_resolution="override").abort
-    prompt.mod.on_event("ctrl-z").abort
+    prompt.mod.on_hotkey().CTRL_Y.toggle_all.accept
+    prompt.mod.on_hotkey(conflict_resolution="override").CTRL_Y.abort
+    prompt.mod.on_hotkey().CTRL_Z.abort
     prompt.mod.apply()
     assert (
         prompt.mod._prompt_data.action_menu.bindings["ctrl-y"].name
@@ -57,9 +57,9 @@ def test_checking_for_event_conflicts():
     )
 
     ## append binding
-    prompt.mod.on_event("ctrl-r").toggle
-    prompt.mod.on_event("ctrl-r", conflict_resolution="append").select_all.accept
-    prompt.mod.on_event("ctrl-s").toggle.select_all.accept
+    prompt.mod.on_hotkey().CTRL_R.toggle
+    prompt.mod.on_hotkey(conflict_resolution="append").CTRL_R.select_all.accept
+    prompt.mod.on_hotkey().CTRL_S.toggle.select_all.accept
     prompt.mod.apply()
     assert (
         prompt.mod._prompt_data.action_menu.bindings["ctrl-r"].name
@@ -67,9 +67,9 @@ def test_checking_for_event_conflicts():
     )
 
     ## prepend binding
-    prompt.mod.on_event("ctrl-b").accept
-    prompt.mod.on_event("ctrl-b", conflict_resolution="prepend").toggle_preview.toggle_all
-    prompt.mod.on_event("ctrl-n").toggle_preview.toggle_all.accept
+    prompt.mod.on_hotkey().CTRL_B.accept
+    prompt.mod.on_hotkey(conflict_resolution="prepend").CTRL_B.toggle_preview.toggle_all
+    prompt.mod.on_hotkey().CTRL_N.toggle_preview.toggle_all.accept
     prompt.mod.apply()
     assert (
         prompt.mod._prompt_data.action_menu.bindings["ctrl-b"].name

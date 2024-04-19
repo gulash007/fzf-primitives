@@ -6,9 +6,12 @@ from typing import Literal
 PromptEvent = Literal[
     "start",
     "load",
+    "resize",
+    "result",
     "change",
     "focus",
     "one",
+    "zero",
     "backward-eof",
 ]
 

@@ -20,9 +20,9 @@ class DefaultPrompt[T, S](Prompt[T, S]):
         presented_choices: list[str] | None = None,
         obj: S = None,
         *,
-        override_basic_hotkeys: bool = False,
+        use_basic_hotkeys: bool | None = None,
     ):
-        super().__init__(choices, presented_choices, obj, override_basic_hotkeys=override_basic_hotkeys)
+        super().__init__(choices, presented_choices, obj, use_basic_hotkeys=use_basic_hotkeys)
         self.mod.preview().basic_indexed
         self.mod.default
 

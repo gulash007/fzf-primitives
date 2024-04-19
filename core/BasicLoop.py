@@ -27,7 +27,7 @@ def run_in_loop[
     while True:
         try:
             prompt = prompt_builder()
-            prompt.mod.on_event(quit_hotkey).quit
+            prompt.mod.on_hotkey(quit_hotkey).quit
             prompt.mod.lastly.exit_round_when_aborted()
             result_processor(prompt.run())
         except ExitRound as e:

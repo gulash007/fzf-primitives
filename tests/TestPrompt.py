@@ -11,12 +11,12 @@ from .Recording import Recording
 def prompt_builder():
     prompt = Prompt(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
     prompt.mod.options.multiselect
-    prompt.mod.on_event("ctrl-a").toggle_all
-    prompt.mod.on_event("ctrl-q").quit
+    prompt.mod.on_hotkey().CTRL_A.toggle_all
+    prompt.mod.on_hotkey().CTRL_Q.quit
+    prompt.mod.on_hotkey().CTRL_C.clip_current_preview.accept
     prompt.mod.preview("ctrl-h").basic
     prompt.mod.preview("ctrl-6").basic_indexed
     prompt.mod.preview("ctrl-y").custom(name="basic2", command="echo hello", window_size="50%", window_position="up")
-    prompt.mod.on_event("ctrl-c").clip_current_preview.accept
     return prompt
 
 

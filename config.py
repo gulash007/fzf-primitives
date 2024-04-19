@@ -1,5 +1,4 @@
-from .core.FzfPrompt.options import Hotkey
-
-
-DEFAULT_ACCEPT_HOTKEY: Hotkey = "enter"
-DEFAULT_ABORT_HOTKEY: Hotkey = "esc"
+# Basic enter/esc for accept/abort
+USE_BASIC_HOTKEYS = True
+DEFAULT_ACCEPT_HOTKEY = "enter"
+DEFAULT_ABORT_HOTKEY = "esc"
