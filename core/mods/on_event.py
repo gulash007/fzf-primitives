@@ -31,15 +31,6 @@ def clip_options(prompt_data: PromptData):
     clipboard.copy(str(prompt_data.options))
 
 
-class binding_preset:
-    def __init__(self, name: str, *actions: Action | ShellCommand) -> None:
-        self._name = name
-        self._actions = actions
-
-    def __get__[T, S](self, obj: OnEvent[T, S], objtype=None) -> OnEvent[T, S]:
-        return obj.run(self._name, *self._actions)
-
-
 type FileBrowser = Literal["VS Code", "VS Code - Insiders"]
 FILE_BROWSERS: dict[FileBrowser, str] = {"VS Code": "code", "VS Code - Insiders": "code-insiders"}
 
@@ -57,7 +48,7 @@ class OnEvent[T, S]:
         self._bindings.append(Binding(name, *actions))
         return self
 
-    def run_function(self, name: str, function: ServerCallFunction[T, S]) -> Self:  # noqa: F821
+    def run_function(self, name: str, function: ServerCallFunction[T, S]) -> Self:
         return self.run(name, (ServerCall(function), "execute"))
 
     def run_shell_command(self, name: str, command: str, command_type: ShellCommandActionType = "execute") -> Self:
@@ -77,21 +68,64 @@ class OnEvent[T, S]:
             )
 
     # presets
-    accept = binding_preset("accept", PromptEndingAction("accept"))
-    abort = binding_preset("abort", PromptEndingAction("abort"))
-    quit = binding_preset("quit", PromptEndingAction("quit"))
-    clip = binding_preset("clip selections", ShellCommand(SHELL_COMMAND.clip_selections))
-    select = binding_preset("select", "select")
-    select_all = binding_preset("select all", "select-all")
-    toggle = binding_preset("toggle", "toggle")
-    toggle_all = binding_preset("toggle all", "toggle-all")
-    refresh_preview = binding_preset("refresh preview", "refresh-preview")
-    toggle_preview = binding_preset("toggle preview", "toggle-preview")
-    jump = binding_preset("jump", "jump")
-    jump_accept = binding_preset("jump and accept", "jump-accept")
-    jump_select = binding_preset("jump and select", "jump", "select")
-    clip_current_preview = binding_preset("clip current preview", ServerCall(clip_current_preview))
-    clip_options = binding_preset("clip options", ServerCall(clip_options))
+    @property
+    def accept(self):
+        """Ends prompt with status 'accept'"""
+        return self.end_prompt("accept", "accept")
+
+    @property
+    def abort(self):
+        """Ends prompt with status 'abort'"""
+        return self.end_prompt("abort", "abort")
+
+    @property
+    def quit(self):
+        """Ends prompt with status 'quit'"""
+        return self.end_prompt("quit", "quit")
+
+    @property
+    def clip(self):
+        return self.run_shell_command("clip", SHELL_COMMAND.clip_selections)
+
+    @property
+    def select(self):
+        return self.run("select", "select")
+
+    @property
+    def select_all(self):
+        return self.run("select", "select-all")
+
+    @property
+    def toggle(self):
+        return self.run("toggle", "toggle")
+
+    @property
+    def toggle_all(self):
+        return self.run("toggle all", "toggle-all")
+
+    @property
+    def refresh_preview(self):
+        return self.run("refresh preview", "refresh-preview")
+
+    @property
+    def toggle_preview(self):
+        return self.run("toggle preview", "toggle-preview")
+
+    @property
+    def jump(self):
+        return self.run("jump", "jump")
+
+    @property
+    def jump_accept(self):
+        return self.run("jump and accept", "jump-accept")
+
+    @property
+    def clip_current_preview(self):
+        return self.run_function("clip current preview", clip_current_preview)
+
+    @property
+    def clip_options(self):
+        return self.run_function("clip options", clip_options)
 
     def view_logs_in_terminal(self, log_file_path: str | Path):
         command = f"less +F '{log_file_path}'"
