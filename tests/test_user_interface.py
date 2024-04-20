@@ -11,9 +11,11 @@ def test_mod_return_value_types():
 
     # test chaining on_events
     assert type(prompt.mod.on_hotkey().CTRL_A) == OnEvent
-    assert type(prompt.mod.on_hotkey().CTRL_B.run("accept", "accept")) == OnEvent
-    assert type(prompt.mod.on_hotkey().CTRL_C.accept) == OnEvent
+    assert type(prompt.mod.on_situation().LOAD.run("toggle-all", "toggle-all")) == OnEvent
     assert type(prompt.mod.on_hotkey().CTRL_O.open_files()) == OnEvent
+    ## except for .end_prompt
+    assert prompt.mod.on_hotkey().CTRL_Q.end_prompt("accept", "accept") is None
+    assert prompt.mod.on_hotkey().CTRL_C.accept is None
 
     # test preview not being chainable
     assert type(prompt.mod.preview()) == PreviewMod

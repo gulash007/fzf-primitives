@@ -57,7 +57,7 @@ class OnEvent[T, S]:
     def end_prompt(
         self, name: str, end_status: EndStatus, post_processor: Callable[[PromptData[T, S]], None] | None = None
     ):
-        return self.run(name, PromptEndingAction(end_status, post_processor))
+        self.run(name, PromptEndingAction(end_status, post_processor))
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         for event in self._events:
