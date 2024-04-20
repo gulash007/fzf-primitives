@@ -45,7 +45,6 @@ class preview_preset:
         )
 
 
-# TODO: Add option to change back to main preview automatically after changing selection
 class PreviewMod[T, S]:
 
     def __init__(

@@ -11,7 +11,6 @@ logger = get_logger()
 app = typer.Typer()
 
 
-# TODO: add support for outputting from all available info (including preview)
 class DefaultMultiselectPrompt[T, S](DefaultPrompt.DefaultPrompt[T, S]):
     def __init__(
         self,

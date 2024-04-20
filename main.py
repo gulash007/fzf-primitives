@@ -3,9 +3,7 @@ from .core.FzfPrompt.Prompt import PromptData, Result, run_fzf_prompt
 from .core.mods import Mod
 
 
-# TODO: choose preset prompt mods in constructor ("default" by default, "base" will return an unmodded prompt)
-# TODO: Or choose the presets in Mod class as its properties
-# TODO: Maybe replace presenter with displayed_choices ❌ but then you have to make sure their length matches
+# TODO: Presented choices should have the same length as choices
 class Prompt[T, S]:
     def __init__(
         self,
@@ -27,7 +25,6 @@ class Prompt[T, S]:
     def mod(self) -> Mod[T, S]:
         return self._mod
 
-    # TODO: should this return immutable sequence? But then you can't adjust them before running unless you want to use a condition to check if prompt is already running
     @property
     def choices(self) -> list[T]:
         return self._prompt_data.choices

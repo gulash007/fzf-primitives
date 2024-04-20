@@ -42,9 +42,6 @@ logger = get_logger()
 FZF_URL = "https://github.com/junegunn/fzf"
 
 
-# TODO: Unbind some default fzf hotkeys (add bind 'hk:ignore' options from left)
-# TODO: Solve other expected hotkeys
-# TODO: Use tempfile
 # TODO: Allow propagation of exceptions through nested prompts (relevant for quit_app)
 # ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable
 def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None) -> Result[T]:
@@ -81,7 +78,6 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
     server_setup_finished.wait()
 
     # TODO: catch 130 in mods.exit_round_on_no_selection (rename it appropriately)
-    # TODO: 🧊 Use subprocess.run without shell=True as [executable_path, *options] (need to change Options)
     try:
         options = prompt_data.resolve_options()
         logger.debug(f"Running fzf with options:\n{options.pretty()}")
@@ -152,34 +148,12 @@ class Result[T](list[T]):
         )
 
 
-# TODO: Ability to output preview in Result (or anything else)
-# TODO: id should be replaced in fzf options with commands in them that work with stored PromptData
-
-# TODO: how to get current preview command so that updating data also updates current preview output?
 # TODO: caching?
-# TODO: preview should try to read from prompt data instead of calculating the output again
-# TODO: store all line identities for easy transformations of lines?
-
-# TODO: ❗ hotkey conflicts
 # TODO: return to previous selection
 # TODO: return with previous query
-# TODO: Allow multiselect (multioutput)?
-# TODO: How to include --bind hotkeys (internal fzf prompt actions)? Maybe action menu can just serve as a hotkey hint
-# Decorator to turn a function into a script that is then used with --bind 'hotkey:execute(python script/path {q} {+})'
-# TODO: enter action in ActionMenu
-# TODO: hotkeys only in ActionMenu prompt (not consumed in owner prompt)
-# TODO: Instead of interpreting falsey values as reset, there should be an explicit named exception raised and caught
-# TODO: Sort actions
-# TODO: Show action menu as preview (to see hotkeys without restarting prompt)
-# TODO: Make action_menu_hotkey owned by ActionMenu instead of prompt
-# TODO: Will subclasses need more than just define actions? Maybe some more options can be overridden?
-# TODO: Preview of result
-# TODO: ❗ Remake as an hotkey:execute(action_menu_prompt <prompt id (port #)>)
+# TODO: Include fzf default --bind hotkeys (extra help)?
+# TODO: Show action menu as preview (to see hotkeys without restarting prompt); use preview(...)
 # TODO: - How to invoke it through --bind and recreate the action back in the owner prompt?
-# TODO: Show command in fzf prompt (invoke using a hotkey maybe?)
-# TODO: replace_prompt: bool = False
-# TODO: silent: bool = True
-# TODO: enforce post-process actions to end prompt
 
 
 class ParametrizedAction(ParametrizedOptionString):
@@ -297,8 +271,6 @@ class ActionMenu[T, S]:
         return bool(self.to_automate)
 
 
-# TODO: Can be invoked as prompt (like old action menu) in a subshell
-# TODO: Custom automation can be used to invoke customized commands such as put(...)
 class Automator(Thread):
     @property
     def port(self) -> str:
@@ -379,9 +351,6 @@ type ServerCallFunctionGeneric[T, S, R] = Callable[Concatenate[PromptData[T, S],
 type ServerCallFunction[T, S] = ServerCallFunctionGeneric[T, S, str | None]
 
 
-# TODO: Add support for index {n} and indices {+n}
-# TODO: Will logging slow it down too much?
-# TODO: Allow seeing output of server call and wait for key press to return to prompt
 class ServerCall[T, S](ShellCommand):
     """❗ custom name mustn't have single nor double quotes in it. It only has informative purpose anyway"""
 
@@ -571,7 +540,6 @@ type PreviewFunction[T, S] = ServerCallFunctionGeneric[T, S, str]
 
 class Preview[T, S]:
     # TODO: | Event
-    # TODO: implement ServerCall commands
     # TODO: line wrap
     def __init__(
         self,
