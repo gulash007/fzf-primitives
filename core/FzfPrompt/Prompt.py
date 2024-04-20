@@ -337,7 +337,7 @@ class Automator(Thread):
 
     def resolve(self, action_menu: ActionMenu):
         action_menu.add(
-            "start", Binding("get automator port", ServerCall(self.get_port_number)), conflict_resolution="append"
+            "start", Binding("get automator port", ServerCall(self.get_port_number)), conflict_resolution="prepend"
         )
         self.add_bindings(*[x if isinstance(x, Binding) else action_menu.bindings[x] for x in action_menu.to_automate])
 
