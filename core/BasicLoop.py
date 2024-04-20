@@ -1,4 +1,4 @@
-from typing import Callable, ParamSpec
+from typing import Callable
 
 from ..main import Prompt
 from .FzfPrompt.exceptions import ExitLoop, ExitRound
@@ -7,8 +7,6 @@ from .FzfPrompt.Prompt import Result
 from .monitoring import Logger
 
 logger = Logger.get_logger()
-
-P = ParamSpec("P")
 
 
 # TODO: Rename to Executor or something
