@@ -36,7 +36,6 @@ from .options import (
 )
 from .shell import SHELL_SCRIPTS
 
-T = TypeVar("T")
 
 logger = get_logger()
 
@@ -113,7 +112,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
 EndStatus = Literal["accept", "abort", "quit"]
 
 
-class Result(list[T]):
+class Result[T](list[T]):
     def __init__(
         self,
         end_status: EndStatus,
