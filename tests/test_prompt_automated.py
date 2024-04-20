@@ -4,7 +4,6 @@ import pytest
 
 from ..config import DEFAULT_ABORT_HOTKEY, DEFAULT_ACCEPT_HOTKEY
 from ..core.FzfPrompt.exceptions import ExitLoop, ExitRound
-from ..core.FzfPrompt.Prompt import PromptData
 from ..core.monitoring import Logger
 from . import TestPrompt
 from .Recording import Recording
@@ -37,27 +36,19 @@ def test_general():
     assert recording.compare_events(expected), f"{len(recording.events)=} vs {len(expected.events)=}"
 
 
-def run_and_quit(prompt_data: PromptData):
-    prompt = TestPrompt.prompt_builder()
-    prompt.mod.automate("ctrl-q")
-    return prompt.run()
-
-
 def test_quit():
     with pytest.raises(ExitLoop) as exc:
-        run_and_quit(PromptData())
-
-
-def run_and_abort(prompt_data: PromptData):
-    prompt = TestPrompt.prompt_builder()
-    prompt.mod.lastly.exit_round_when_aborted()
-    prompt.mod.automate(DEFAULT_ABORT_HOTKEY)
-    return prompt.run()
+        prompt = TestPrompt.prompt_builder()
+        prompt.mod.automate("ctrl-q")
+        prompt.run()
 
 
 def test_abort():
     with pytest.raises(ExitRound) as exc:
-        run_and_abort(PromptData())
+        prompt = TestPrompt.prompt_builder()
+        prompt.mod.lastly.exit_round_when_aborted()
+        prompt.mod.automate(DEFAULT_ABORT_HOTKEY)
+        prompt.run()
 
 
 if __name__ == "__main__":
