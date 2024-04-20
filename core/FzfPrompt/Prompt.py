@@ -325,11 +325,7 @@ class Automator(Thread):
                 if not self.port_resolved.wait(timeout=5):
                     logger.warning("Waiting for port to be resolved…")
             for binding_to_automate in self.bindings:
-                # HACK: PromptEndingAction won't allow move_to_next_binding_server_call to be called but that doesn't
-                # matter because PromptEndingAction ends prompt anyway
-                self.execute_binding(
-                    binding_to_automate + Binding("move to next binding", self.move_to_next_binding_server_call)
-                )
+                self.execute_binding(binding_to_automate)
         except Exception as e:
             logger.exception(e)
             raise
@@ -339,12 +335,20 @@ class Automator(Thread):
 
     def execute_binding(self, binding: Binding):
         logger.debug(f"Automating {binding}")
-        action_str = binding.to_action_string()
+        if not binding.final_action:
+            binding += Binding("move to next automated binding", self.move_to_next_binding_server_call)
+        action_str = (
+            binding
+            if binding.final_action
+            else binding + Binding("move to next automated binding", self.move_to_next_binding_server_call)
+        ).to_action_string()
         self.binding_executed.clear()
         if response := requests.post(f"http://localhost:{self.port}", data=action_str).text:
             if not response.startswith("unknown action:"):
                 logger.weirdness(response)
             raise RuntimeError(response)
+        if binding.final_action:
+            return
         self.binding_executed.wait()
         time.sleep(0.4)
 
