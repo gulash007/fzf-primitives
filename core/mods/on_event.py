@@ -10,7 +10,7 @@ from thingies import shell_command
 from ..FzfPrompt.constants import SHELL_COMMAND
 from ..FzfPrompt.options.actions import ShellCommandActionType
 from ..FzfPrompt.options.events import Hotkey, Situation
-from ..FzfPrompt.Prompt import (
+from ..FzfPrompt import (
     Action,
     Binding,
     ConflictResolution,

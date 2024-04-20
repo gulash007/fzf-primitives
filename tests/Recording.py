@@ -7,8 +7,8 @@ from typing import Self
 import loguru
 import pydantic
 
-from ..core.FzfPrompt.options import Situation, Hotkey
-from ..core.FzfPrompt.Prompt import EndStatus, Result
+from ..core.FzfPrompt import EndStatus, Result
+from ..core.FzfPrompt.options import Hotkey, Situation
 from ..core.monitoring.Logger import get_logger
 
 RECORDINGS_DIR = Path(__file__).parent.joinpath("recordings/")
@@ -24,10 +24,10 @@ class Event(pydantic.BaseModel):
 class Recording(pydantic.BaseModel):
     name: str
     events: list[Event] = []
-    end_status: EndStatus = None
-    event: Hotkey | Situation = None
-    query: str = None
-    lines: list[str] = None
+    end_status: EndStatus = None  # type: ignore
+    event: Hotkey | Situation = None  # type: ignore
+    query: str = None  # type: ignore
+    lines: list[str] = None  # type: ignore
 
     def __call__(self, message: loguru.Message):
         self.events.append(

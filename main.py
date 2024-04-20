@@ -1,5 +1,5 @@
 from . import config
-from .core.FzfPrompt.Prompt import PromptData, Result, run_fzf_prompt
+from .core.FzfPrompt import PromptData, Result, run_fzf_prompt
 from .core.mods import Mod
 
 

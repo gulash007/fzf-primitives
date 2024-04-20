@@ -1,9 +1,9 @@
 from typing import Callable
 
 from ..main import Prompt
+from .FzfPrompt import Result
 from .FzfPrompt.exceptions import ExitLoop, ExitRound
 from .FzfPrompt.options import Hotkey
-from .FzfPrompt.Prompt import Result
 from .monitoring import Logger
 
 logger = Logger.get_logger()

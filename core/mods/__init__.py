@@ -3,14 +3,13 @@ from __future__ import annotations
 
 from typing import Callable, Self, overload
 
+from ..FzfPrompt import Action, ConflictResolution, PromptData
+from ..FzfPrompt.options import Hotkey, Options, Situation
+from ..monitoring.Logger import get_logger
 from .EventAdder import HotkeyAdder, SituationAdder
 from .on_event import OnEvent
 from .post_processing import PostProcessing
 from .preview import PreviewMod
-
-from ..FzfPrompt.options import Hotkey, Options, Situation
-from ..FzfPrompt.Prompt import Action, ConflictResolution, PromptData
-from ..monitoring.Logger import get_logger
 
 logger = get_logger()
 

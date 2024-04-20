@@ -1,8 +1,8 @@
 import pytest
 
 from .. import Prompt
+from ..core.FzfPrompt import BindingConflict
 from ..core.FzfPrompt.options import Options
-from ..core.FzfPrompt.Prompt import BindingConflict
 from ..core.mods import Mod, OnEvent, PostProcessing, PreviewMod
 
 

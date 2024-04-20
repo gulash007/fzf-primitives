@@ -4,8 +4,8 @@ from typing import Callable
 
 from thingies import shell_command
 
+from ..FzfPrompt import ConflictResolution, Preview, PreviewFunction, PromptData
 from ..FzfPrompt.options import Hotkey, Position, RelativeWindowSize
-from ..FzfPrompt.Prompt import ConflictResolution, Preview, PreviewFunction, PromptData
 
 
 def preview_basic(prompt_data: PromptData):

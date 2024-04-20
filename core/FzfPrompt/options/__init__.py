@@ -5,8 +5,8 @@ from typing import Self
 
 from .actions import BaseAction, ParametrizedActionType, ShellCommandActionType
 from .events import Hotkey, Situation
-from .values import Position, RelativeWindowSize, Layout, Border
 from .ParametrizedOptionString import ParametrizedOptionString
+from .values import Border, EndStatus, Layout, Position, RelativeWindowSize
 
 __all__ = [
     "Options",
@@ -15,6 +15,7 @@ __all__ = [
     "ShellCommandActionType",
     "Hotkey",
     "Situation",
+    "EndStatus",
     "Position",
     "RelativeWindowSize",
     "Layout",

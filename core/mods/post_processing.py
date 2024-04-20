@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Callable
 
 from ..FzfPrompt.exceptions import ExitRound
-from ..FzfPrompt.Prompt import PostProcessor, PromptData, Result
+from ..FzfPrompt import PostProcessor, PromptData, Result
 
 
 class PostProcessing[T, S]:
