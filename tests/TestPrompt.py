@@ -1,6 +1,7 @@
-from ..core.FzfPrompt.exceptions import ExitLoop
-from ..core.monitoring import Logger
 from .. import Prompt
+from ..core.FzfPrompt.exceptions import ExitLoop
+from ..core.FzfPrompt.prompt_data import PromptData
+from ..core.monitoring import Logger
 from .Recording import Recording
 
 # TEST ALL KINDS OF STUFF
@@ -8,8 +9,11 @@ from .Recording import Recording
 # TODO: test mods.on_event preset bindings chaining
 
 
-def wait_for_input(prompt_data):
+def wait_for_input(prompt_data: PromptData[str, None]):
     input("Press Enter to continue...")
+
+
+def bad_server_call_function(prompt_data: PromptData[int, str]): ...
 
 
 def prompt_builder():
@@ -20,6 +24,7 @@ def prompt_builder():
     prompt.mod.on_hotkey().CTRL_C.clip_current_preview.accept
     prompt.mod.on_hotkey().CTRL_O.clip_options
     prompt.mod.on_hotkey().CTRL_N.run_function("wait", wait_for_input)
+    # prompt.mod.on_hotkey().CTRL_X.run_function("wait", bad_server_call_function) # uncomment to reveal error
     prompt.mod.preview("ctrl-y").basic
     prompt.mod.preview("ctrl-6").custom(
         name="basic2", command="echo {}", window_size="50%", window_position="up", store_output=False
