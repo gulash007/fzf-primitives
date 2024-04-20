@@ -33,7 +33,8 @@ def test_general():
     assert expected.event == result.event
     assert expected.query == result.query
     assert expected.lines == result.lines
-    assert recording.compare_events(expected), f"{len(recording.events)=} vs {len(expected.events)=}"
+    assert len(recording.events) == len(expected.events)
+    assert recording.compare_events(expected)
 
 
 def test_quit():

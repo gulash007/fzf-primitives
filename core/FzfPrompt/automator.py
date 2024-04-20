@@ -68,7 +68,7 @@ class Automator(Thread):
         if binding.final_action:
             return
         self.binding_executed.wait()
-        time.sleep(0.4)
+        time.sleep(0.25)
 
     def move_to_next_binding(self, prompt_data: PromptData):
         self.binding_executed.set()
