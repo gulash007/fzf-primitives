@@ -133,3 +133,4 @@ dmypy.json
 
 _logs/
 tests/recordings
+.personal
