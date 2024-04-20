@@ -10,7 +10,6 @@ import socket
 import subprocess
 import time
 import traceback
-from dataclasses import dataclass
 from datetime import datetime
 from shutil import which
 from threading import Event, Thread
@@ -57,6 +56,23 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
     if (action_menu := prompt_data.action_menu).should_run_automator:
         action_menu.automator.resolve(action_menu)
         action_menu.automator.start()
+
+    if prompt_data.previewer.previews:
+        initial_preview = prompt_data.previewer.current_preview
+        prompt_data.action_menu.add(
+            "start",
+            Binding(
+                f"Change preview to '{initial_preview.name}'",
+                PreviewWindowChange(initial_preview.window_size, initial_preview.window_position),
+                PreviewChange(initial_preview),
+                (
+                    ShellCommand(initial_preview.command, "change-preview")
+                    if not initial_preview.store_output and isinstance(initial_preview.command, str)
+                    else GetCurrentPreviewFromServer(initial_preview)
+                ),
+            ),
+            conflict_resolution="prepend",
+        )
 
     server_setup_finished = Event()
     server_should_close = Event()
@@ -196,17 +212,17 @@ class Binding:
     def __init__(self, name: str, /, *actions: Action):
         self.name = name  # only descriptive function
         self.actions: list[Action] = []
-        self.final = False
+        self.final_action: PromptEndingAction | None = None
         for action in actions:
-            if self.final:
+            if self.final_action is not None:
                 raise ValueError(f"{self.name}: PromptEndingAction should be the last action in the binding: {actions}")
             self.actions.append(action)
             if isinstance(action, PromptEndingAction):
-                self.final = True
+                self.final_action = action
 
     def to_action_string(self) -> str:
         actions = self.actions.copy()
-        if self.final:
+        if self.final_action:
             actions.append("abort")
         action_strings = [
             action.action_string() if isinstance(action, ParametrizedAction) else action for action in actions
@@ -229,8 +245,9 @@ class BindingConflict(Exception):
 
 
 class ActionMenu[T, S]:
-    def __init__(self) -> None:
+    def __init__(self, previewer: Previewer[T, S]) -> None:
         self.bindings: dict[Hotkey | Situation, Binding] = {}
+        self.previewer = previewer
         self.automator = Automator()
         self.to_automate: list[Binding | Hotkey] = []
 
@@ -238,7 +255,11 @@ class ActionMenu[T, S]:
     def actions(self) -> list[Action]:
         return [action for binding in self.bindings.values() for action in binding.actions]
 
-    def add(self, event: Hotkey | Situation, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"):
+    def add(
+        self, event: Hotkey | Situation, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
+    ):
+        if binding.final_action:
+            binding.final_action.resolve_event(event)
         if event not in self.bindings:
             self.bindings[event] = binding
         else:
@@ -257,11 +278,6 @@ class ActionMenu[T, S]:
     # TODO: silent binding (doesn't appear in header help)?
     @single_use_method
     def resolve_options(self) -> Options:
-        for event, binding in self.bindings.items():
-            for action in binding.actions:
-                if isinstance(action, PromptEndingAction):
-                    logger.debug(f"{action}: Resolving event: {event}")
-                    action.resolve_event(event)
         options = Options()
         for event, binding in self.bindings.items():
             options.bind(event, binding.to_action_string())
@@ -372,10 +388,11 @@ class ServerCall[T, S](ShellCommand):
         action_type: ShellCommandActionType = "execute",
     ) -> None:
         self.function = function
-        self.name = f"{custom_name or function.__name__} ({id(self)})"
+        self.name = custom_name or function.__name__
+        self.id = f"{custom_name or function.__name__} ({id(self)})"
         self.socket_number: int
 
-        template, placeholders_to_resolve = Request.create_template(self.name, function, action_type)
+        template, placeholders_to_resolve = Request.create_template(self.id, function, action_type)
         placeholders_to_resolve.append("socket_number")
         super().__init__(template, action_type, placeholders_to_resolve)
 
@@ -385,7 +402,7 @@ class ServerCall[T, S](ShellCommand):
         self.resolve(socket_number=socket_number)
 
     def __str__(self) -> str:
-        return f"{self.name}: {super().__str__()}"
+        return f"{self.id}: {super().__str__()}"
 
 
 type PostProcessor[T, S] = Callable[[PromptData[T, S]], None]
@@ -477,12 +494,17 @@ class PromptState(pydantic.BaseModel):
 
 
 class Server[T, S](Thread):
-    def __init__(self, prompt_data: PromptData[T, S], server_setup_finished: Event, server_should_close: Event) -> None:
+    def __init__(
+        self,
+        prompt_data: PromptData[T, S],
+        server_setup_finished: Event,
+        server_should_close: Event,
+    ) -> None:
         super().__init__(name="Server")
         self.prompt_data = prompt_data
         self.server_setup_finished = server_setup_finished
         self.server_should_close = server_should_close
-        self.server_calls: dict[str, ServerCall[T, S]] = {sc.name: sc for sc in prompt_data.server_calls()}
+        self.server_calls: dict[str, ServerCall[T, S]] = {sc.id: sc for sc in prompt_data.server_calls()}
 
     # TODO: Use automator to end running prompt and propagate errors
     def run(self):
@@ -543,7 +565,6 @@ class Server[T, S](Thread):
 type PreviewFunction[T, S] = ServerCallFunctionGeneric[T, S, str]
 
 
-@dataclass
 class Preview[T, S]:
     # TODO: | Event
     # TODO: implement ServerCall commands
@@ -560,11 +581,7 @@ class Preview[T, S]:
     ):
         self.name = name
         self.id = f"{name} ({id(self)})"
-        self.command = (
-            ShellCommand(command)
-            if isinstance(command, str) and not store_output
-            else PreviewChangeServerCall(command, self, store_output)
-        )
+        self.command = command
         self.hotkey: Hotkey | None = hotkey
         self.window_size = window_size
         self.window_position: Position = window_position
@@ -585,37 +602,41 @@ class Preview[T, S]:
         self._output = value
 
 
-class PreviewChangeServerCall[T, S](ServerCall):
-    def __init__(self, command: str | PreviewFunction[T, S], preview: Preview[T, S], store_output: bool) -> None:
+class PreviewChange[T, S](ServerCall[T, S]):
+    def __init__(self, preview: Preview[T, S]) -> None:
+
+        def change_current_preview(prompt_data: PromptData[T, S]):
+            prompt_data.previewer.set_current_preview(preview.id)
+            logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
+
+        super().__init__(change_current_preview, "execute-silent")
+
+
+class GetCurrentPreviewFromServer(ServerCall):
+    def __init__(self, preview: Preview) -> None:
         action_type = "change-preview"
+        command = preview.command
         if isinstance(command, str):
 
-            def execute_preview(
-                prompt_data: PromptData[T, S], preview_output: str = CommandOutput("echo $preview_output")
+            def store_preview_output(
+                prompt_data: PromptData, preview_output: str = CommandOutput("echo $preview_output")
             ):
-                if preview.id != prompt_data.previewer.current_preview.id:
-                    prompt_data.previewer.set_current_preview(preview.id)
-                    logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
+                preview.output = preview_output
                 logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
-                if store_output:
-                    preview.output = preview_output
 
-            super().__init__(execute_preview, f"Execute preview {preview.name}", action_type=action_type)
-            self.template = f'preview_output="$({command})"; echo $preview_output && {self.template}'
+            super().__init__(store_preview_output, f"Store preview of {preview.name}", action_type)
+            self.template = f'preview_output="$({preview.command})"; echo $preview_output && {self.template}'
+
         else:
 
-            def execute_preview_with_enclosed_function(prompt_data: PromptData[T, S], **kwargs):
-                if preview.id != prompt_data.previewer.current_preview.id:
-                    prompt_data.previewer.set_current_preview(preview.id)
-                    logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
+            def get_current_preview(prompt_data: PromptData, **kwargs):
+                preview.output = command(prompt_data)
                 logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
-                preview_output = command(prompt_data, **kwargs)
-                if store_output:
-                    preview.output = preview_output
-                return preview_output
+                return preview.output
 
-            super().__init__(command, f"Execute preview {preview.name}", action_type=action_type)
-            self.function = execute_preview_with_enclosed_function  # HACK
+            super().__init__(command, f"Show preview of {preview.name}", action_type=action_type)
+            # HACK: wanna ServerCall to parse parameters of enclosed function first to create the right template
+            self.function = get_current_preview
 
 
 class PreviewWindowChange(ParametrizedAction):
@@ -627,7 +648,7 @@ class PreviewWindowChange(ParametrizedAction):
 
 
 class Previewer[T, S]:
-    """Handles passing right preview options"""
+    """Handles storing preview outputs and tracking current preview and possibly other logic associated with previews"""
 
     def __init__(self) -> None:
         self._previews: dict[str, Preview[T, S]] = {}
@@ -654,16 +675,6 @@ class Previewer[T, S]:
     def get_preview(self, preview_id: str) -> Preview[T, S]:
         return self._previews[preview_id]
 
-    @single_use_method
-    def resolve_options(self) -> Options:
-        if not self._previews:
-            return Options()
-        return (
-            Options()
-            .preview(self.current_preview.command.resolved_string())
-            .preview_window(self.current_preview.window_position, self.current_preview.window_size)
-        )
-
 
 JSON_ENV_VAR_NAME = "PROMPT_DATA"
 
@@ -687,7 +698,7 @@ class PromptData[T, S]:
         self.obj = obj
         self.data = data or {}
         self.previewer = previewer or Previewer()
-        self.action_menu = action_menu or ActionMenu()
+        self.action_menu = action_menu or ActionMenu(self.previewer)
         self.options = options or Options()
         self.data_as_env_var = data_as_env_var
         self.post_processors: list[PostProcessor] = []
@@ -734,7 +745,7 @@ class PromptData[T, S]:
         return "\n".join(self.presented_choices)
 
     def get_current_preview(self) -> str:
-        return self.previewer.current_preview.output
+        return self.action_menu.previewer.current_preview.output
 
     def add_preview(
         self, preview: Preview, *, conflict_resolution: ConflictResolution = "raise error", main: bool = False
@@ -746,7 +757,12 @@ class PromptData[T, S]:
                 Binding(
                     f"Change preview to '{preview.name}'",
                     PreviewWindowChange(preview.window_size, preview.window_position),
-                    preview.command,
+                    PreviewChange(preview),
+                    (
+                        ShellCommand(preview.command, "change-preview")
+                        if not preview.store_output and isinstance(preview.command, str)
+                        else GetCurrentPreviewFromServer(preview)
+                    ),
                 ),
                 conflict_resolution=conflict_resolution,
             )
@@ -761,11 +777,10 @@ class PromptData[T, S]:
 
     @single_use_method
     def resolve_options(self) -> Options:
-        return self.options + self.previewer.resolve_options() + self.action_menu.resolve_options()
+        return self.options + self.action_menu.resolve_options()
 
     def server_calls(self) -> list[ServerCall]:
         server_calls = [action for action in self.action_menu.actions if isinstance(action, ServerCall)]
-        logger.debug(f"Server calls:\n{'\n'.join(str(sc) for sc in server_calls)}")
         if self.action_menu.should_run_automator:
             return [*server_calls, self.action_menu.automator.move_to_next_binding_server_call]
         return server_calls
