@@ -30,6 +30,7 @@ from .options import (
     ParametrizedActionType,
     ParametrizedOptionString,
     Position,
+    RelativeWindowSize,
     Situation,
     ShellCommandActionType,
 )
@@ -578,7 +579,7 @@ class Preview[T, S]:
         name: str,
         command: str | PreviewFunction[T, S],
         hotkey: Hotkey | None = None,
-        window_size: int | str = "50%",
+        window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
         preview_label: str | None = None,
         store_output: bool = True,
@@ -587,7 +588,7 @@ class Preview[T, S]:
         self.id = f"{name} ({id(self)})"
         self.command = command
         self.hotkey: Hotkey | None = hotkey
-        self.window_size = window_size
+        self.window_size: int | RelativeWindowSize = window_size
         self.window_position: Position = window_position
         self.preview_label = preview_label
         self.store_output = store_output
@@ -644,7 +645,7 @@ class GetCurrentPreviewFromServer(ServerCall):
 
 
 class PreviewWindowChange(ParametrizedAction):
-    def __init__(self, window_size: int | str, window_position: Position) -> None:
+    def __init__(self, window_size: int | RelativeWindowSize, window_position: Position) -> None:
         """Window size: int - absolute, str - relative and should be in '<int>%' format"""
         self.window_size = window_size
         self.window_position = window_position

@@ -4,7 +4,7 @@ from typing import Callable
 
 from thingies import shell_command
 
-from ..FzfPrompt.options import Hotkey, Position
+from ..FzfPrompt.options import Hotkey, Position, RelativeWindowSize
 from ..FzfPrompt.Prompt import ConflictResolution, Preview, PreviewFunction, PromptData
 
 
@@ -27,14 +27,14 @@ class preview_preset:
         self,
         name: str,
         command: str | PreviewFunction,
-        window_size: int | str = "50%",
+        window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
         preview_label: str | None = None,
         store_output: bool = True,
     ) -> None:
         self._name = name
         self._command = command
-        self._window_size = window_size
+        self._window_size: int | RelativeWindowSize = window_size
         self._window_position: Position = window_position
         self._preview_label = preview_label
         self._store_output = store_output
@@ -64,7 +64,7 @@ class PreviewMod[T, S]:
         self,
         name: str,
         command: str | PreviewFunction[T, S],
-        window_size: int | str = "50%",
+        window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
         preview_label: str | None = None,
         store_output: bool = True,
