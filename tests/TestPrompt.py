@@ -14,9 +14,12 @@ def prompt_builder():
     prompt.mod.on_hotkey().CTRL_A.toggle_all
     prompt.mod.on_hotkey().CTRL_Q.quit
     prompt.mod.on_hotkey().CTRL_C.clip_current_preview.accept
-    prompt.mod.preview("ctrl-h").basic
-    prompt.mod.preview("ctrl-6").basic_indexed
-    prompt.mod.preview("ctrl-y").custom(name="basic2", command="echo hello", window_size="50%", window_position="up")
+    prompt.mod.on_hotkey().CTRL_O.clip_options
+    prompt.mod.preview("ctrl-n").custom(
+        name="basic2", command="echo {}", window_size="50%", window_position="up", store_output=False
+    )
+    prompt.mod.preview("ctrl-6").basic
+    prompt.mod.preview("ctrl-y").basic_indexed
     return prompt
 
 
