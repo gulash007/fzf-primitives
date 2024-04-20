@@ -8,6 +8,10 @@ from .Recording import Recording
 # TODO: test mods.on_event preset bindings chaining
 
 
+def wait_for_input(prompt_data):
+    input("Press Enter to continue...")
+
+
 def prompt_builder():
     prompt = Prompt(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
     prompt.mod.options.multiselect
@@ -15,11 +19,11 @@ def prompt_builder():
     prompt.mod.on_hotkey().CTRL_Q.quit
     prompt.mod.on_hotkey().CTRL_C.clip_current_preview.accept
     prompt.mod.on_hotkey().CTRL_O.clip_options
-    prompt.mod.preview("ctrl-n").custom(
+    prompt.mod.on_hotkey().CTRL_N.run_function("wait", wait_for_input)
+    prompt.mod.preview("ctrl-y").basic
+    prompt.mod.preview("ctrl-6").custom(
         name="basic2", command="echo {}", window_size="50%", window_position="up", store_output=False
     )
-    prompt.mod.preview("ctrl-6").basic
-    prompt.mod.preview("ctrl-y").basic_indexed
     return prompt
 
 
