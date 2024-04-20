@@ -19,21 +19,17 @@ class PromptData[T, S]:
         choices: list[T] | None = None,
         presented_choices: list[str] | None = None,
         obj: S = None,
-        data: dict | None = None,  # arbitrary data to be passed to fzf process
         previewer: pv.Previewer[T, S] | None = None,
         action_menu: am.ActionMenu[T, S] | None = None,
         options: op.Options | None = None,
-        data_as_env_var: bool = False,
     ):
         self.choices = choices or []
         self.presented_choices = presented_choices or [str(choice) for choice in self.choices]
         self.obj = obj
-        self.data = data or {}
         self.previewer = previewer or pv.Previewer()
         self.action_menu = action_menu or am.ActionMenu(self.previewer)
         self.automator = auto.Automator()
         self.options = options or op.Options()
-        self.data_as_env_var = data_as_env_var
         self.post_processors: list[sv.PostProcessor] = []
         self._current_state: sv.PromptState | None = None
         self._result: Result[T]

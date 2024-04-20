@@ -42,16 +42,9 @@ class ServerCall[T, S](ShellCommand):
         self.function = function
         self.name = custom_name or function.__name__
         self.id = f"{custom_name or function.__name__} ({id(self)})"
-        self.socket_number: int
 
         template, placeholders_to_resolve = Request.create_template(self.id, function, action_type)
-        placeholders_to_resolve.append("socket_number")
         super().__init__(template, action_type, placeholders_to_resolve)
-
-    @single_use_method
-    def resolve_socket_number(self, socket_number: int) -> None:
-        self.socket_number = socket_number
-        self.resolve(socket_number=socket_number)
 
     def __str__(self) -> str:
         return f"{self.id}: {super().__str__()}"
@@ -119,7 +112,7 @@ class Request(pydantic.BaseModel):
             + f'server_call_name:"{server_call_id}",command_type:"{command_type}"'
             + "} + {kwargs:$ARGS.named}' "
             + " ".join(jq_args)
-            + " | nc localhost $socket_number"
+            + " | nc localhost $SOCKET_NUMBER"
         )
         return template, placeholders_to_resolve
 
@@ -157,6 +150,7 @@ class Server[T, S](Thread):
         self.server_setup_finished = server_setup_finished
         self.server_should_close = server_should_close
         self.server_calls: dict[str, ServerCall[T, S]] = {sc.id: sc for sc in prompt_data.server_calls()}
+        self.socket_number: int
 
     # TODO: Use automator to end running prompt and propagate errors
     def run(self):
@@ -164,8 +158,7 @@ class Server[T, S](Thread):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
                 server_socket.bind(("localhost", 0))
                 socket_specs = server_socket.getsockname()
-                socket_number = socket_specs[1]
-                self.resolve_all_server_calls(socket_number)
+                self.socket_number = socket_specs[1]
                 server_socket.listen()
                 logger.info(f"Server listening on {socket_specs}...")
 
@@ -208,7 +201,3 @@ class Server[T, S](Thread):
                 client_socket.sendall(str(response).encode("utf-8"))
         finally:
             client_socket.close()
-
-    def resolve_all_server_calls(self, socket_number: int):
-        for server_call in self.server_calls.values():
-            server_call.resolve_socket_number(socket_number)

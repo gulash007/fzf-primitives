@@ -46,9 +46,6 @@ logger = get_logger()
 FZF_URL = "https://github.com/junegunn/fzf"
 
 
-JSON_ENV_VAR_NAME = "PROMPT_DATA"
-
-
 # TODO: Allow propagation of exceptions through nested prompts (relevant for quit_app)
 # ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable
 def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None) -> Result[T]:
@@ -83,6 +80,8 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
     server = Server(prompt_data, server_setup_finished, server_should_close)
     server.start()
     server_setup_finished.wait()
+    env = os.environ.copy()
+    env["SOCKET_NUMBER"] = str(server.socket_number)
 
     # TODO: catch 130 in mods.exit_round_on_no_selection (rename it appropriately)
     try:
@@ -93,7 +92,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
             shell=False,
             input=prompt_data.choices_string.encode(),
             check=True,
-            env=os.environ | {JSON_ENV_VAR_NAME: json.dumps(prompt_data.data)} if prompt_data.data_as_env_var else None,
+            env=env,
         )
     except subprocess.CalledProcessError as err:
         # 130 means aborted or unassigned hotkey was pressed
