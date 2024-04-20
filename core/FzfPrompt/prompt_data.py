@@ -3,12 +3,12 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
-from . import action_menu as am
-from . import automator as auto
-from . import decorators as dec
-from . import options as op
-from . import previewer as pv
-from . import server as sv
+from .action_menu import ActionMenu, Binding, ConflictResolution, ShellCommand
+from .automator import Automator
+from .decorators import single_use_method
+from .options import Hotkey, Options, Situation
+from .previewer import GetCurrentPreviewFromServer, Preview, PreviewChange, Previewer, PreviewWindowChange
+from .server import EndStatus, PostProcessor, PromptState, ServerCall
 
 
 class PromptData[T, S]:
@@ -19,30 +19,30 @@ class PromptData[T, S]:
         choices: list[T] | None = None,
         presented_choices: list[str] | None = None,
         obj: S = None,
-        previewer: pv.Previewer[T, S] | None = None,
-        action_menu: am.ActionMenu[T, S] | None = None,
-        options: op.Options | None = None,
+        previewer: Previewer[T, S] | None = None,
+        action_menu: ActionMenu[T, S] | None = None,
+        options: Options | None = None,
     ):
         self.choices = choices or []
         self.presented_choices = presented_choices or [str(choice) for choice in self.choices]
         self.obj = obj
-        self.previewer = previewer or pv.Previewer()
-        self.action_menu = action_menu or am.ActionMenu(self.previewer)
-        self.automator = auto.Automator()
-        self.options = options or op.Options()
-        self.post_processors: list[sv.PostProcessor] = []
-        self._current_state: sv.PromptState | None = None
+        self.previewer = previewer or Previewer()
+        self.action_menu = action_menu or ActionMenu(self.previewer)
+        self.automator = Automator()
+        self.options = options or Options()
+        self.post_processors: list[PostProcessor] = []
+        self._current_state: PromptState | None = None
         self._result: Result[T]
         self.id = datetime.now().isoformat()  # TODO: Use it?
         self._finished = False
 
     @property
-    def current_state(self) -> sv.PromptState:
+    def current_state(self) -> PromptState:
         if not self._current_state:
             raise RuntimeError("Current state not set")
         return self._current_state
 
-    def set_current_state(self, prompt_state: sv.PromptState):
+    def set_current_state(self, prompt_state: PromptState):
         self._current_state = prompt_state
 
     @property
@@ -56,7 +56,7 @@ class PromptData[T, S]:
     def finished(self) -> bool:
         return self._finished
 
-    def finish(self, event: am.Hotkey | am.Situation, end_status: sv.EndStatus):
+    def finish(self, event: Hotkey | Situation, end_status: EndStatus):
         self._result = Result(
             end_status=end_status,
             event=event,
@@ -77,39 +77,39 @@ class PromptData[T, S]:
         return self.action_menu.previewer.current_preview.output
 
     def add_preview(
-        self, preview: pv.Preview, *, conflict_resolution: am.ConflictResolution = "raise error", main: bool = False
+        self, preview: Preview, *, conflict_resolution: ConflictResolution = "raise error", main: bool = False
     ):
         if preview.hotkey:
             self.action_menu.add(
                 preview.hotkey,
                 # ❗ It's crucial that window change happens before preview change
-                am.Binding(
+                Binding(
                     f"Change preview to '{preview.name}'",
-                    pv.PreviewWindowChange(preview.window_size, preview.window_position),
-                    pv.PreviewChange(preview),
+                    PreviewWindowChange(preview.window_size, preview.window_position),
+                    PreviewChange(preview),
                     (
-                        am.ShellCommand(preview.command, "change-preview")
+                        ShellCommand(preview.command, "change-preview")
                         if not preview.store_output and isinstance(preview.command, str)
-                        else pv.GetCurrentPreviewFromServer(preview)
+                        else GetCurrentPreviewFromServer(preview)
                     ),
                 ),
                 conflict_resolution=conflict_resolution,
             )
         self.previewer.add(preview, main=main)
 
-    def add_post_processor(self, post_processor: sv.PostProcessor):
+    def add_post_processor(self, post_processor: PostProcessor):
         self.post_processors.append(post_processor)
 
     def apply_common_post_processors(self, prompt_data: PromptData[T, S]):
         for post_processor in self.post_processors:
             post_processor(prompt_data)
 
-    @dec.single_use_method
-    def resolve_options(self) -> op.Options:
+    @single_use_method
+    def resolve_options(self) -> Options:
         return self.options + self.action_menu.resolve_options()
 
-    def server_calls(self) -> list[sv.ServerCall]:
-        server_calls = [action for action in self.action_menu.actions if isinstance(action, sv.ServerCall)]
+    def server_calls(self) -> list[ServerCall]:
+        server_calls = [action for action in self.action_menu.actions if isinstance(action, ServerCall)]
         if self.action_menu.should_run_automator:
             return [*server_calls, self.automator.move_to_next_binding_server_call]
         return server_calls
@@ -118,8 +118,8 @@ class PromptData[T, S]:
 class Result[T](list[T]):
     def __init__(
         self,
-        end_status: sv.EndStatus,
-        event: am.Hotkey | am.Situation,
+        end_status: EndStatus,
+        event: Hotkey | Situation,
         choices: list[T],
         query: str,  # as in {q} placeholder
         single_index: int | None,  # as in {n} placeholder
@@ -127,8 +127,8 @@ class Result[T](list[T]):
         single_line: str | None,  # as in {} placeholder; stripped of ANSI codes
         lines: list[str],  # as in {+} placeholder; stripped of ANSI codes
     ):
-        self.end_status: sv.EndStatus = end_status
-        self.event: am.Hotkey | am.Situation = event
+        self.end_status: EndStatus = end_status
+        self.event: Hotkey | Situation = event
         self.query = query
         self.single_index = single_index  # of pointer starting from 0
         self.indices = indices  # of marked selections or pointer if none are selected

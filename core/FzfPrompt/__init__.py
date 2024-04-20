@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 import shlex
 import subprocess
@@ -14,8 +13,8 @@ if TYPE_CHECKING:
     from .prompt_data import PromptData
     from .server import PromptEndingAction, ServerCall
 from ..monitoring.Logger import get_logger
-from .action_menu.parametrized_actions import Action, ShellCommand
 from .action_menu.binding import Binding, BindingConflict, ConflictResolution
+from .action_menu.parametrized_actions import Action, ShellCommand
 from .exceptions import ExitLoop
 from .previewer import GetCurrentPreviewFromServer, Preview, PreviewChange, PreviewFunction, PreviewWindowChange
 from .prompt_data import PromptData, Result
