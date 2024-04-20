@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from typing import Callable, Self, overload
 
-from .EventAdder import HotkeyAdder, PromptEventAdder
+from .EventAdder import HotkeyAdder, SituationAdder
 from .on_event import OnEvent
 from .post_processing import PostProcessing
 from .preview import PreviewMod
 
-from ..FzfPrompt.options import Hotkey, Options, PromptEvent
+from ..FzfPrompt.options import Hotkey, Options, Situation
 from ..FzfPrompt.Prompt import Action, ConflictResolution, PromptData
 from ..monitoring.Logger import get_logger
 
@@ -52,22 +52,22 @@ class Mod[T, S]:
         return HotkeyAdder(on_event_mod)
 
     @overload
-    def on_prompt_event(
-        self, prompt_event: PromptEvent, *, conflict_resolution: ConflictResolution = "raise error"
+    def on_situation(
+        self, situation: Situation, *, conflict_resolution: ConflictResolution = "raise error"
     ) -> OnEvent[T, S]: ...
     @overload
-    def on_prompt_event(
+    def on_situation(
         self, *, conflict_resolution: ConflictResolution = "raise error"
-    ) -> PromptEventAdder[OnEvent[T, S]]: ...
-    def on_prompt_event(
-        self, prompt_event: PromptEvent | None = None, *, conflict_resolution: ConflictResolution = "raise error"
-    ) -> OnEvent[T, S] | PromptEventAdder[OnEvent[T, S]]:
+    ) -> SituationAdder[OnEvent[T, S]]: ...
+    def on_situation(
+        self, situation: Situation | None = None, *, conflict_resolution: ConflictResolution = "raise error"
+    ) -> OnEvent[T, S] | SituationAdder[OnEvent[T, S]]:
         on_event_mod = OnEvent[T, S](conflict_resolution=conflict_resolution)
         self._mods.append(on_event_mod)
-        if prompt_event:
-            on_event_mod.set_event(prompt_event)
+        if situation:
+            on_event_mod.set_event(situation)
             return on_event_mod
-        return PromptEventAdder(on_event_mod)
+        return SituationAdder(on_event_mod)
 
     def preview(
         self,

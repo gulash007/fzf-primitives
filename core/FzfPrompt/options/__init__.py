@@ -4,7 +4,7 @@ import shlex
 from typing import Self
 
 from .actions import BaseAction, ParametrizedActionType, ShellCommandActionType
-from .events import Hotkey, PromptEvent
+from .events import Hotkey, Situation
 from .values import Position, Layout, Border
 from .ParametrizedOptionString import ParametrizedOptionString
 
@@ -14,7 +14,7 @@ __all__ = [
     "ParametrizedActionType",
     "ShellCommandActionType",
     "Hotkey",
-    "PromptEvent",
+    "Situation",
     "Position",
     "Layout",
     "Border",
@@ -83,14 +83,14 @@ class Options:
     def preview_label(self, label: str) -> Self:
         return self.add(shlex.join(["--preview-label", label]))
 
-    def bind(self, event: Hotkey | PromptEvent, action: str) -> Self:
+    def bind(self, event: Hotkey | Situation, action: str) -> Self:
         return self.add(shlex.join(["--bind", f"{event}:{action}"]))
 
-    def bind_base_action(self, event: Hotkey | PromptEvent, action: BaseAction) -> Self:
+    def bind_base_action(self, event: Hotkey | Situation, action: BaseAction) -> Self:
         return self.bind(event, action)
 
     def bind_shell_command(
-        self, event: Hotkey | PromptEvent, command: str, command_type: ShellCommandActionType = "execute"
+        self, event: Hotkey | Situation, command: str, command_type: ShellCommandActionType = "execute"
     ) -> Self:
         return self.bind(event, f"{command_type}({command})")
 

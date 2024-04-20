@@ -31,7 +31,7 @@ from .options import (
     ParametrizedActionType,
     ParametrizedOptionString,
     Position,
-    PromptEvent,
+    Situation,
     ShellCommandActionType,
 )
 from .shell import SHELL_SCRIPTS
@@ -100,7 +100,7 @@ class Result(list[T]):
     def __init__(
         self,
         end_status: EndStatus,
-        event: Hotkey | PromptEvent,
+        event: Hotkey | Situation,
         choices: list[T],
         query: str,  # as in {q} placeholder
         single_index: int | None,  # as in {n} placeholder
@@ -109,7 +109,7 @@ class Result(list[T]):
         lines: list[str],  # as in {+} placeholder; stripped of ANSI codes
     ):
         self.end_status: EndStatus = end_status
-        self.event: Hotkey | PromptEvent = event
+        self.event: Hotkey | Situation = event
         self.query = query
         self.single_index = single_index  # of pointer starting from 0
         self.indices = indices  # of marked selections or pointer if none are selected
@@ -230,7 +230,7 @@ class BindingConflict(Exception):
 
 class ActionMenu[T, S]:
     def __init__(self) -> None:
-        self.bindings: dict[Hotkey | PromptEvent, Binding] = {}
+        self.bindings: dict[Hotkey | Situation, Binding] = {}
         self.automator = Automator()
         self.to_automate: list[Binding | Hotkey] = []
 
@@ -238,9 +238,7 @@ class ActionMenu[T, S]:
     def actions(self) -> list[Action]:
         return [action for binding in self.bindings.values() for action in binding.actions]
 
-    def add(
-        self, event: Hotkey | PromptEvent, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
-    ):
+    def add(self, event: Hotkey | Situation, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"):
         if event not in self.bindings:
             self.bindings[event] = binding
         else:
@@ -397,24 +395,24 @@ class PromptEndingAction[T, S](ServerCall):
     def __init__(self, end_status: EndStatus, post_processor: PostProcessor[T, S] | None = None) -> None:
         self.end_status: EndStatus = end_status
         self.post_processor = post_processor
-        self._event: Hotkey | PromptEvent | None = None
+        self._event: Hotkey | Situation | None = None
         # ❗ Needs to be silent, otherwise program can get stuck when waiting for user input on error in Server
         super().__init__(self.pipe_results, action_type="execute-silent")
 
     @property
-    def event(self) -> Hotkey | PromptEvent:
+    def event(self) -> Hotkey | Situation:
         if self._event is None:
             raise RuntimeError("event not resolved")
         return self._event
 
-    def pipe_results(self, prompt_data: PromptData[T, S], event: Hotkey | PromptEvent):
+    def pipe_results(self, prompt_data: PromptData[T, S], event: Hotkey | Situation):
         prompt_data.finish(event, self.end_status)
         if self.post_processor:
             self.post_processor(prompt_data)
         logger.debug(f"Piping results:\n{prompt_data.result}")
 
     @single_use_method
-    def resolve_event(self, event: Hotkey | PromptEvent):
+    def resolve_event(self, event: Hotkey | Situation):
         self._event = event
         self.resolve(event=event)
 
@@ -718,7 +716,7 @@ class PromptData[T, S]:
     def finished(self) -> bool:
         return self._finished
 
-    def finish(self, event: Hotkey | PromptEvent, end_status: EndStatus):
+    def finish(self, event: Hotkey | Situation, end_status: EndStatus):
         self._result = Result(
             end_status=end_status,
             event=event,

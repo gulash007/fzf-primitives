@@ -1,7 +1,7 @@
 from .on_event import OnEvent
 
 
-class PromptEventAdder[M: OnEvent]:
+class SituationAdder[M: OnEvent]:
     def __init__(self, mod: M):
         self._mod = mod
 

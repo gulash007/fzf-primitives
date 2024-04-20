@@ -9,7 +9,7 @@ from thingies import shell_command
 
 from ..FzfPrompt.constants import SHELL_COMMAND
 from ..FzfPrompt.options.actions import ShellCommandActionType
-from ..FzfPrompt.options.events import Hotkey, PromptEvent
+from ..FzfPrompt.options.events import Hotkey, Situation
 from ..FzfPrompt.Prompt import (
     Action,
     Binding,
@@ -38,10 +38,10 @@ FILE_BROWSERS: dict[FileBrowser, str] = {"VS Code": "code", "VS Code - Insiders"
 class OnEvent[T, S]:
     def __init__(self, *, conflict_resolution: ConflictResolution = "raise error"):
         self._bindings: list[Binding] = []
-        self._events: list[Hotkey | PromptEvent] = []
+        self._events: list[Hotkey | Situation] = []
         self._conflict_resolution: ConflictResolution = conflict_resolution
 
-    def set_event(self, event: Hotkey | PromptEvent):
+    def set_event(self, event: Hotkey | Situation):
         self._events.append(event)
 
     def run(self, name: str, *actions: Action) -> Self:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Literal
 
 
-PromptEvent = Literal[
+Situation = Literal[
     "start",
     "load",
     "resize",

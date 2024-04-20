@@ -7,7 +7,7 @@ from typing import Self
 import loguru
 import pydantic
 
-from ..core.FzfPrompt.options import PromptEvent, Hotkey
+from ..core.FzfPrompt.options import Situation, Hotkey
 from ..core.FzfPrompt.Prompt import EndStatus, Result
 from ..core.monitoring.Logger import get_logger
 
@@ -25,7 +25,7 @@ class Recording(pydantic.BaseModel):
     name: str
     events: list[Event] = []
     end_status: EndStatus = None
-    event: Hotkey | PromptEvent = None
+    event: Hotkey | Situation = None
     query: str = None
     lines: list[str] = None
 
