@@ -2,9 +2,9 @@ import pyperclip
 import typer
 from thingies import read_from_pipe
 
-from .FzfPrompt import PromptData, run_fzf_prompt
-from .FzfPrompt.exceptions import ExitLoop
-from .FzfPrompt.options import Options
+from ..core.FzfPrompt import PromptData, run_fzf_prompt
+from ..core.FzfPrompt.exceptions import ExitLoop
+from ..core.FzfPrompt.options import Options
 
 app = typer.Typer()
 

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import typer
 
-from ..core import BasePrompt
-from ..main import Prompt
-from .FzfPrompt.exceptions import ExitLoop
-from .monitoring.Logger import get_logger
+from .. import Prompt
+from ..core.FzfPrompt.exceptions import ExitLoop
+from ..core.monitoring.Logger import get_logger
+from . import BasePrompt
 
 logger = get_logger()
 

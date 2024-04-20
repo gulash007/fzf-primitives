@@ -1,10 +1,10 @@
 from typing import Callable
 
-from ..main import Prompt
-from .FzfPrompt import Result
-from .FzfPrompt.exceptions import ExitLoop, ExitRound
-from .FzfPrompt.options import Hotkey
-from .monitoring import Logger
+from .. import Prompt
+from ..core.FzfPrompt import Result
+from ..core.FzfPrompt.exceptions import ExitLoop, ExitRound
+from ..core.FzfPrompt.options import Hotkey
+from ..core.monitoring import Logger
 
 logger = Logger.get_logger()
 

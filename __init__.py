@@ -1,5 +1,5 @@
-from .main import Prompt
-from .core import BasicLoop
+from .core import Prompt
+from .extra import BasicLoop
 from .core.monitoring import Logger
 from .core.FzfPrompt import PromptData
 

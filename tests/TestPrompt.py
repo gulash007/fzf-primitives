@@ -1,6 +1,6 @@
 from ..core.FzfPrompt.exceptions import ExitLoop
 from ..core.monitoring import Logger
-from ..main import Prompt
+from .. import Prompt
 from .Recording import Recording
 
 # TEST ALL KINDS OF STUFF
