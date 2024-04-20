@@ -38,7 +38,7 @@ class ParametrizedOptionString:
         return Template(self.template).safe_substitute(self.resolved_placeholders)
 
     def __str__(self) -> str:
-        return f"'{self.template}' ({self.placeholders_to_resolve=}) ({self.resolved_placeholders=})"
+        return f"{self.__class__.__name__} ({self.placeholders_to_resolve=}, {self.resolved_placeholders=})"
 
 
 class NotResolved(RuntimeError): ...
