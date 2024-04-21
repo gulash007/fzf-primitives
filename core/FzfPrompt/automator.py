@@ -55,16 +55,12 @@ class Automator(Thread):
         logger.debug(f"Automating {binding}")
         if not binding.final_action:
             binding += am.Binding("move to next automated binding", self.move_to_next_binding_server_call)
-        action_str = (
-            binding
-            if binding.final_action
-            else binding + am.Binding("move to next automated binding", self.move_to_next_binding_server_call)
-        ).to_action_string()
         self.binding_executed.clear()
-        if response := requests.post(f"http://localhost:{self.port}", data=action_str).text:
-            if not response.startswith("unknown action:"):
-                logger.weirdness(response)  # type: ignore
-            raise RuntimeError(response)
+        response = requests.post(f"http://localhost:{self.port}", data=binding.to_action_string())
+        if message := response.text:
+            if not message.startswith("unknown action:"):
+                logger.weirdness(message)  # type: ignore
+            raise RuntimeError(message)
         if binding.final_action:
             return
         self.binding_executed.wait()
