@@ -27,7 +27,7 @@ class PostProcessing[T, S]:
     def exit_round_on(self, predicate: Callable[[PromptData[T, S]], bool], message: str = ""):
         def exit_round_on_predicate(prompt_data: PromptData[T, S]):
             if predicate(prompt_data):
-                raise ExitRound(message)
+                raise ExitRound(message, prompt_data.result)
 
         return self.custom(exit_round_on_predicate)
 

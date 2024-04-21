@@ -1,8 +1,13 @@
-# rename exception to signal its use to end prompt
+from ..FzfPrompt.prompt_data import Result
+
+
 class PromptEnd(Exception):
-    ...
+    def __init__(self, message: str, result: Result) -> None:
+        self.result = result
+        super().__init__(message)
 
 
+# TODO: rename exceptions to signal their use to end prompt
 class ExitRound(PromptEnd):
     pass
 
