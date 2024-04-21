@@ -58,7 +58,7 @@ class PreviewChange[T, S](ServerCall[T, S]):
             prompt_data.previewer.set_current_preview(preview.id)
             logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
 
-        super().__init__(change_current_preview, "execute-silent")
+        super().__init__(change_current_preview, action_type="execute-silent")
 
 
 class GetCurrentPreviewFromServer(ServerCall):
