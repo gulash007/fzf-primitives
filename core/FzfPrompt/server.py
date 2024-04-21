@@ -5,7 +5,7 @@ import re
 import socket
 import traceback
 from threading import Event, Thread
-from typing import TYPE_CHECKING, Callable, Concatenate, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Concatenate, ParamSpec, TypeVar
 
 import pydantic
 
@@ -27,7 +27,7 @@ P = ParamSpec("P")
 R = TypeVar("R", bound=str | None)
 # means it requires first parameter to be of type PromptData but other parameters can be anything
 type ServerCallFunctionGeneric[T, S, R] = Callable[Concatenate[PromptData[T, S], ...], R]
-type ServerCallFunction[T, S] = ServerCallFunctionGeneric[T, S, str | None]
+type ServerCallFunction[T, S] = ServerCallFunctionGeneric[T, S, Any]
 
 
 class ServerCall[T, S](ShellCommand):
@@ -50,7 +50,7 @@ class ServerCall[T, S](ShellCommand):
         return f"{self.id}: {super().__str__()}"
 
 
-type PostProcessor[T, S] = Callable[[PromptData[T, S]], None]
+type PostProcessor[T, S] = Callable[[PromptData[T, S]], Any]
 
 
 class PromptEndingAction[T, S](ServerCall):
