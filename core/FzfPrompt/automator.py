@@ -8,16 +8,28 @@ import clipboard
 import requests
 
 if TYPE_CHECKING:
-    from .prompt_data import PromptData
     from .action_menu import ActionMenu
-from . import action_menu as am
-from .server import ServerCall
+    from .prompt_data import PromptData
 from ..monitoring import Logger
+from . import action_menu as am
+from .decorators import single_use_method
+from .options import Hotkey, Options
+from .server import ServerCall
 
 logger = Logger.get_logger()
 
 
 class Automator(Thread):
+
+    def __init__(self, action_menu: ActionMenu) -> None:
+        self.__port: str | None = None
+        self.action_menu = action_menu
+        self.bindings: list[am.Binding] = []
+        self.port_resolved = Event()
+        self.binding_executed = Event()
+        self.move_to_next_binding_server_call = ServerCall(self.move_to_next_binding)
+        super().__init__()
+
     @property
     def port(self) -> str:
         if self.__port is None:
@@ -27,15 +39,7 @@ class Automator(Thread):
     @port.setter
     def port(self, value: str):
         self.__port = value
-        logger.info(f"Automator listening on port {self.port}")
-
-    def __init__(self) -> None:
-        self.__port: str | None = None
-        self.bindings: list[am.Binding] = []
-        self.port_resolved = Event()
-        self.binding_executed = Event()
-        self.move_to_next_binding_server_call = ServerCall(self.move_to_next_binding)
-        super().__init__()
+        logger.info(f"Automated prompt listening on port {self.port}")
 
     def run(self):
         try:
@@ -48,11 +52,28 @@ class Automator(Thread):
             logger.exception(e)
             raise
 
-    def add_bindings(self, *bindings: am.Binding):
-        self.bindings.extend(bindings)
+    @single_use_method
+    def prepare(self):
+        self.action_menu.add(
+            "start",
+            am.Binding("get prompt port number for automator", ServerCall(self.get_port_number)),
+            conflict_resolution="prepend",
+        )
+        self.action_menu.server_calls.append(self.move_to_next_binding_server_call)
+
+    # TODO: Also allow automating default fzf hotkeys (can be solved by creating appropriate bindings in the action menu)
+    def automate(self, *to_automate: Hotkey):
+        self.bindings.extend(self.action_menu.bindings[hotkey] for hotkey in to_automate)
+
+    def automate_actions(self, *actions: am.Action, name: str | None = None):
+        self.bindings.append(am.Binding(name or "anonymous actions", *actions))
+
+    @property
+    def should_run(self) -> bool:
+        return bool(self.bindings)
 
     def execute_binding(self, binding: am.Binding):
-        logger.debug(f"Automating {binding}")
+        logger.debug(f">>>>> Automating {binding}")
         if not binding.final_action:
             binding += am.Binding("move to next automated binding", self.move_to_next_binding_server_call)
         self.binding_executed.clear()
@@ -69,17 +90,13 @@ class Automator(Thread):
     def move_to_next_binding(self, prompt_data: PromptData):
         self.binding_executed.set()
 
-    def resolve(self, action_menu: ActionMenu):
-        action_menu.add(
-            "start", am.Binding("get automator port", ServerCall(self.get_port_number)), conflict_resolution="prepend"
-        )
-        self.add_bindings(
-            *[x if isinstance(x, am.Binding) else action_menu.bindings[x] for x in action_menu.to_automate]
-        )
-
     def get_port_number(self, prompt_data: PromptData, FZF_PORT: str):
         """Utilizes the $FZF_PORT variable containing the port assigned to --listen option
         (or the one generated automatically when --listen=0)"""
         self.port = FZF_PORT
         clipboard.copy(FZF_PORT)
         self.port_resolved.set()
+
+    @single_use_method
+    def resolve_options(self) -> Options:
+        return Options().listen() if self.should_run else Options()

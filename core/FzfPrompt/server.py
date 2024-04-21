@@ -149,7 +149,7 @@ class Server[T, S](Thread):
         self.prompt_data = prompt_data
         self.server_setup_finished = server_setup_finished
         self.server_should_close = server_should_close
-        self.server_calls: dict[str, ServerCall[T, S]] = {sc.id: sc for sc in prompt_data.server_calls()}
+        self.server_calls: dict[str, ServerCall[T, S]] = {sc.id: sc for sc in prompt_data.action_menu.server_calls}
         self.socket_number: int
 
     # TODO: Use automator to end running prompt and propagate errors
@@ -172,7 +172,6 @@ class Server[T, S](Thread):
                             logger.info("Server closing")
                             break
                         continue
-                    logger.info(f"Connection from {addr}")
                     self.handle_request(client_socket, self.prompt_data)
         except Exception as e:
             logger.exception(e)

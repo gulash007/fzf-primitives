@@ -28,7 +28,7 @@ class PromptData[T, S]:
         self.obj = obj
         self.previewer = previewer or Previewer()
         self.action_menu = action_menu or ActionMenu(self.previewer)
-        self.automator = Automator()
+        self.automator = Automator(self.action_menu)
         self.options = options or Options()
         self.post_processors: list[PostProcessor] = []
         self._current_state: PromptState | None = None
@@ -106,13 +106,7 @@ class PromptData[T, S]:
 
     @single_use_method
     def resolve_options(self) -> Options:
-        return self.options + self.action_menu.resolve_options()
-
-    def server_calls(self) -> list[ServerCall]:
-        server_calls = [action for action in self.action_menu.actions if isinstance(action, ServerCall)]
-        if self.action_menu.should_run_automator:
-            return [*server_calls, self.automator.move_to_next_binding_server_call]
-        return server_calls
+        return self.options + self.action_menu.resolve_options() + self.automator.resolve_options()
 
 
 class Result[T](list[T]):

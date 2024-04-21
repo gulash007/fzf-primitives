@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 from ...monitoring import Logger
 from ..decorators import single_use_method
 from ..options import Hotkey, Options, Situation
+from ..server import ServerCall
 from .binding import Binding, BindingConflict, ConflictResolution
 from .parametrized_actions import Action, ParametrizedAction, ShellCommand
 
@@ -33,8 +34,8 @@ __all__ = [
 class ActionMenu[T, S]:
     def __init__(self, previewer: Previewer[T, S]) -> None:
         self.bindings: dict[Hotkey | Situation, Binding] = {}
+        self.server_calls: list[ServerCall] = []
         self.previewer = previewer
-        self.to_automate: list[Binding | Hotkey] = []
 
     @property
     def actions(self) -> list[Action]:
@@ -43,8 +44,6 @@ class ActionMenu[T, S]:
     def add(
         self, event: Hotkey | Situation, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
     ):
-        if binding.final_action:
-            binding.final_action.resolve_event(event)
         if event not in self.bindings:
             self.bindings[event] = binding
         else:
@@ -59,6 +58,11 @@ class ActionMenu[T, S]:
                     self.bindings[event] = binding + self.bindings[event]
                 case _:
                     raise ValueError(f"Invalid conflict resolution: {conflict_resolution}")
+        if binding.final_action:
+            binding.final_action.resolve_event(event)
+        for action in binding.actions:
+            if isinstance(action, ServerCall):
+                self.server_calls.append(action)
 
     # TODO: silent binding (doesn't appear in header help)?
     @single_use_method
@@ -67,16 +71,4 @@ class ActionMenu[T, S]:
         for event, binding in self.bindings.items():
             options.bind(event, binding.to_action_string())
         header_help = "\n".join(f"{event}\t{action.name}" for event, action in self.bindings.items())
-        if self.should_run_automator:
-            options.listen()
         return options.header(header_help).header_first
-
-    def automate(self, *to_automate: Binding | Hotkey):
-        self.to_automate.extend(to_automate)
-
-    def automate_actions(self, *actions: Action):
-        self.automate(Binding("anonymous actions", *actions))
-
-    @property
-    def should_run_automator(self) -> bool:
-        return bool(self.to_automate)

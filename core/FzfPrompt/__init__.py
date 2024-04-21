@@ -53,9 +53,9 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
     else:
         executable_path = "fzf"
 
-    if (action_menu := prompt_data.action_menu).should_run_automator:
-        prompt_data.automator.resolve(action_menu)
-        prompt_data.automator.start()
+    if (automator := prompt_data.automator).should_run:
+        automator.prepare()
+        automator.start()
 
     if prompt_data.previewer.previews:
         initial_preview = prompt_data.previewer.current_preview
