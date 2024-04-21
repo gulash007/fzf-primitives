@@ -19,6 +19,7 @@ def bad_server_call_function(prompt_data: PromptData[int, str]): ...
 def prompt_builder():
     prompt = Prompt(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
     prompt.mod.options.multiselect
+    prompt.mod.on_situation().BACKWARD_EOF.run_shell_command("clip socket number", "echo $SOCKET_NUMBER | clip")
     prompt.mod.on_hotkey().CTRL_A.toggle_all
     prompt.mod.on_hotkey().CTRL_Q.quit
     prompt.mod.on_hotkey().CTRL_C.clip_current_preview.accept
