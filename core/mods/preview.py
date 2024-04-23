@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from itertools import cycle
 from typing import Callable
 
 from thingies import shell_command
 
-from ..FzfPrompt import ConflictResolution, Preview, PreviewFunction, PromptData
+from ..FzfPrompt import ConflictResolution, OnPreviewChange, Preview, PreviewFunction, PromptData
 from ..FzfPrompt.options import Hotkey, Position, RelativeWindowSize
+from ..monitoring import Logger
 
 
 def preview_basic(prompt_data: PromptData):
@@ -27,22 +29,16 @@ class preview_preset:
         self,
         name: str,
         command: str | PreviewFunction,
-        window_size: int | RelativeWindowSize = "50%",
-        window_position: Position = "right",
-        preview_label: str | None = None,
+        on_change: OnPreviewChange | None = None,
         store_output: bool = True,
     ) -> None:
         self._name = name
         self._command = command
-        self._window_size: int | RelativeWindowSize = window_size
-        self._window_position: Position = window_position
-        self._preview_label = preview_label
+        self._on_change = on_change
         self._store_output = store_output
 
     def __get__(self, obj: PreviewMod, objtype=None):
-        return obj.custom(
-            self._name, self._command, self._window_size, self._window_position, self._preview_label, self._store_output
-        )
+        return obj.custom(self._name, self._command, self._on_change, self._store_output)
 
 
 class PreviewMod[T, S]:
@@ -50,12 +46,18 @@ class PreviewMod[T, S]:
     def __init__(
         self,
         hotkey: Hotkey | None = None,
+        window_size: int | RelativeWindowSize = "50%",
+        window_position: Position = "right",
+        preview_label: str | None = None,
         *,
         conflict_resolution: ConflictResolution = "raise error",
         main: bool = False,
     ):
         self._preview_adder: Callable[[PromptData[T, S]]]
         self._hotkey: Hotkey | None = hotkey
+        self._window_size: int | RelativeWindowSize = window_size
+        self._window_position: Position = window_position
+        self._preview_label: str | None = preview_label
         self._conflict_resolution: ConflictResolution = conflict_resolution
         self._main = main
 
@@ -63,13 +65,20 @@ class PreviewMod[T, S]:
         self,
         name: str,
         command: str | PreviewFunction[T, S],
-        window_size: int | RelativeWindowSize = "50%",
-        window_position: Position = "right",
-        preview_label: str | None = None,
+        on_change: OnPreviewChange[T, S] | None = None,
         store_output: bool = True,
     ) -> None:
         self._preview_adder = lambda prompt_data: prompt_data.previewer.add(
-            Preview[T, S](name, command, self._hotkey, window_size, window_position, preview_label, store_output),
+            Preview[T, S](
+                name,
+                command,
+                self._hotkey,
+                on_change,
+                self._window_size,
+                self._window_position,
+                self._preview_label,
+                store_output,
+            ),
             conflict_resolution=self._conflict_resolution,
             main=self._main,
         )
@@ -105,3 +114,36 @@ class PreviewMod[T, S]:
             return shell_command(command)
 
         self.custom("View File", view_file)
+
+    def cycle(self, preview_functions: dict[str, PreviewFunction[T, S]], name: str = ""):
+        preview_cycler = PreviewCycler(preview_functions)
+        if not name:
+            name = f'[{"|".join(preview_functions.keys())}]'
+        preview = Preview(
+            name,
+            preview_cycler,
+            self._hotkey,
+            on_change=preview_cycler.next,
+            window_size=self._window_size,
+            window_position=self._window_position,
+            preview_label=self._preview_label,
+        )
+        self._preview_adder = lambda prompt_data: prompt_data.previewer.add(
+            preview, conflict_resolution=self._conflict_resolution, main=self._main
+        )
+
+
+class PreviewCycler:
+    def __init__(self, preview_functions: dict[str, PreviewFunction]):
+        self._preview_functions = preview_functions
+        self._keys = cycle(preview_functions.keys())
+        self._current_key: str
+        self.logger = Logger.get_logger()
+
+    def __call__(self, prompt_data: PromptData):
+        return self._preview_functions[self._current_key](prompt_data)
+
+    def next(self, prompt_data: PromptData, preview: Preview):
+        if prompt_data.previewer.current_preview.id == preview.id:
+            self._current_key = next(self._keys)
+            self.logger.debug(f"Changing preview to next in cycle: {self._current_key}")

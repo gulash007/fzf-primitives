@@ -16,7 +16,7 @@ from ..monitoring.Logger import get_logger
 from .action_menu.binding import Binding, BindingConflict, ConflictResolution
 from .action_menu.parametrized_actions import Action, ShellCommand
 from .exceptions import ExitLoop
-from .previewer import Preview, PreviewFunction
+from .previewer import Preview, PreviewFunction, OnPreviewChange
 from .prompt_data import PromptData, Result
 from .server import EndStatus, PostProcessor, PromptEndingAction, Server, ServerCall, ServerCallFunction
 
@@ -36,6 +36,7 @@ __all__ = [
     "EndStatus",
     "Preview",
     "PreviewFunction",
+    "OnPreviewChange",
 ]
 
 # Black magic layer
