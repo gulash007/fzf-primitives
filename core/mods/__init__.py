@@ -73,13 +73,13 @@ class Mod[T, S]:
         hotkey: Hotkey | None = None,
         window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
-        preview_label: str | None = None,
+        label: str | None = None,
         *,
         conflict_resolution: ConflictResolution = "raise error",
         main: bool = False,
     ):
         preview_mod = PreviewMod[T, S](
-            hotkey, window_size, window_position, preview_label, conflict_resolution=conflict_resolution, main=main
+            hotkey, window_size, window_position, label, conflict_resolution=conflict_resolution, main=main
         )
         self._mods.append(preview_mod)
         return preview_mod

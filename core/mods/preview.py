@@ -48,7 +48,7 @@ class PreviewMod[T, S]:
         hotkey: Hotkey | None = None,
         window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
-        preview_label: str | None = None,
+        label: str | None = None,
         *,
         conflict_resolution: ConflictResolution = "raise error",
         main: bool = False,
@@ -57,7 +57,7 @@ class PreviewMod[T, S]:
         self._hotkey: Hotkey | None = hotkey
         self._window_size: int | RelativeWindowSize = window_size
         self._window_position: Position = window_position
-        self._preview_label: str | None = preview_label
+        self._label: str | None = label
         self._conflict_resolution: ConflictResolution = conflict_resolution
         self._main = main
 
@@ -76,7 +76,7 @@ class PreviewMod[T, S]:
                 on_change,
                 self._window_size,
                 self._window_position,
-                self._preview_label,
+                self._label,
                 store_output,
             ),
             conflict_resolution=self._conflict_resolution,
@@ -126,7 +126,7 @@ class PreviewMod[T, S]:
             on_change=preview_cycler.next,
             window_size=self._window_size,
             window_position=self._window_position,
-            preview_label=self._preview_label,
+            label=self._label,
         )
         self._preview_adder = lambda prompt_data: prompt_data.previewer.add(
             preview, conflict_resolution=self._conflict_resolution, main=self._main

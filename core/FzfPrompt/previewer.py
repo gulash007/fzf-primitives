@@ -26,7 +26,7 @@ class Preview[T, S]:
         on_change: OnPreviewChange[T, S] | None = None,
         window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
-        preview_label: str | None = None,
+        label: str | None = None,
         store_output: bool = True,
     ):
         self.name = name
@@ -35,14 +35,14 @@ class Preview[T, S]:
         self.event: Hotkey | Situation | None = event
         self.window_size: int | RelativeWindowSize = window_size
         self.window_position: Position = window_position
-        self.preview_label = preview_label
+        self.label = label
         self.store_output = store_output
         self._output: str | None = None
 
         # ❗ It's crucial that window change happens before preview change
         actions: list[Action] = [PreviewWindowChange(window_size, window_position)]
-        if preview_label:
-            actions.append(PreviewLabelChange(preview_label))
+        if label:
+            actions.append(PreviewLabelChange(label))
         actions.append(PreviewChange(self, on_change))
         actions.append(
             (StorePreviewOutput(self.command, self) if store_output else ShellCommand(self.command, "change-preview"))
