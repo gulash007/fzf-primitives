@@ -73,6 +73,7 @@ class Automator(Thread):
         return bool(self.bindings)
 
     def execute_binding(self, binding: am.Binding):
+        time.sleep(0.25)
         logger.debug(f">>>>> Automating {binding}")
         if not binding.final_action:
             binding += am.Binding("move to next automated binding", self.move_to_next_binding_server_call)
@@ -85,7 +86,6 @@ class Automator(Thread):
         if binding.final_action:
             return
         self.binding_executed.wait()
-        time.sleep(0.25)
 
     def move_to_next_binding(self, prompt_data: PromptData):
         self.binding_executed.set()
