@@ -26,8 +26,8 @@ class PromptData[T, S]:
         self.choices = choices or []
         self.presented_choices = presented_choices or [str(choice) for choice in self.choices]
         self.obj = obj
-        self.previewer = previewer or Previewer()
-        self.action_menu = action_menu or ActionMenu(self.previewer)
+        self.action_menu = action_menu or ActionMenu()
+        self.previewer = previewer or Previewer(self.action_menu)
         self.automator = Automator(self.action_menu)
         self.options = options or Options()
         self.post_processors: list[PostProcessor] = []
@@ -74,14 +74,7 @@ class PromptData[T, S]:
         return "\n".join(self.presented_choices)
 
     def get_current_preview(self) -> str:
-        return self.action_menu.previewer.current_preview.output
-
-    def add_preview(
-        self, preview: Preview, *, conflict_resolution: ConflictResolution = "raise error", main: bool = False
-    ):
-        if preview.event:
-            self.action_menu.add(preview.event, preview.preview_change_binding, conflict_resolution=conflict_resolution)
-        self.previewer.add(preview, main=main)
+        return self.previewer.current_preview.output
 
     def add_post_processor(self, post_processor: PostProcessor):
         self.post_processors.append(post_processor)

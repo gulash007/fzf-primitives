@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from ..previewer import Previewer
 from ...monitoring import Logger
 from ..decorators import single_use_method
 from ..options import Hotkey, Options, Situation
@@ -32,10 +28,9 @@ __all__ = [
 
 
 class ActionMenu[T, S]:
-    def __init__(self, previewer: Previewer[T, S]) -> None:
+    def __init__(self) -> None:
         self.bindings: dict[Hotkey | Situation, Binding] = {}
         self.server_calls: list[ServerCall] = []
-        self.previewer = previewer
 
     @property
     def actions(self) -> list[Action]:
@@ -62,13 +57,12 @@ class ActionMenu[T, S]:
             binding.final_action.resolve_event(event)
         for action in binding.actions:
             if isinstance(action, ServerCall):
+                logger.debug(f"Adding server call: {action}")
                 self.server_calls.append(action)
 
     # TODO: silent binding (doesn't appear in header help)?
     @single_use_method
     def resolve_options(self) -> Options:
-        if self.previewer.previews:
-            self.add("start", self.previewer.current_preview.preview_change_binding, conflict_resolution="prepend")
         options = Options()
         for event, binding in self.bindings.items():
             options.bind(event, binding.to_action_string())

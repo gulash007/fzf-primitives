@@ -68,7 +68,7 @@ class PreviewMod[T, S]:
         preview_label: str | None = None,
         store_output: bool = True,
     ) -> None:
-        self._preview_adder = lambda prompt_data: prompt_data.add_preview(
+        self._preview_adder = lambda prompt_data: prompt_data.previewer.add(
             Preview[T, S](name, command, self._hotkey, window_size, window_position, preview_label, store_output),
             conflict_resolution=self._conflict_resolution,
             main=self._main,

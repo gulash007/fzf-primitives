@@ -41,7 +41,7 @@ class ServerCall[T, S](ShellCommand):
     ) -> None:
         self.function = function
         self.name = custom_name or function.__name__
-        self.id = f"{custom_name or function.__name__} ({id(self)})"
+        self.id = f"{self.name} ({id(self)})"
 
         template, placeholders_to_resolve = Request.create_template(self.id, function, action_type)
         super().__init__(template, action_type, placeholders_to_resolve)
@@ -193,8 +193,12 @@ class Server[T, S](Thread):
         except Exception as err:
             logger.error(trb := traceback.format_exc())
             response = trb
+            if isinstance(err, KeyError):
+                response = f"{trb}\n{list(self.server_calls.keys())}"
+                logger.error(f"Available server calls:\n{list(self.server_calls.keys())}")
+            if isinstance(err, pydantic.ValidationError):
+                logger.error(f"Payload contents:\n{payload}")
             client_socket.sendall(str(response).encode("utf-8"))
-            logger.error(f"Payload contents:\n{payload}")
         else:
             if response:
                 client_socket.sendall(str(response).encode("utf-8"))

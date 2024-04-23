@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .prompt_data import PromptData
 from ..monitoring import Logger
-from .action_menu.binding import Binding
-from .action_menu.parametrized_actions import Action, ParametrizedAction, ShellCommand
+from .action_menu import Action, ActionMenu, Binding, ConflictResolution, ParametrizedAction, ShellCommand
 from .options import Hotkey, Position, RelativeWindowSize, Situation
 from .server import CommandOutput, ServerCall, ServerCallFunctionGeneric
 
@@ -116,9 +115,10 @@ class PreviewLabelChange(ParametrizedAction):
 class Previewer[T, S]:
     """Handles storing preview outputs and tracking current preview and possibly other logic associated with previews"""
 
-    def __init__(self) -> None:
+    def __init__(self, action_menu: ActionMenu) -> None:
         self._previews: dict[str, Preview[T, S]] = {}
         self._current_preview: Preview[T, S] | None = None
+        self._action_menu = action_menu
 
     @property
     def current_preview(self) -> Preview[T, S]:
@@ -129,14 +129,24 @@ class Previewer[T, S]:
     def set_current_preview(self, preview_id: str):
         self._current_preview = self.get_preview(preview_id)
 
+    def get_preview(self, preview_id: str) -> Preview[T, S]:
+        return self._previews[preview_id]
+
     @property
     def previews(self) -> list[Preview[T, S]]:
         return list(self._previews.values())
 
-    def add(self, preview: Preview[T, S], *, main: bool = False):
+    def add(
+        self, preview: Preview[T, S], *, conflict_resolution: ConflictResolution = "raise error", main: bool = False
+    ):
         if main or not self._previews:
             self._current_preview = preview
         self._previews[preview.id] = preview
+        if preview.event:
+            self._action_menu.add(
+                preview.event, preview.preview_change_binding, conflict_resolution=conflict_resolution
+            )
 
-    def get_preview(self, preview_id: str) -> Preview[T, S]:
-        return self._previews[preview_id]
+    def resolve_main_preview(self):
+        if self._current_preview:
+            self._action_menu.add("start", self._current_preview.preview_change_binding, conflict_resolution="prepend")

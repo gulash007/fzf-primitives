@@ -57,6 +57,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         automator.prepare()
         automator.start()
 
+    prompt_data.previewer.resolve_main_preview()
     server_setup_finished = Event()
     server_should_close = Event()
     server = Server(prompt_data, server_setup_finished, server_should_close)
