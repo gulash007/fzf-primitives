@@ -3,11 +3,11 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
-from .action_menu import ActionMenu, ConflictResolution
+from .action_menu import ActionMenu
 from .automator import Automator
 from .decorators import single_use_method
 from .options import Hotkey, Options, Situation
-from .previewer import Preview, Previewer
+from .previewer import Previewer
 from .server import EndStatus, PostProcessor, PromptState
 
 
