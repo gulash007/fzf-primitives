@@ -7,20 +7,22 @@ from typing import Callable, Literal, Self
 import clipboard
 from thingies import shell_command
 
-from ..FzfPrompt.constants import SHELL_COMMAND
-from ..FzfPrompt.options.actions import BaseAction, ShellCommandActionType
-from ..FzfPrompt.options.events import Hotkey, Situation
 from ..FzfPrompt import (
     Action,
     Binding,
+    ChoicesGetter,
     ConflictResolution,
     EndStatus,
     PromptData,
     PromptEndingAction,
+    ReloadChoices,
     ServerCall,
     ServerCallFunction,
     ShellCommand,
 )
+from ..FzfPrompt.constants import SHELL_COMMAND
+from ..FzfPrompt.options.actions import BaseAction, ShellCommandActionType
+from ..FzfPrompt.options.events import Hotkey, Situation
 
 
 def clip_current_preview(prompt_data: PromptData):
@@ -138,3 +140,6 @@ class OnEvent[T, S]:
                 [command, *[f"{relative_to}/{selection}" for selection in pd.current_state.lines]], shell=False
             ),
         )
+
+    def reload_choices(self, choices_getter: ChoicesGetter[T, S]):
+        return self.run("reload choices", ReloadChoices(choices_getter))

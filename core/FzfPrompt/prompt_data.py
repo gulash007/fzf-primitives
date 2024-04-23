@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
+from typing import Callable
 
 from .action_menu import ActionMenu
 from .automator import Automator
 from .decorators import single_use_method
 from .options import Hotkey, Options, Situation
 from .previewer import Previewer
-from .server import EndStatus, PostProcessor, PromptState
+from .server import EndStatus, PostProcessor, PromptState, ServerCall
 
 
 class PromptData[T, S]:
@@ -25,6 +26,7 @@ class PromptData[T, S]:
     ):
         self.choices = choices or []
         self.presented_choices = presented_choices or [str(choice) for choice in self.choices]
+        check_choices_and_lines_length(self.choices, self.presented_choices)
         self.obj = obj
         self.action_menu = action_menu or ActionMenu()
         self.previewer = previewer or Previewer(self.action_menu)
@@ -126,3 +128,32 @@ class Result[T](list[T]):
             indent=4,
             default=repr,
         )
+
+
+class ChoicesAndLinesMismatch(Exception): ...
+
+
+def check_choices_and_lines_length(choices: list, lines: list):
+    if len(choices) != len(lines):
+        message = f"Choices and lines have different lengths: {len(choices)} vs {len(lines)}"
+        raise ChoicesAndLinesMismatch(message)
+
+
+type ChoicesGetter[T, S] = Callable[[PromptData[T, S]], tuple[list[T], list[str]]]
+
+
+class ReloadChoices(ServerCall):
+    def __init__(self, choices_getter: ChoicesGetter):
+
+        def reload_choices(prompt_data: PromptData):
+            choices, lines = choices_getter(prompt_data)
+            try:
+                check_choices_and_lines_length(choices, lines)
+            except ChoicesAndLinesMismatch as err:
+                input(str(err))
+                raise
+            prompt_data.choices = choices
+            prompt_data.presented_choices = lines
+            return "\n".join(lines)
+
+        super().__init__(reload_choices, action_type="reload")
