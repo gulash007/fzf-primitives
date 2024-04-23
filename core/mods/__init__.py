@@ -1,6 +1,7 @@
 # Syntax sugar layer
 from __future__ import annotations
 
+import functools
 from typing import Callable, Self, overload
 
 from ..FzfPrompt import Action, ConflictResolution, PromptData
@@ -35,38 +36,37 @@ class Mod[T, S]:
 
     @overload
     def on_hotkey(
-        self, hotkey: Hotkey, *, conflict_resolution: ConflictResolution = "raise error"
+        self, hotkey: Hotkey, *hotkeys: Hotkey, conflict_resolution: ConflictResolution = "raise error"
     ) -> OnEvent[T, S]: ...
     @overload
     def on_hotkey(self, *, conflict_resolution: ConflictResolution = "raise error") -> HotkeyAdder[OnEvent[T, S]]: ...
 
     def on_hotkey(
-        self, hotkey: Hotkey | None = None, *, conflict_resolution: ConflictResolution = "raise error"
+        self, *hotkeys: Hotkey, conflict_resolution: ConflictResolution = "raise error"
     ) -> OnEvent[T, S] | HotkeyAdder[OnEvent[T, S]]:
-        on_event_mod = OnEvent[T, S](conflict_resolution=conflict_resolution)
-        self._mods.append(on_event_mod)
-        if hotkey:
-            on_event_mod.set_event(hotkey)
-            return on_event_mod
-        return HotkeyAdder(on_event_mod)
+        if hotkeys:
+            return self.on_event(*hotkeys, conflict_resolution=conflict_resolution)
+        return HotkeyAdder(functools.partial(self.on_hotkey, conflict_resolution=conflict_resolution))
 
     @overload
     def on_situation(
-        self, situation: Situation, *, conflict_resolution: ConflictResolution = "raise error"
+        self, situation: Situation, *situations: Situation, conflict_resolution: ConflictResolution = "raise error"
     ) -> OnEvent[T, S]: ...
     @overload
     def on_situation(
         self, *, conflict_resolution: ConflictResolution = "raise error"
     ) -> SituationAdder[OnEvent[T, S]]: ...
     def on_situation(
-        self, situation: Situation | None = None, *, conflict_resolution: ConflictResolution = "raise error"
+        self, *situations: Situation, conflict_resolution: ConflictResolution = "raise error"
     ) -> OnEvent[T, S] | SituationAdder[OnEvent[T, S]]:
-        on_event_mod = OnEvent[T, S](conflict_resolution=conflict_resolution)
+        if situations:
+            return self.on_event(*situations, conflict_resolution=conflict_resolution)
+        return SituationAdder(functools.partial(self.on_situation, conflict_resolution=conflict_resolution))
+
+    def on_event(self, *events: Hotkey | Situation, conflict_resolution: ConflictResolution = "raise error"):
+        on_event_mod = OnEvent[T, S](*events, conflict_resolution=conflict_resolution)
         self._mods.append(on_event_mod)
-        if situation:
-            on_event_mod.set_event(situation)
-            return on_event_mod
-        return SituationAdder(on_event_mod)
+        return on_event_mod
 
     def preview(
         self,

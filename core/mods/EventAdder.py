@@ -1,14 +1,15 @@
-from ..FzfPrompt.options import Situation, Hotkey
+from typing import Callable
+
+from ..FzfPrompt.options import Hotkey, Situation
 from .on_event import OnEvent
 
 
 class SituationAdder[M: OnEvent]:
-    def __init__(self, mod: M):
-        self._mod = mod
+    def __init__(self, mod_adder: Callable[[Situation], M]):
+        self._mod_adder = mod_adder
 
     def _set_and_return_mod(self, situation: Situation) -> M:
-        self._mod.set_event(situation)
-        return self._mod
+        return self._mod_adder(situation)
 
     @property
     def START(self) -> M:
@@ -57,12 +58,11 @@ class SituationAdder[M: OnEvent]:
 
 
 class HotkeyAdder[M: OnEvent]:
-    def __init__(self, mod: M):
-        self._mod = mod
+    def __init__(self, mod_adder: Callable[[Hotkey], M]):
+        self._mod_adder = mod_adder
 
     def _set_and_return_mod(self, hotkey: Hotkey) -> M:
-        self._mod.set_event(hotkey)
-        return self._mod
+        return self._mod_adder(hotkey)
 
     @property
     def ALT_0(self) -> M:
