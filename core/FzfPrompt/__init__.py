@@ -16,7 +16,7 @@ from ..monitoring.Logger import get_logger
 from .action_menu.binding import Binding, BindingConflict, ConflictResolution
 from .action_menu.parametrized_actions import Action, ShellCommand
 from .exceptions import ExitLoop
-from .previewer import GetCurrentPreviewFromServer, Preview, PreviewChange, PreviewFunction, PreviewWindowChange
+from .previewer import Preview, PreviewFunction
 from .prompt_data import PromptData, Result
 from .server import EndStatus, PostProcessor, PromptEndingAction, Server, ServerCall, ServerCallFunction
 
@@ -56,23 +56,6 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
     if (automator := prompt_data.automator).should_run:
         automator.prepare()
         automator.start()
-
-    if prompt_data.previewer.previews:
-        initial_preview = prompt_data.previewer.current_preview
-        prompt_data.action_menu.add(
-            "start",
-            Binding(
-                f"Change preview to '{initial_preview.name}'",
-                PreviewWindowChange(initial_preview.window_size, initial_preview.window_position),
-                PreviewChange(initial_preview),
-                (
-                    ShellCommand(initial_preview.command, "change-preview")
-                    if not initial_preview.store_output and isinstance(initial_preview.command, str)
-                    else GetCurrentPreviewFromServer(initial_preview)
-                ),
-            ),
-            conflict_resolution="prepend",
-        )
 
     server_setup_finished = Event()
     server_should_close = Event()

@@ -3,12 +3,12 @@ from __future__ import annotations
 import json
 from datetime import datetime
 
-from .action_menu import ActionMenu, Binding, ConflictResolution, ShellCommand
+from .action_menu import ActionMenu, ConflictResolution
 from .automator import Automator
 from .decorators import single_use_method
 from .options import Hotkey, Options, Situation
-from .previewer import GetCurrentPreviewFromServer, Preview, PreviewChange, Previewer, PreviewWindowChange
-from .server import EndStatus, PostProcessor, PromptState, ServerCall
+from .previewer import Preview, Previewer
+from .server import EndStatus, PostProcessor, PromptState
 
 
 class PromptData[T, S]:
@@ -79,22 +79,8 @@ class PromptData[T, S]:
     def add_preview(
         self, preview: Preview, *, conflict_resolution: ConflictResolution = "raise error", main: bool = False
     ):
-        if preview.hotkey:
-            self.action_menu.add(
-                preview.hotkey,
-                # ❗ It's crucial that window change happens before preview change
-                Binding(
-                    f"Change preview to '{preview.name}'",
-                    PreviewWindowChange(preview.window_size, preview.window_position),
-                    PreviewChange(preview),
-                    (
-                        ShellCommand(preview.command, "change-preview")
-                        if not preview.store_output and isinstance(preview.command, str)
-                        else GetCurrentPreviewFromServer(preview)
-                    ),
-                ),
-                conflict_resolution=conflict_resolution,
-            )
+        if preview.event:
+            self.action_menu.add(preview.event, preview.preview_change_binding, conflict_resolution=conflict_resolution)
         self.previewer.add(preview, main=main)
 
     def add_post_processor(self, post_processor: PostProcessor):

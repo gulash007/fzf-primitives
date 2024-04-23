@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..monitoring import Logger
-
 if TYPE_CHECKING:
     from .prompt_data import PromptData
-from .action_menu.parametrized_actions import ParametrizedAction
-from .options import Hotkey, Position, RelativeWindowSize
+from ..monitoring import Logger
+from .action_menu.binding import Binding
+from .action_menu.parametrized_actions import Action, ParametrizedAction, ShellCommand
+from .options import Hotkey, Position, RelativeWindowSize, Situation
 from .server import CommandOutput, ServerCall, ServerCallFunctionGeneric
 
 logger = Logger.get_logger()
@@ -22,7 +22,7 @@ class Preview[T, S]:
         self,
         name: str,
         command: str | PreviewFunction[T, S],
-        hotkey: Hotkey | None = None,
+        event: Hotkey | Situation | None = None,
         window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
         preview_label: str | None = None,
@@ -31,12 +31,24 @@ class Preview[T, S]:
         self.name = name
         self.id = f"{name} ({id(self)})"
         self.command = command
-        self.hotkey: Hotkey | None = hotkey
+        self.event: Hotkey | Situation | None = event
         self.window_size: int | RelativeWindowSize = window_size
         self.window_position: Position = window_position
         self.preview_label = preview_label
         self.store_output = store_output
         self._output: str | None = None
+
+        # ❗ It's crucial that window change happens before preview change
+        actions: list[Action] = [PreviewWindowChange(window_size, window_position)]
+        if preview_label:
+            actions.append(PreviewLabelChange(preview_label))
+        actions.append(PreviewChange(self))
+        actions.append(
+            ShellCommand(command, "change-preview")
+            if not store_output and isinstance(command, str)
+            else GetCurrentPreviewFromServer(self)
+        )
+        self.preview_change_binding = Binding(f"Change preview to '{name}'", *actions)
 
     @property
     def output(self) -> str:
@@ -51,10 +63,10 @@ class Preview[T, S]:
         self._output = value
 
 
-class PreviewChange[T, S](ServerCall[T, S]):
-    def __init__(self, preview: Preview[T, S]) -> None:
+class PreviewChange(ServerCall):
+    def __init__(self, preview: Preview) -> None:
 
-        def change_current_preview(prompt_data: PromptData[T, S]):
+        def change_current_preview(prompt_data: PromptData):
             prompt_data.previewer.set_current_preview(preview.id)
             logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
 
@@ -96,6 +108,11 @@ class PreviewWindowChange(ParametrizedAction):
         super().__init__(f"{self.window_size},{self.window_position}", "change-preview-window")
 
 
+class PreviewLabelChange(ParametrizedAction):
+    def __init__(self, label: str) -> None:
+        super().__init__(label, "change-preview-label")
+
+
 class Previewer[T, S]:
     """Handles storing preview outputs and tracking current preview and possibly other logic associated with previews"""
 
@@ -111,13 +128,6 @@ class Previewer[T, S]:
 
     def set_current_preview(self, preview_id: str):
         self._current_preview = self.get_preview(preview_id)
-
-    def move_to_next_preview(self):
-        key = self.current_preview.id
-        key_list = list(self._previews.keys())
-        key_index = key_list.index(key)
-        next_key_index = (key_index + 1) % len(key_list)
-        self.set_current_preview(key_list[next_key_index])
 
     @property
     def previews(self) -> list[Preview[T, S]]:

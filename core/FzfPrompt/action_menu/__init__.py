@@ -67,6 +67,8 @@ class ActionMenu[T, S]:
     # TODO: silent binding (doesn't appear in header help)?
     @single_use_method
     def resolve_options(self) -> Options:
+        if self.previewer.previews:
+            self.add("start", self.previewer.current_preview.preview_change_binding, conflict_resolution="prepend")
         options = Options()
         for event, binding in self.bindings.items():
             options.bind(event, binding.to_action_string())
