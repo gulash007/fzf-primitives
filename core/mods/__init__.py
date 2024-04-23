@@ -75,11 +75,18 @@ class Mod[T, S]:
         window_position: Position = "right",
         label: str | None = None,
         *,
+        line_wrap: bool = True,
         conflict_resolution: ConflictResolution = "raise error",
         main: bool = False,
     ):
         preview_mod = PreviewMod[T, S](
-            hotkey, window_size, window_position, label, conflict_resolution=conflict_resolution, main=main
+            hotkey,
+            window_size,
+            window_position,
+            label,
+            line_wrap=line_wrap,
+            conflict_resolution=conflict_resolution,
+            main=main,
         )
         self._mods.append(preview_mod)
         return preview_mod

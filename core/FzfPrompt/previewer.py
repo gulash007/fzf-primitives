@@ -26,6 +26,8 @@ class Preview[T, S]:
         window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
         label: str | None = None,
+        *,
+        line_wrap: bool = True,
         store_output: bool = True,
     ):
         self.name = name
@@ -35,11 +37,12 @@ class Preview[T, S]:
         self.window_size: int | RelativeWindowSize = window_size
         self.window_position: Position = window_position
         self.label = label
+        self.line_wrap = line_wrap
         self.store_output = store_output
         self._output: str | None = None
 
         # ❗ It's crucial that window change happens before preview change
-        actions: list[Action] = [PreviewWindowChange(window_size, window_position)]
+        actions: list[Action] = [PreviewWindowChange(window_size, window_position, line_wrap=line_wrap)]
         if label:
             actions.append(PreviewLabelChange(label))
         actions.append(PreviewChange(self, on_change))
@@ -101,11 +104,15 @@ class StorePreviewOutput(ServerCall):
 
 
 class PreviewWindowChange(ParametrizedAction):
-    def __init__(self, window_size: int | RelativeWindowSize, window_position: Position) -> None:
+    def __init__(
+        self, window_size: int | RelativeWindowSize, window_position: Position, *, line_wrap: bool = True
+    ) -> None:
         """Window size: int - absolute, str - relative and should be in '<int>%' format"""
         self.window_size = window_size
         self.window_position = window_position
-        super().__init__(f"{self.window_size},{self.window_position}", "change-preview-window")
+        super().__init__(
+            f"{self.window_size},{self.window_position}:{'wrap' if line_wrap else 'nowrap'}", "change-preview-window"
+        )
 
 
 class PreviewLabelChange(ParametrizedAction):

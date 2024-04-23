@@ -80,8 +80,8 @@ class Options:
     def preview(self, command: str) -> Self:
         return self.add(shlex.join(["--preview", f"{command}"]))
 
-    def preview_window(self, position: Position, size: int | str) -> Self:
-        return self.add(shlex.join(["--preview-window", f"{position},{size}"]))
+    def preview_window(self, position: Position, size: int | str, *, line_wrap: bool = True) -> Self:
+        return self.add(shlex.join(["--preview-window", f"{position},{size}:{'wrap' if line_wrap else 'nowrap'}"]))
 
     def preview_label(self, label: str) -> Self:
         return self.add(shlex.join(["--preview-label", label]))
