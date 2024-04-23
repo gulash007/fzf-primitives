@@ -31,7 +31,8 @@ class Binding:
         return "+".join(action_strings)
 
     def __add__(self, other: Self) -> Self:
-        return self.__class__(f"{self.name}+{other.name}", *(self.actions + other.actions))
+        name = "+".join(n for n in [self.name, other.name] if n)
+        return self.__class__(name, *(self.actions + other.actions))
 
     def __str__(self) -> str:
         actions = [f"'{str(action)}'" for action in self.actions]
