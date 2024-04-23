@@ -1,7 +1,5 @@
 from .. import Prompt, PromptData, config
-from ..core.monitoring import Logger
-
-Logger.get_logger().enable("")
+from ..core.mods.preview import FileViewer
 
 
 class record_preview_name:
@@ -34,6 +32,14 @@ def test_no_explicit_main_preview_having_first_added_as_main():
 
 
 # Modding
+def test_file_preview():
+    prompt = Prompt([__file__])
+    prompt.mod.preview().file()
+    prompt.mod.automate(config.DEFAULT_ACCEPT_HOTKEY)
+    prompt.run()
+    assert prompt.current_preview == FileViewer().view(__file__)
+
+
 def test_cyclical_preview():
     prompt = Prompt([1, 2, 3], obj=[])
     prompt.mod.preview("ctrl-y").cycle({"first": record_preview_name("first"), "second": record_preview_name("second")})

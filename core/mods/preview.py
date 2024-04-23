@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from itertools import cycle
+from pathlib import Path
 from typing import Callable
 
 from thingies import shell_command
@@ -22,6 +23,27 @@ def preview_basic_indexed(prompt_data: PromptData):
     query, index, line, indices, lines = cs.query, cs.single_index, cs.single_line, cs.indices, cs.lines
     indexed_selections = [f"{i}\t{selection}" for i, selection in zip(indices, lines)]
     return f"query: {query}\nselection: {index} {line}\nselections:\n\t{sep.join(indexed_selections)}"
+
+
+class FileViewer:
+    def __init__(self, language: str = "python", theme: str = "Solarized (light)", *, plain: bool = True):
+        self.language = language
+        self.theme = theme
+        self.plain = plain
+
+    def view(self, *files: str | Path):
+        if not files:
+            return "No file selected"
+        command = ["bat", "--color=always"]
+        if self.language:
+            command.extend(("--language", self.language))
+        if self.theme:
+            command.extend(("--theme", self.theme))
+        if self.plain:
+            command.append("--plain")
+        command.append("--")  # Fixes file names starting with a hyphen
+        command.extend(map(str, files))
+        return shell_command(command)
 
 
 class preview_preset:
@@ -100,18 +122,13 @@ class PreviewMod[T, S]:
     basic = preview_preset("basic", preview_basic)
     basic_indexed = preview_preset("basic indexed", preview_basic_indexed)
 
-    def file(self, language: str = "python", theme: str = "Solarized (light)"):
+    def file(self, language: str = "python", theme: str = "Solarized (light)", plain: bool = True):
         """Parametrized preset for viewing files"""
 
         def view_file(prompt_data: PromptData[T, S]):
-            command = ["bat", "--color=always"]
-            if language:
-                command.extend(("--language", language))
-            if theme:
-                command.extend(("--theme", theme))
-            command.append("--")  # Fixes file names starting with a hyphen
-            command.extend(prompt_data.current_state.lines)
-            return shell_command(command)
+            if not (files := prompt_data.current_state.lines):
+                return "No file selected"
+            return FileViewer(language, theme, plain=plain).view(*files)
 
         self.custom("View File", view_file)
 

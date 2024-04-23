@@ -54,6 +54,7 @@ class Options:
     multiselect = OptionsAdder("--multi")
     header_first = OptionsAdder("--header-first")
     disable_search = OptionsAdder("--disabled")
+    sync = OptionsAdder("--sync")
 
     # TODO: Make it a dict
 

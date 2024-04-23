@@ -148,6 +148,7 @@ class Previewer[T, S]:
                 preview.event, preview.preview_change_binding, conflict_resolution=conflict_resolution
             )
 
-    def resolve_main_preview(self):
+    def resolve_main_preview(self, prompt_data: PromptData[T, S]):
         if self._current_preview:
             self._action_menu.add("start", self._current_preview.preview_change_binding, conflict_resolution="prepend")
+            prompt_data.options.sync
