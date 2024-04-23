@@ -16,7 +16,6 @@ type OnPreviewChange[T, S] = Callable[[PromptData[T, S], Preview[T, S]], Any]
 
 
 class Preview[T, S]:
-    # TODO: | Event
     # TODO: line wrap
     def __init__(
         self,

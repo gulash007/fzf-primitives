@@ -5,8 +5,6 @@ from ..core.monitoring import Logger
 from .Recording import Recording
 
 # TEST ALL KINDS OF STUFF
-# TODO: test getting preview output
-# TODO: test mods.on_event preset bindings chaining
 
 
 def wait_for_input(prompt_data: PromptData[str, None]):

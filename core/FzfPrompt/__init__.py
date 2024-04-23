@@ -82,7 +82,6 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         )
     except subprocess.CalledProcessError as err:
         # 130 means aborted or unassigned hotkey was pressed
-        # TODO: Disable those hotkeys instead
         if err.returncode != 130:
             raise MoreInformativeCalledProcessError(err) from None
     finally:

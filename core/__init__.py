@@ -4,6 +4,7 @@ from .mods import Mod
 
 
 # TODO: Presented choices should have the same length as choices
+# TODO: Add choice of logging level
 class Prompt[T, S]:
     def __init__(
         self,
