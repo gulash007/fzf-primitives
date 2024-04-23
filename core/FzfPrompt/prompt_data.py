@@ -48,6 +48,10 @@ class PromptData[T, S]:
         self._current_state = prompt_state
 
     @property
+    def current_choices(self) -> list[T]:
+        return [self.choices[i] for i in self.current_state.indices]
+
+    @property
     def result(self) -> Result[T]:
         try:
             return self._result
