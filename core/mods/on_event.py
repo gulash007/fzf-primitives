@@ -8,7 +8,7 @@ import clipboard
 from thingies import shell_command
 
 from ..FzfPrompt.constants import SHELL_COMMAND
-from ..FzfPrompt.options.actions import ShellCommandActionType
+from ..FzfPrompt.options.actions import BaseAction, ShellCommandActionType
 from ..FzfPrompt.options.events import Hotkey, Situation
 from ..FzfPrompt import (
     Action,
@@ -45,11 +45,13 @@ class OnEvent[T, S]:
         self._bindings.append(Binding(name, *actions))
         return self
 
-    def run_function(self, name: str, function: ServerCallFunction[T, S]) -> Self:
-        return self.run(name, ServerCall(function, action_type="execute"))
+    def run_function(self, name: str, function: ServerCallFunction[T, S], *base_actions: BaseAction) -> Self:
+        return self.run(name, ServerCall(function, action_type="execute"), *base_actions)
 
-    def run_shell_command(self, name: str, command: str, command_type: ShellCommandActionType = "execute") -> Self:
-        return self.run(name, ShellCommand(command, action_type=command_type))
+    def run_shell_command(
+        self, name: str, command: str, *base_actions: BaseAction, command_type: ShellCommandActionType = "execute"
+    ) -> Self:
+        return self.run(name, ShellCommand(command, action_type=command_type), *base_actions)
 
     def end_prompt(
         self, name: str, end_status: EndStatus, post_processor: Callable[[PromptData[T, S]], None] | None = None
