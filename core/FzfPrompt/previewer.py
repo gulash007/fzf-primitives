@@ -43,9 +43,9 @@ class Preview[T, S]:
             actions.append(PreviewLabelChange(preview_label))
         actions.append(PreviewChange(self))
         actions.append(
-            ShellCommand(command, "change-preview")
-            if not store_output and isinstance(command, str)
-            else GetCurrentPreviewFromServer(self)
+            (StorePreviewOutput(self.command, self) if store_output else ShellCommand(self.command, "change-preview"))
+            if isinstance(self.command, str)
+            else InvokeCurrentPreview(self.command, self)
         )
         self.preview_change_binding = Binding(f"Change preview to '{name}'", *actions)
 
@@ -72,31 +72,29 @@ class PreviewChange(ServerCall):
         super().__init__(change_current_preview, action_type="execute-silent")
 
 
-class GetCurrentPreviewFromServer(ServerCall):
-    def __init__(self, preview: Preview) -> None:
+class InvokeCurrentPreview(ServerCall):
+    def __init__(self, preview_function: PreviewFunction, preview: Preview) -> None:
         action_type = "change-preview"
-        command = preview.command
-        if isinstance(command, str):
 
-            def store_preview_output(
-                prompt_data: PromptData, preview_output: str = CommandOutput("echo $preview_output")
-            ):
-                preview.output = preview_output
-                logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
+        def get_current_preview(prompt_data: PromptData, **kwargs):
+            preview.output = preview_function(prompt_data)
+            logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
+            return preview.output
 
-            super().__init__(store_preview_output, f"Store preview of {preview.name}", action_type)
-            self.template = f'preview_output="$({preview.command})"; echo $preview_output && {self.template}'
+        super().__init__(preview_function, f"Show preview of {preview.name}", action_type=action_type)
+        # HACK: wanna ServerCall to parse parameters of enclosed function first to create the right template
+        self.function = get_current_preview
 
-        else:
 
-            def get_current_preview(prompt_data: PromptData, **kwargs):
-                preview.output = command(prompt_data)
-                logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
-                return preview.output
+class StorePreviewOutput(ServerCall):
+    def __init__(self, preview_command: str, preview: Preview) -> None:
 
-            super().__init__(command, f"Show preview of {preview.name}", action_type=action_type)
-            # HACK: wanna ServerCall to parse parameters of enclosed function first to create the right template
-            self.function = get_current_preview
+        def store_preview_output(prompt_data: PromptData, preview_output: str = CommandOutput("echo $preview_output")):
+            preview.output = preview_output
+            logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
+
+        super().__init__(store_preview_output, f"Store preview of {preview.name}", "change-preview")
+        self.template = f'preview_output="$({preview_command})"; echo $preview_output && {self.template}'
 
 
 class PreviewWindowChange(ParametrizedAction):
