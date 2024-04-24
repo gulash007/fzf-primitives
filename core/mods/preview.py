@@ -98,10 +98,10 @@ class PreviewMod[T, S]:
                 name,
                 command,
                 self._hotkey,
-                before_change_do,
                 self._window_size,
                 self._window_position,
                 self._label,
+                before_change_do,
                 line_wrap=self._line_wrap,
                 store_output=store_output,
             ),
@@ -153,10 +153,10 @@ class PreviewMod[T, S]:
             name,
             preview_cycler,
             self._hotkey,
-            before_change_do=preview_cycler.next,
             window_size=self._window_size,
             window_position=self._window_position,
             label=self._label,
+            before_change_do=preview_cycler.next,
             line_wrap=self._line_wrap,
         )
         self._preview_adder = lambda prompt_data: prompt_data.previewer.add(
