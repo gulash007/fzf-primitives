@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from itertools import cycle
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 from thingies import shell_command
 
-from ..FzfPrompt import ConflictResolution, PreviewChangePreProcessor, Preview, PreviewFunction, PromptData
-from ..FzfPrompt.options import Hotkey, Position, RelativeWindowSize
+from ..FzfPrompt import Binding, ConflictResolution, Preview, PreviewChangePreProcessor, PreviewFunction, PromptData
+from ..FzfPrompt.action_menu.transformation import Transformation
+from ..FzfPrompt.options import Hotkey, Position, RelativeWindowSize, Situation
 from ..monitoring import Logger
 
 
@@ -76,7 +77,7 @@ class PreviewMod[T, S]:
         conflict_resolution: ConflictResolution = "raise error",
         main: bool = False,
     ):
-        self._preview_adder: Callable[[PromptData[T, S]]]
+        self._preview_adder: Callable[[PromptData[T, S]], Any]
         self._hotkey: Hotkey | None = hotkey
         self._window_size: int | RelativeWindowSize = window_size
         self._window_position: Position = window_position
@@ -135,7 +136,16 @@ class PreviewMod[T, S]:
 
         self.custom("View File", view_file)
 
-    def cycle(self, preview_functions: dict[str, PreviewFunction[T, S]], name: str = ""):
+    def cycle_previews(self, previews: list[Preview[T, S]], name: str = ""):
+        if not name:
+            name = f'[{"|".join(preview.name for preview in previews)}]'
+        cyclical_preview = CyclicalPreview(name, previews, self._hotkey)
+        self._preview_adder = lambda prompt_data: (
+            prompt_data.previewer.add(cyclical_preview, conflict_resolution=self._conflict_resolution, main=self._main),
+            *(prompt_data.previewer.add(preview) for preview in previews),
+        )
+
+    def cycle_functions(self, preview_functions: dict[str, PreviewFunction[T, S]], name: str = ""):
         preview_cycler = PreviewCycler(preview_functions)
         if not name:
             name = f'[{"|".join(preview_functions.keys())}]'
@@ -152,6 +162,21 @@ class PreviewMod[T, S]:
         self._preview_adder = lambda prompt_data: prompt_data.previewer.add(
             preview, conflict_resolution=self._conflict_resolution, main=self._main
         )
+
+
+# HACK: ❗This object pretends to be a preview but when transformation is invoked it injects its previews cyclically
+# into Previewer as current previews. Therefore the previews don't appear in Previewers dict of previews.
+class CyclicalPreview[T, S](Preview[T, S]):
+    def __init__(self, name: str, previews: list[Preview[T, S]], event: Hotkey | Situation | None = None):
+        super().__init__(name, "", event)
+        self._previews = cycle(previews)
+        self.preview_change_binding = Binding(name, Transformation(self.next))
+        self._current_preview = next(self._previews)
+
+    def next(self, prompt_data: PromptData[T, S]) -> Binding:
+        if self._current_preview.id == prompt_data.previewer.current_preview.id:
+            self._current_preview = next(self._previews)
+        return self._current_preview.preview_change_binding
 
 
 class PreviewCycler:

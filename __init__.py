@@ -1,6 +1,6 @@
 from .core import Prompt
-from .extra import BasicLoop
+from .core.FzfPrompt import Preview, PromptData
 from .core.monitoring import Logger
-from .core.FzfPrompt import PromptData
+from .extra import BasicLoop
 
-__all__ = ["Prompt", "BasicLoop", "Logger", "PromptData"]
+__all__ = ["Prompt", "BasicLoop", "Logger", "PromptData", "Preview"]

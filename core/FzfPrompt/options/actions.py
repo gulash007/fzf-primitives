@@ -114,6 +114,7 @@ ShellCommandActionType = Literal[
     "change-preview",
     "change-prompt",
     "reload",
+    "transform",
 ]
 
 

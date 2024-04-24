@@ -147,6 +147,7 @@ class Previewer[T, S]:
     def add(
         self, preview: Preview[T, S], *, conflict_resolution: ConflictResolution = "raise error", main: bool = False
     ):
+        logger.debug(f"📺 Adding preview '{preview.name}'")
         if main or not self._previews:
             self._current_preview = preview
         self._previews[preview.id] = preview

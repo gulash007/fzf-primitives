@@ -39,6 +39,7 @@ class ActionMenu[T, S]:
     def add(
         self, event: Hotkey | Situation, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
     ):
+        logger.debug(f"🔗 Adding binding: {binding}")
         if event not in self.bindings:
             self.bindings[event] = binding
         else:
@@ -57,7 +58,7 @@ class ActionMenu[T, S]:
             binding.final_action.resolve_event(event)
         for action in binding.actions:
             if isinstance(action, ServerCall):
-                logger.debug(f"Adding server call: {action}")
+                logger.debug(f"🤙 Adding server call: {action}")
                 self.server_calls.append(action)
 
     # TODO: silent binding (doesn't appear in header help)?
