@@ -17,7 +17,7 @@ def test_general():
     Logger.remove_handler("STDERR")
     Logger.add_file_handler("AutomatedTestPrompt", level="TRACE")
     recording = Recording(name="AutomatedTestPrompt")
-    recording.enable_logging()
+    recording.enable_logging()  # HACK: ❗Utilizes trace logging so using logger.trace() in the code might break this
     prompt = TestPrompt.prompt_builder()
     prompt.mod.automate_actions("up")
     prompt.mod.automate_actions("down")

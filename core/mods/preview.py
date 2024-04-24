@@ -136,6 +136,8 @@ class PreviewMod[T, S]:
 
         self.custom("View File", view_file)
 
+    # FIXME: ❗Right now previews need to have their own hotkey so that they're added to action menu
+    # and their server calls are resolved
     def cycle_previews(self, previews: list[Preview[T, S]], name: str = ""):
         if not name:
             name = f'[{"|".join(preview.name for preview in previews)}]'
