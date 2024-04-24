@@ -33,8 +33,8 @@ def clip_options(prompt_data: PromptData):
     clipboard.copy(str(prompt_data.options))
 
 
-type FileBrowser = Literal["VS Code", "VS Code - Insiders"]
-FILE_BROWSERS: dict[FileBrowser, str] = {"VS Code": "code", "VS Code - Insiders": "code-insiders"}
+type FileEditor = Literal["VS Code", "VS Code - Insiders"]
+FILE_EDITORS: dict[FileEditor, str] = {"VS Code": "code", "VS Code - Insiders": "code-insiders"}
 
 
 class OnEvent[T, S]:
@@ -132,8 +132,8 @@ class OnEvent[T, S]:
         command = f"less +F '{log_file_path}'"
         return self.run("copy command to view logs in terminal", ServerCall(lambda pd: clipboard.copy(command)))
 
-    def open_files(self, relative_to: str | Path = ".", app: FileBrowser = "VS Code"):
-        command = FILE_BROWSERS[app]
+    def open_files(self, relative_to: str | Path = ".", app: FileEditor = "VS Code"):
+        command = FILE_EDITORS[app]
         return self.run_function(
             f"open files in {app}",
             lambda pd: shell_command(
