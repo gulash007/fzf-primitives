@@ -51,10 +51,12 @@ FZF_URL = "https://github.com/junegunn/fzf"
 # TODO: Allow propagation of exceptions through nested prompts (relevant for quit_app)
 # ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable
 def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None) -> Result[T]:
-    if not which("fzf") and not executable_path:
-        raise SystemError(f"Cannot find 'fzf' installed on PATH. ({FZF_URL})")
-    else:
+    if executable_path:
+        pass
+    elif which("fzf"):
         executable_path = "fzf"
+    else:
+        raise SystemError(f"Cannot find 'fzf' installed on PATH. ({FZF_URL})")
 
     if (automator := prompt_data.automator).should_run:
         automator.prepare()
