@@ -12,7 +12,7 @@ from .server import CommandOutput, ServerCall, ServerCallFunctionGeneric
 logger = Logger.get_logger()
 
 type PreviewFunction[T, S] = ServerCallFunctionGeneric[T, S, str]
-type OnPreviewChange[T, S] = Callable[[PromptData[T, S], Preview[T, S]], Any]
+type PreviewChangePreProcessor[T, S] = Callable[[PromptData[T, S], Preview[T, S]], Any]
 
 
 class Preview[T, S]:
@@ -22,7 +22,7 @@ class Preview[T, S]:
         name: str,
         command: str | PreviewFunction[T, S],
         event: Hotkey | Situation | None = None,
-        on_change: OnPreviewChange[T, S] | None = None,
+        before_change_do: PreviewChangePreProcessor[T, S] | None = None,
         window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
         label: str | None = None,
@@ -45,7 +45,7 @@ class Preview[T, S]:
         actions: list[Action] = [PreviewWindowChange(window_size, window_position, line_wrap=line_wrap)]
         if label:
             actions.append(PreviewLabelChange(label))
-        actions.append(PreviewChange(self, on_change))
+        actions.append(PreviewChange(self, before_change_do))
         actions.append(
             (StorePreviewOutput(self.command, self) if store_output else ShellCommand(self.command, "change-preview"))
             if isinstance(self.command, str)
@@ -67,11 +67,11 @@ class Preview[T, S]:
 
 
 class PreviewChange(ServerCall):
-    def __init__(self, preview: Preview, on_change: OnPreviewChange | None = None) -> None:
+    def __init__(self, preview: Preview, before_change_do: PreviewChangePreProcessor | None = None) -> None:
 
         def change_current_preview(prompt_data: PromptData):
-            if on_change:
-                on_change(prompt_data, preview)
+            if before_change_do:
+                before_change_do(prompt_data, preview)
             prompt_data.previewer.set_current_preview(preview.id)
             logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
 

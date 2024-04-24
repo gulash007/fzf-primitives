@@ -6,7 +6,7 @@ from typing import Callable
 
 from thingies import shell_command
 
-from ..FzfPrompt import ConflictResolution, OnPreviewChange, Preview, PreviewFunction, PromptData
+from ..FzfPrompt import ConflictResolution, PreviewChangePreProcessor, Preview, PreviewFunction, PromptData
 from ..FzfPrompt.options import Hotkey, Position, RelativeWindowSize
 from ..monitoring import Logger
 
@@ -51,16 +51,16 @@ class preview_preset:
         self,
         name: str,
         command: str | PreviewFunction,
-        on_change: OnPreviewChange | None = None,
+        before_change_do: PreviewChangePreProcessor | None = None,
         store_output: bool = True,
     ) -> None:
         self._name = name
         self._command = command
-        self._on_change = on_change
+        self._before_change_do = before_change_do
         self._store_output = store_output
 
     def __get__(self, obj: PreviewMod, objtype=None):
-        return obj.custom(self._name, self._command, self._on_change, self._store_output)
+        return obj.custom(self._name, self._command, self._before_change_do, self._store_output)
 
 
 class PreviewMod[T, S]:
@@ -89,7 +89,7 @@ class PreviewMod[T, S]:
         self,
         name: str,
         command: str | PreviewFunction[T, S],
-        on_change: OnPreviewChange[T, S] | None = None,
+        before_change_do: PreviewChangePreProcessor[T, S] | None = None,
         store_output: bool = True,
     ) -> None:
         self._preview_adder = lambda prompt_data: prompt_data.previewer.add(
@@ -97,7 +97,7 @@ class PreviewMod[T, S]:
                 name,
                 command,
                 self._hotkey,
-                on_change,
+                before_change_do,
                 self._window_size,
                 self._window_position,
                 self._label,
@@ -143,7 +143,7 @@ class PreviewMod[T, S]:
             name,
             preview_cycler,
             self._hotkey,
-            on_change=preview_cycler.next,
+            before_change_do=preview_cycler.next,
             window_size=self._window_size,
             window_position=self._window_position,
             label=self._label,
