@@ -65,5 +65,5 @@ class ActionMenu[T, S]:
         options = Options()
         for event, binding in self.bindings.items():
             options.bind(event, binding.to_action_string())
-        header_help = "\n".join(f"{event}\t{action.name}" for event, action in self.bindings.items())
+        header_help = "\n".join(f"{event}\t{binding.name}" for event, binding in self.bindings.items())
         return options.header(header_help).header_first
