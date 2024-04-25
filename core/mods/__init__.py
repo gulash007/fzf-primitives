@@ -70,7 +70,7 @@ class Mod[T, S]:
 
     def preview(
         self,
-        hotkey: Hotkey | None = None,
+        event: Hotkey | Situation | None = None,
         window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
         label: str | None = None,
@@ -80,7 +80,7 @@ class Mod[T, S]:
         main: bool = False,
     ):
         preview_mod = PreviewMod[T, S](
-            hotkey,
+            event,
             window_size,
             window_position,
             label,

@@ -68,7 +68,7 @@ class PreviewMod[T, S]:
 
     def __init__(
         self,
-        hotkey: Hotkey | None = None,
+        event: Hotkey | Situation | None = None,
         window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
         label: str | None = None,
@@ -78,7 +78,7 @@ class PreviewMod[T, S]:
         main: bool = False,
     ):
         self._preview_adder: Callable[[PromptData[T, S]], Any]
-        self._hotkey: Hotkey | None = hotkey
+        self._event: Hotkey | Situation | None = event
         self._window_size: int | RelativeWindowSize = window_size
         self._window_position: Position = window_position
         self._label = label
@@ -97,7 +97,7 @@ class PreviewMod[T, S]:
             Preview[T, S](
                 name,
                 command,
-                self._hotkey,
+                self._event,
                 self._window_size,
                 self._window_position,
                 self._label,
@@ -114,8 +114,8 @@ class PreviewMod[T, S]:
 
         def add_simple_preview(prompt_data: PromptData[T, S]):
             prompt_data.options.preview(command)
-            if self._hotkey:
-                prompt_data.options.bind_shell_command(self._hotkey, command, "change-preview")
+            if self._event:
+                prompt_data.options.bind_shell_command(self._event, command, "change-preview")
 
         self._preview_adder = add_simple_preview
 
@@ -141,7 +141,7 @@ class PreviewMod[T, S]:
     def cycle_previews(self, previews: list[Preview[T, S]], name: str = ""):
         if not name:
             name = f'[{"|".join(preview.name for preview in previews)}]'
-        cyclical_preview = CyclicalPreview(name, previews, self._hotkey)
+        cyclical_preview = CyclicalPreview(name, previews, self._event)
         self._preview_adder = lambda prompt_data: (
             prompt_data.previewer.add(cyclical_preview, conflict_resolution=self._conflict_resolution, main=self._main),
             *(prompt_data.previewer.add(preview) for preview in previews),
@@ -154,7 +154,7 @@ class PreviewMod[T, S]:
         preview = Preview(
             name,
             preview_cycler,
-            self._hotkey,
+            self._event,
             window_size=self._window_size,
             window_position=self._window_position,
             label=self._label,
