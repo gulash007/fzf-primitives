@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import functools
 from pathlib import Path
 from typing import Callable, Literal, Self
 
@@ -39,34 +38,38 @@ FILE_EDITORS: dict[FileEditor, str] = {"VS Code": "code", "VS Code - Insiders": 
 
 class OnEvent[T, S]:
     def __init__(self, *events: Hotkey | Situation, conflict_resolution: ConflictResolution = "raise error"):
-        self._bindings: list[Binding] = []
+        self._bindings: dict[Hotkey | Situation, Binding] = {}
         self._events: list[Hotkey | Situation] = list(events)
         self._conflict_resolution: ConflictResolution = conflict_resolution
 
     def run(self, name: str, *actions: Action) -> Self:
-        self._bindings.append(Binding(name, *actions))
+        for event in self._events:
+            self._add_binding(event, name, *actions)
         return self
 
+    def _add_binding(self, event: Hotkey | Situation, name: str, *actions: Action):
+        if event not in self._bindings:
+            self._bindings[event] = Binding(name, *actions)
+        else:
+            self._bindings[event] += Binding(name, *actions)
+
     def run_function(self, name: str, function: ServerCallFunction[T, S], *base_actions: BaseAction) -> Self:
-        return self.run(name, ServerCall(function, action_type="execute"), *base_actions)
+        return self.run(name, ServerCall(function, command_type="execute"), *base_actions)
 
     def run_shell_command(
         self, name: str, command: str, *base_actions: BaseAction, command_type: ShellCommandActionType = "execute"
     ) -> Self:
-        return self.run(name, ShellCommand(command, action_type=command_type), *base_actions)
+        return self.run(name, ShellCommand(command, command_type=command_type), *base_actions)
 
     def end_prompt(
         self, name: str, end_status: EndStatus, post_processor: Callable[[PromptData[T, S]], None] | None = None
     ):
-        self.run(name, PromptEndingAction(end_status, post_processor))
+        for event in self._events:
+            self._add_binding(event, name, PromptEndingAction(end_status, event, post_processor))
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
-        for event in self._events:
-            prompt_data.action_menu.add(
-                event,
-                functools.reduce(lambda b1, b2: b1 + b2, self._bindings),
-                conflict_resolution=self._conflict_resolution,
-            )
+        for event, binding in self._bindings.items():
+            prompt_data.action_menu.add(event, binding, conflict_resolution=self._conflict_resolution)
 
     # presets
     @property

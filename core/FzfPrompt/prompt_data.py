@@ -160,4 +160,4 @@ class ReloadChoices(ServerCall):
             prompt_data.presented_choices = lines
             return "\n".join(lines)
 
-        super().__init__(reload_choices, action_type="reload")
+        super().__init__(reload_choices, command_type="reload")

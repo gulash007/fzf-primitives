@@ -54,8 +54,6 @@ class ActionMenu[T, S]:
                     self.bindings[event] = binding + self.bindings[event]
                 case _:
                     raise ValueError(f"Invalid conflict resolution: {conflict_resolution}")
-        if binding.final_action:
-            binding.final_action.resolve_event(event)
         for action in binding.actions:
             if isinstance(action, ServerCall):
                 logger.debug(f"🤙 Adding server call: {action}")

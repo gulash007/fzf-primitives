@@ -1,28 +1,21 @@
-from typing import Iterable
-
-from ..options import BaseAction, ParametrizedActionType, ParametrizedOptionString, ShellCommandActionType
+from ..options import BaseAction, ParametrizedActionType, ShellCommandActionType
 
 
-class ParametrizedAction(ParametrizedOptionString):
+class ParametrizedAction:
 
-    def __init__(
-        self, template: str, action_type: ParametrizedActionType, placeholders_to_resolve: Iterable[str] = ()
-    ) -> None:
+    def __init__(self, action_value: str, action_type: ParametrizedActionType) -> None:
+        self.action_value = action_value
         self.action_type: ParametrizedActionType = action_type
-        super().__init__(template, placeholders_to_resolve)
 
     def action_string(self) -> str:
-        return f"{self.action_type}({self.resolved_string()})"
+        return f"{self.action_type}({self.action_value})"
 
 
 class ShellCommand(ParametrizedAction):
-    def __init__(
-        self,
-        command_template: str,
-        action_type: ShellCommandActionType = "execute",
-        placeholders_to_resolve: Iterable[str] = (),
-    ) -> None:
-        super().__init__(command_template, action_type, placeholders_to_resolve)
+    def __init__(self, command: str, command_type: ShellCommandActionType = "execute") -> None:
+        self.command = command
+        self.command_type = command_type
+        super().__init__(command, command_type)
 
 
 # Action can just be a string if you know what you're doing (look in `man fzf` for what can be assigned to '--bind')

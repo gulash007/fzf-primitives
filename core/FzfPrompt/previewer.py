@@ -75,7 +75,7 @@ class PreviewChange(ServerCall):
             prompt_data.previewer.set_current_preview(preview.id)
             logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
 
-        super().__init__(change_current_preview, action_type="execute-silent")
+        super().__init__(change_current_preview, command_type="execute-silent")
 
 
 class InvokeCurrentPreview(ServerCall):
@@ -87,7 +87,7 @@ class InvokeCurrentPreview(ServerCall):
             logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
             return preview.output
 
-        super().__init__(preview_function, f"Show preview of {preview.name}", action_type=action_type)
+        super().__init__(preview_function, f"Show preview of {preview.name}", command_type=action_type)
         # HACK: wanna ServerCall to parse parameters of enclosed function first to create the right template
         self.function = get_current_preview
 
@@ -100,7 +100,7 @@ class StorePreviewOutput(ServerCall):
             logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
 
         super().__init__(store_preview_output, f"Store preview of {preview.name}", "change-preview")
-        self.template = f'preview_output="$({preview_command})"; echo $preview_output && {self.template}'
+        self.command = f'preview_output="$({preview_command})"; echo $preview_output && {self.command}'
 
 
 class PreviewWindowChange(ParametrizedAction):
