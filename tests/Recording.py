@@ -27,6 +27,7 @@ class Recording(pydantic.BaseModel):
     end_status: EndStatus = None  # type: ignore
     event: Hotkey | Situation = None  # type: ignore
     query: str = None  # type: ignore
+    choices: list[str] = None  # type: ignore
     lines: list[str] = None  # type: ignore
 
     def __call__(self, message: loguru.Message):
@@ -43,14 +44,16 @@ class Recording(pydantic.BaseModel):
         self.end_status = result.end_status
         self.event = result.event
         self.query = result.query
-        self.lines = list(result)
+        self.choices = list(map(str, result))
+        self.lines = result.lines
 
     def compare_result(self, result: Result) -> bool:
         return (
             self.end_status == result.end_status
             and self.event == result.event
             and self.query == result.query
-            and self.lines == list(result)
+            and self.choices == list(map(str, result))
+            and self.lines == result.lines
         )
 
     def compare_events(self, other: Self) -> bool:
