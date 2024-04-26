@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from enum import Enum, auto
+
 from .. import Prompt
 from ..core.FzfPrompt.exceptions import ExitLoop
 from ..core.FzfPrompt.prompt_data import PromptData
@@ -7,15 +11,32 @@ from .Recording import Recording
 # TEST ALL KINDS OF STUFF
 
 
-def wait_for_input(prompt_data: PromptData[str, None]):
+def wait_for_input(prompt_data: PromptData[DayOfTheWeek, None]):
     input("Press Enter to continue...")
 
 
 def bad_server_call_function(prompt_data: PromptData[int, str]): ...
 
 
+class DayOfTheWeek(Enum):
+    Monday = auto()
+    Tuesday = auto()
+    Wednesday = auto()
+    Thursday = auto()
+    Friday = auto()
+    Saturday = auto()
+    Sunday = auto()
+
+
+monday = DayOfTheWeek["Monday"]
+tuesday = DayOfTheWeek(2)
+
+TEST_CHOICES = list(DayOfTheWeek)
+TEST_PRESENTED_CHOICES = [day.name for day in TEST_CHOICES]
+
+
 def prompt_builder():
-    prompt = Prompt(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+    prompt = Prompt(TEST_CHOICES, TEST_PRESENTED_CHOICES)
     prompt.mod.options.multiselect
     prompt.mod.on_situation().BACKWARD_EOF.run_shell_command("clip socket number", "echo $SOCKET_NUMBER | clip")
     prompt.mod.on_hotkey().CTRL_A.toggle_all
