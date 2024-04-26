@@ -109,7 +109,7 @@ class Options:
             raise ValueError(f"Pointer too long (should be max 2 chars): {pointer}")
         return self.add(shlex.join(["--pointer", pointer]))
 
-    def header(self, header: str) -> Self:
+    def add_header(self, header: str) -> Self:
         self._header_strings.append(header)
         return self
 
