@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 from typing import Callable, Literal, Self
 
 import clipboard
-from thingies import shell_command
 
 from ..FzfPrompt import (
     Action,
@@ -32,8 +32,12 @@ def clip_options(prompt_data: PromptData):
     clipboard.copy(str(prompt_data.options))
 
 
-type FileEditor = Literal["VS Code", "VS Code - Insiders"]
-FILE_EDITORS: dict[FileEditor, str] = {"VS Code": "code", "VS Code - Insiders": "code-insiders"}
+type FileEditor = Literal["VS Code", "VS Code - Insiders", "NeoVim"]
+FILE_EDITORS: dict[FileEditor, str] = {
+    "VS Code": "code",
+    "VS Code - Insiders": "code-insiders",
+    "NeoVim": "nvim",
+}
 
 
 class OnEvent[T, S]:
@@ -138,9 +142,7 @@ class OnEvent[T, S]:
     def open_files(self, file_getter: Callable[[PromptData], list[str]] | None = None, app: FileEditor = "VS Code"):
         file_getter = file_getter or (lambda pd: pd.current_state.lines)
         command = FILE_EDITORS[app]
-        return self.run_function(
-            f"open files in {app}", lambda pd: shell_command([command, "--", *file_getter(pd)], shell=False)
-        )
+        return self.run_function(f"open files in {app}", lambda pd: subprocess.run([command, "--", *file_getter(pd)]))
 
     def reload_choices(self, choices_getter: ChoicesGetter[T, S]):
         return self.run("reload choices", ReloadChoices(choices_getter))
