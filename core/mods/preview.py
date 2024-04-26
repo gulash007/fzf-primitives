@@ -67,7 +67,7 @@ class PreviewMod[T, S]:
         event: Hotkey | Situation | None = None,
         window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
-        label: str | None = None,
+        label: str = "",
         *,
         line_wrap: bool = True,
         conflict_resolution: ConflictResolution = "raise error",

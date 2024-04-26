@@ -24,7 +24,7 @@ class Preview[T, S]:
         event: Hotkey | Situation | None = None,
         window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
-        label: str | None = None,
+        label: str = "",
         before_change_do: PreviewChangePreProcessor[T, S] | None = None,
         *,
         line_wrap: bool = True,
@@ -42,15 +42,20 @@ class Preview[T, S]:
         self._output: str | None = None
 
         # ❗ It's crucial that window change happens before preview change
-        actions: list[Action] = [PreviewWindowChange(window_size, window_position, line_wrap=line_wrap)]
-        if label:
-            actions.append(PreviewLabelChange(label))
-        actions.append(PreviewChange(self, before_change_do))
-        actions.append(
-            (StorePreviewOutput(self.command, self) if store_output else ShellCommand(self.command, "change-preview"))
-            if isinstance(self.command, str)
-            else InvokeCurrentPreview(self.command, self)
-        )
+        actions: list[Action] = [
+            PreviewWindowChange(window_size, window_position, line_wrap=line_wrap),
+            PreviewChange(self, before_change_do),
+            (
+                (
+                    StorePreviewOutput(self.command, self)
+                    if store_output
+                    else ShellCommand(self.command, "change-preview")
+                )
+                if isinstance(self.command, str)
+                else InvokeCurrentPreview(self.command, self)
+            ),
+            PreviewLabelChange(label),
+        ]
         self.preview_change_binding = Binding(f"Change preview to '{name}'", *actions)
 
     @property
