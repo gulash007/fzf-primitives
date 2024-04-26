@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import functools
 import inspect
-import re
 import socket
 import traceback
 from threading import Event, Thread
@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from .prompt_data import PromptData
 from ..monitoring import Logger
 from .action_menu.parametrized_actions import ShellCommand
-from .decorators import single_use_method
 from .options import EndStatus, Hotkey, ShellCommandActionType, Situation
 from .shell import SHELL_SCRIPTS
 
@@ -60,7 +59,6 @@ class PromptEndingAction[T, S](ServerCall):
         self.end_status: EndStatus = end_status
         self.post_processor = post_processor
         self.event: Hotkey | Situation = event
-        # ❗ Needs to be silent, otherwise program can get stuck when waiting for user input on error in Server
         super().__init__(self.pipe_results, command_type="execute-silent")
 
     def pipe_results(self, prompt_data: PromptData[T, S]):
@@ -82,7 +80,7 @@ class Request(pydantic.BaseModel):
     @staticmethod
     def create_command(server_call_id: str, function: ServerCallFunction, command_type: ShellCommandActionType) -> str:
 
-        parameters = list(inspect.signature(function).parameters.values())[1:]  # excludes prompt_data
+        parameters = Request.parse_function_parameters(function)
         jq_args = []
         for parameter in parameters:
             if isinstance(parameter.default, CommandOutput):
@@ -100,6 +98,15 @@ class Request(pydantic.BaseModel):
             + " ".join(jq_args)
             + " | nc localhost $SOCKET_NUMBER"
         )
+
+    @staticmethod
+    def parse_function_parameters(function: ServerCallFunction) -> list[inspect.Parameter]:
+        params = list(inspect.signature(function).parameters.values())[1:]  # excludes prompt_data
+        if isinstance(function, functools.partial):
+            if function.args:
+                raise ValueError("Partial functions should only have passed keyworded arguments")
+            params = list(filter(lambda p: p.name not in function.keywords, params))
+        return params
 
 
 PLACEHOLDERS = {
