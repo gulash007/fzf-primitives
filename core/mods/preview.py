@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from itertools import cycle
+import json
 from pathlib import Path
 from typing import Any, Callable
 
@@ -18,7 +19,7 @@ def preview_basic(prompt_data: PromptData):
     query, index, line, indices, lines = cs.query, cs.single_index, cs.single_line, cs.indices, cs.lines
     indexed_selections = [f"{i}\t{selection}" for i, selection in zip(indices, lines)]
     choice, choices = prompt_data.current_single_choice, prompt_data.current_choices
-    return f"query: {query}\nselection: {index} {line}\nselections:\n\t{sep.join(indexed_selections)}\nchoice: {choice}\nchoices:\n\t{sep.join(map(str, choices))}"
+    return f"query: {query}\nselection: {index} {line}\nselections:\n\t{sep.join(indexed_selections)}\nchoice: {choice}\nchoices: {json.dumps([str(c) for c in choices], indent=4)}"
 
 
 class FileViewer:
