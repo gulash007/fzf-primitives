@@ -57,8 +57,12 @@ class OnEvent[T, S]:
         else:
             self._bindings[event] += Binding(name, *actions)
 
-    def run_function(self, name: str, function: ServerCallFunction[T, S], *base_actions: BaseAction) -> Self:
-        return self.run(name, ServerCall(function, command_type="execute"), *base_actions)
+    def run_function(
+        self, name: str, function: ServerCallFunction[T, S], *base_actions: BaseAction, silent: bool = False
+    ) -> Self:
+        return self.run(
+            name, ServerCall(function, command_type="execute-silent" if silent else "execute"), *base_actions
+        )
 
     def run_shell_command(
         self, name: str, command: str, *base_actions: BaseAction, command_type: ShellCommandActionType = "execute"
