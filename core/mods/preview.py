@@ -14,16 +14,11 @@ from ..monitoring import Logger
 
 def preview_basic(prompt_data: PromptData):
     sep = "\n\t"
-    query, line, lines = (cs := prompt_data.current_state).query, cs.single_line, cs.lines
-    return f"query: {query}\nselection: {line}\nselections:\n\t{sep.join(lines)}"
-
-
-def preview_basic_indexed(prompt_data: PromptData):
-    sep = "\n\t"
     cs = prompt_data.current_state
     query, index, line, indices, lines = cs.query, cs.single_index, cs.single_line, cs.indices, cs.lines
     indexed_selections = [f"{i}\t{selection}" for i, selection in zip(indices, lines)]
-    return f"query: {query}\nselection: {index} {line}\nselections:\n\t{sep.join(indexed_selections)}"
+    choice, choices = prompt_data.current_single_choice, prompt_data.current_choices
+    return f"query: {query}\nselection: {index} {line}\nselections:\n\t{sep.join(indexed_selections)}\nchoice: {choice}\nchoices:\n\t{sep.join(map(str, choices))}"
 
 
 class FileViewer:
@@ -124,7 +119,6 @@ class PreviewMod[T, S]:
 
     # presets
     basic = preview_preset("basic", preview_basic)
-    basic_indexed = preview_preset("basic indexed", preview_basic_indexed)
 
     def file(self, language: str = "python", theme: str = "Solarized (light)", plain: bool = True):
         """Parametrized preset for viewing files"""
