@@ -36,6 +36,16 @@ def test_no_explicit_main_preview_having_first_added_as_main():
     assert prompt.obj[1:] == ["first"]
 
 
+def test_storing_preview_output():
+    prompt = Prompt(obj="")
+    command = "printf 'hello\\nworld'"
+    prompt.mod.preview().custom("first", command)
+
+    prompt.mod.automate(config.DEFAULT_ACCEPT_HOTKEY)
+    prompt.run()
+    assert prompt.current_preview == "hello\nworld"
+
+
 # Modding
 def get_file_preview_prompt():
     prompt = Prompt([__file__], obj=[])

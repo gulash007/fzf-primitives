@@ -100,7 +100,8 @@ class StorePreviewOutput(ServerCall):
             logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
 
         super().__init__(store_preview_output, f"Store preview of {preview.name}", "change-preview")
-        self.command = f'preview_output="$({preview_command})"; echo $preview_output && {self.command}'
+        # HACK ❗
+        self.action_value = f'preview_output="$({preview_command})"; echo $preview_output && {self.command}'
 
 
 class PreviewWindowChange(ParametrizedAction):

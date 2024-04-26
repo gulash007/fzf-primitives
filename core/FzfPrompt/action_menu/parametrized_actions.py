@@ -13,9 +13,16 @@ class ParametrizedAction:
 
 class ShellCommand(ParametrizedAction):
     def __init__(self, command: str, command_type: ShellCommandActionType = "execute") -> None:
-        self.command = command
-        self.command_type = command_type
+        self.action_type: ShellCommandActionType
         super().__init__(command, command_type)
+
+    @property
+    def command(self) -> str:
+        return self.action_value
+
+    @property
+    def command_type(self) -> ShellCommandActionType:
+        return self.action_type
 
 
 # Action can just be a string if you know what you're doing (look in `man fzf` for what can be assigned to '--bind')
