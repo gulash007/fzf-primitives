@@ -140,6 +140,8 @@ class OnEvent[T, S]:
         return self.run("copy command to view logs in terminal", ServerCall(lambda pd: clipboard.copy(command)))
 
     def open_files(self, file_getter: Callable[[PromptData], list[str]] | None = None, app: FileEditor = "VS Code"):
+        """❗ VS Code doesn't handle files with leading or trailing spaces/tabs/newlines (it strips them)
+        NeoVim opens them all"""
         file_getter = file_getter or (lambda pd: pd.current_state.lines)
         command = FILE_EDITORS[app]
         return self.run_function(f"open files in {app}", lambda pd: subprocess.run([command, "--", *file_getter(pd)]))
