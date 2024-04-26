@@ -135,13 +135,11 @@ class OnEvent[T, S]:
         command = f"less +F '{log_file_path}'"
         return self.run("copy command to view logs in terminal", ServerCall(lambda pd: clipboard.copy(command)))
 
-    def open_files(self, relative_to: str | Path = ".", app: FileEditor = "VS Code"):
+    def open_files(self, file_getter: Callable[[PromptData], list[str]] | None = None, app: FileEditor = "VS Code"):
+        file_getter = file_getter or (lambda pd: pd.current_state.lines)
         command = FILE_EDITORS[app]
         return self.run_function(
-            f"open files in {app}",
-            lambda pd: shell_command(
-                [command, *[f"{relative_to}/{selection}" for selection in pd.current_state.lines]], shell=False
-            ),
+            f"open files in {app}", lambda pd: shell_command([command, "--", *file_getter(pd)], shell=False)
         )
 
     def reload_choices(self, choices_getter: ChoicesGetter[T, S]):
