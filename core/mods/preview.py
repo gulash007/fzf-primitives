@@ -12,6 +12,8 @@ from ..FzfPrompt.action_menu.transformation import Transformation
 from ..FzfPrompt.options import Hotkey, Position, RelativeWindowSize, Situation
 from ..monitoring import Logger
 
+logger = Logger.get_logger()
+
 
 def preview_basic(prompt_data: PromptData):
     sep = "\n\t"
@@ -135,6 +137,7 @@ class PreviewMod[T, S]:
     # FIXME: ❗Right now previews need to have their own hotkey so that they're added to action menu
     # and their server calls are resolved
     def cycle_previews(self, previews: list[Preview[T, S]], name: str = ""):
+        """If you don't need separate Preview specs for each preview, you can use cycle_functions"""
         if not name:
             name = f'[{"|".join(preview.name for preview in previews)}]'
         cyclical_preview = CyclicalPreview(name, previews, self._event)
@@ -163,7 +166,7 @@ class PreviewMod[T, S]:
 
 
 # HACK: ❗This object pretends to be a preview but when transformation is invoked it injects its previews cyclically
-# into Previewer as current previews. Therefore the previews don't appear in Previewers dict of previews.
+# into Previewer as current previews (it's never itself a current preview).
 class CyclicalPreview[T, S](Preview[T, S]):
     def __init__(self, name: str, previews: list[Preview[T, S]], event: Hotkey | Situation | None = None):
         super().__init__(name, "", event)
@@ -173,6 +176,7 @@ class CyclicalPreview[T, S](Preview[T, S]):
 
     def next(self, prompt_data: PromptData[T, S]) -> Binding:
         if self._current_preview.id == prompt_data.previewer.current_preview.id:
+            logger.debug(f"Changing preview to next in cycle: {self._current_preview.name}")
             self._current_preview = next(self._previews)
         return self._current_preview.preview_change_binding
 
@@ -182,7 +186,6 @@ class PreviewCycler:
         self._preview_functions = preview_functions
         self._keys = cycle(preview_functions.keys())
         self._current_key: str
-        self.logger = Logger.get_logger()
 
     def __call__(self, prompt_data: PromptData):
         return self._preview_functions[self._current_key](prompt_data)
@@ -190,4 +193,4 @@ class PreviewCycler:
     def next(self, prompt_data: PromptData, preview: Preview):
         if prompt_data.previewer.current_preview.id == preview.id:
             self._current_key = next(self._keys)
-            self.logger.debug(f"Changing preview to next in cycle: {self._current_key}")
+            logger.debug(f"Changing preview to next in cycle: {self._current_key}")
