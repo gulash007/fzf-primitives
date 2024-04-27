@@ -143,7 +143,9 @@ class OnEvent[T, S]:
         command = f"less +F '{log_file_path}'"
         return self.run("copy command to view logs in terminal", ServerCall(lambda pd: pyperclip.copy(command)))
 
-    def open_files(self, file_getter: Callable[[PromptData], list[str]] | None = None, app: FileEditor = "VS Code"):
+    def open_files(
+        self, file_getter: Callable[[PromptData[T, S]], list[str]] | None = None, app: FileEditor = "VS Code"
+    ):
         """❗ VS Code doesn't handle files with leading or trailing spaces/tabs/newlines (it strips them)
         NeoVim opens them all"""
         file_getter = file_getter or (lambda pd: pd.current_state.lines)
