@@ -97,8 +97,8 @@ ParametrizedActionType = Literal[
     "put",
     "rebind",
     "reload",
-    "reload-sync",  # TODO: Add this to ShellCommandActionType after you find use for it
-    "transform",  # TODO: Add this to ShellCommandActionType after you find use for it
+    "reload-sync",
+    "transform",
     "transform-border-label",  # TODO: Add this to ShellCommandActionType after you find use for it
     "transform-header",  # TODO: Add this to ShellCommandActionType after you find use for it
     "transform-preview-label",  # TODO: Add this to ShellCommandActionType after you find use for it
@@ -114,6 +114,7 @@ ShellCommandActionType = Literal[
     "change-preview",
     "change-prompt",
     "reload",
+    "reload-sync",
     "transform",
 ]
 

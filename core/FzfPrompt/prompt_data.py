@@ -163,7 +163,7 @@ type ChoicesGetter[T, S] = Callable[[PromptData[T, S]], tuple[list[T], list[str]
 
 
 class ReloadChoices(ServerCall):
-    def __init__(self, choices_getter: ChoicesGetter):
+    def __init__(self, choices_getter: ChoicesGetter, *, sync: bool = False):
 
         def reload_choices(prompt_data: PromptData):
             choices, lines = choices_getter(prompt_data)
@@ -176,4 +176,4 @@ class ReloadChoices(ServerCall):
             prompt_data.presented_choices = lines
             return "\n".join(lines)
 
-        super().__init__(reload_choices, command_type="reload")
+        super().__init__(reload_choices, command_type="reload-sync" if sync else "reload")

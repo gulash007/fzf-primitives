@@ -69,6 +69,9 @@ class OnEvent[T, S]:
     ) -> Self:
         return self.run(name, ShellCommand(command, command_type=command_type), *base_actions)
 
+    def reload_choices(self, choices_getter: ChoicesGetter[T, S], *, sync: bool = False):
+        return self.run(f"reload choices{' (sync)' if sync else ''}", ReloadChoices(choices_getter, sync=sync))
+
     def end_prompt(
         self, name: str, end_status: EndStatus, post_processor: Callable[[PromptData[T, S]], None] | None = None
     ):
@@ -151,6 +154,3 @@ class OnEvent[T, S]:
         file_getter = file_getter or (lambda pd: pd.current_state.lines)
         command = FILE_EDITORS[app]
         return self.run_function(f"open files in {app}", lambda pd: subprocess.run([command, "--", *file_getter(pd)]))
-
-    def reload_choices(self, choices_getter: ChoicesGetter[T, S]):
-        return self.run("reload choices", ReloadChoices(choices_getter))
