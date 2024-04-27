@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import inspect
 import json
+import shlex
 import socket
 import traceback
 from dataclasses import dataclass
@@ -86,23 +87,25 @@ class Request:
     def create_command(server_call_id: str, function: ServerCallFunction, command_type: ShellCommandActionType) -> str:
 
         parameters = Request.parse_function_parameters(function)
-        jq_args = []
+        command = [
+            "jq",
+            "--compact-output",
+            shlex.quote(
+                "{prompt_state:.} + {"
+                + f'server_call_name:"{server_call_id}",command_type:"{command_type}"'
+                + "} + {kwargs:$ARGS.named}"
+            ),
+        ]
+        socket_request_command = ["nc", "localhost", '"$SOCKET_NUMBER"']
         for parameter in parameters:
             if isinstance(parameter.default, CommandOutput):
                 # HACK: when default value of a parameter of ServerCallFunction is of type CommandOutput
                 # then the parameter is going to be injected with the output of the value executed as shell command
-                jq_args.append(f'--arg {parameter.name} "$({parameter.default})"')
+                command.extend(["--arg", parameter.name, f'"$({parameter.default})"'])
             else:
                 # otherwise it's going to be injected with a shell variable of the same name (mainly env vars)
-                jq_args.append(f'--arg {parameter.name} "${parameter.name}"')
-        return (
-            PromptState.create_command()
-            + " | jq --compact-output '{prompt_state:.} + {"
-            + f'server_call_name:"{server_call_id}",command_type:"{command_type}"'
-            + "} + {kwargs:$ARGS.named}' "
-            + " ".join(jq_args)
-            + " | nc localhost $SOCKET_NUMBER"
-        )
+                command.extend(["--arg", parameter.name, f'"${parameter.name}"'])
+        return f'{PromptState.create_command()} |& {" ".join(command)} |& {" ".join(socket_request_command)}'
 
     @staticmethod
     def parse_function_parameters(function: ServerCallFunction) -> list[inspect.Parameter]:
@@ -120,11 +123,11 @@ class Request:
 
 
 PLACEHOLDERS = {
-    "query": "--arg query {q}",  # type str
-    "single_index": "--argjson single_index $(x={n}; echo ${x:-null})",  # type int
-    "single_line": f'--argjson single_line "$({SHELL_SCRIPTS.selection_to_json} {{}})"',  # type str
-    "indices": f'--argjson indices "$({SHELL_SCRIPTS.indices_to_json} {{+n}})"',  # type list[int]
-    "lines": f'--argjson lines "$({SHELL_SCRIPTS.selections_to_json} {{+}})"',  # type list[str]
+    "query": ["--arg", "query", "{q}"],  # type str
+    "single_index": ["--argjson", "single_index", '"$(x={n}; echo ${x:-null})"'],  # type int
+    "single_line": ["--argjson", "single_line", f'"$({SHELL_SCRIPTS.selection_to_json} {{}})"'],  # type str
+    "indices": ["--argjson", "indices", f'"$({SHELL_SCRIPTS.indices_to_json} {{+n}})"'],  # type list[int]
+    "lines": ["--argjson", "lines", f'"$({SHELL_SCRIPTS.selections_to_json} {{+}})"'],  # type list[str]
 }
 
 
@@ -138,7 +141,8 @@ class PromptState:
 
     @staticmethod
     def create_command() -> str:
-        return f'jq --null-input \'$ARGS.named\' {" ".join(PLACEHOLDERS.values())}'
+        command = ["jq", "--null-input", "'$ARGS.named'", *[x for y in PLACEHOLDERS.values() for x in y]]
+        return " ".join(command)
 
     @classmethod
     def from_json(cls, data: dict) -> Self:

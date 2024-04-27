@@ -46,7 +46,7 @@ def prompt_builder():
     prompt.mod.on_hotkey().CTRL_N.run_function("wait", wait_for_input)
     # prompt.mod.on_hotkey().CTRL_X.run_function("wait", bad_server_call_function) # uncomment to reveal error
     prompt.mod.preview("ctrl-y", label="basic").basic
-    prompt.mod.preview("ctrl-6", "50%", "up", "basic 2").custom(name="basic2", command="echo {}", store_output=True)
+    prompt.mod.preview("ctrl-6", "50%", "up", "basic 2").custom(name="'basic 2'", command="echo {}", store_output=True)
     return prompt
 
 
