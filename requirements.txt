@@ -3,5 +3,3 @@ pyperclip
 pytest
 requests
 typer[all]
-
-thingies

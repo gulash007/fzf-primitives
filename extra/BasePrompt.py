@@ -1,6 +1,9 @@
+import os
+import sys
+from stat import S_ISFIFO
+
 import pyperclip
 import typer
-from thingies import read_from_pipe
 
 from ..core.FzfPrompt import PromptData, run_fzf_prompt
 from ..core.FzfPrompt.exceptions import ExitLoop
@@ -15,6 +18,10 @@ run = run_fzf_prompt
 
 
 # TODO: cache read choices for multiple rounds of selection
+def read_from_pipe():
+    return sys.stdin.read() if S_ISFIFO(os.fstat(0).st_mode) else None
+
+
 def read_choices():
     if (choices := read_from_pipe()) is None:
         choices = pyperclip.paste()
