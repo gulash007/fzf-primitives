@@ -1,5 +1,4 @@
 loguru
-pydantic
 pyperclip
 pytest
 requests

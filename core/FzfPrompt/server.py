@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import functools
 import inspect
+import json
 import socket
 import traceback
+from dataclasses import dataclass
 from threading import Event, Thread
-from typing import TYPE_CHECKING, Any, Callable, Concatenate, ParamSpec, TypeVar
-
-import pydantic
+from typing import TYPE_CHECKING, Any, Callable, Concatenate, ParamSpec, Self, TypeVar
 
 if TYPE_CHECKING:
     from .prompt_data import PromptData
@@ -71,11 +71,12 @@ class PromptEndingAction[T, S](ServerCall):
         return f"{self.event}: end status '{self.end_status}' with {self.post_processor} post-processor: {super().__str__()}"
 
 
-class Request(pydantic.BaseModel):
+@dataclass(frozen=True)
+class Request:
     server_call_name: str
     command_type: ShellCommandActionType
     prompt_state: PromptState
-    kwargs: dict = {}
+    kwargs: dict
 
     @staticmethod
     def create_command(server_call_id: str, function: ServerCallFunction, command_type: ShellCommandActionType) -> str:
@@ -108,17 +109,23 @@ class Request(pydantic.BaseModel):
             params = list(filter(lambda p: p.name not in function.keywords, params))
         return params
 
+    @classmethod
+    def from_json(cls, data: dict) -> Self:
+        prompt_state = PromptState.from_json(data["prompt_state"])
+        return cls(data["server_call_name"], data["command_type"], prompt_state, data["kwargs"])
+
 
 PLACEHOLDERS = {
     "query": "--arg query {q}",  # type str
-    "index": "--argjson single_index $(x={n}; echo ${x:-null})",  # type int
-    "fzf_selection": f'--argjson single_line "$({SHELL_SCRIPTS.selection_to_json} {{}})"',  # type str
+    "single_index": "--argjson single_index $(x={n}; echo ${x:-null})",  # type int
+    "single_line": f'--argjson single_line "$({SHELL_SCRIPTS.selection_to_json} {{}})"',  # type str
     "indices": f'--argjson indices "$({SHELL_SCRIPTS.indices_to_json} {{+n}})"',  # type list[int]
     "lines": f'--argjson lines "$({SHELL_SCRIPTS.selections_to_json} {{+}})"',  # type list[str]
 }
 
 
-class PromptState(pydantic.BaseModel):
+@dataclass(frozen=True)
+class PromptState:
     query: str
     single_index: int | None
     indices: list[int]
@@ -128,6 +135,10 @@ class PromptState(pydantic.BaseModel):
     @staticmethod
     def create_command() -> str:
         return f'jq --null-input \'$ARGS.named\' {" ".join(PLACEHOLDERS.values())}'
+
+    @classmethod
+    def from_json(cls, data: dict) -> Self:
+        return cls(**data)
 
 
 class Server[T, S](Thread):
@@ -177,19 +188,19 @@ class Server[T, S](Thread):
             payload_bytearray.extend(r)
         payload = payload_bytearray.decode("utf-8").strip()
         try:
-            request = Request.model_validate_json(payload)
+            request = Request.from_json(json.loads(payload))
             logger.debug(request.server_call_name)
             prompt_data.set_current_state(request.prompt_state)
             function = self.server_calls[request.server_call_name].function
             response = function(prompt_data, **request.kwargs)
         except Exception as err:
             logger.error(trb := traceback.format_exc())
-            response = trb
+            payload_info = f"Payload contents:\n{payload}"
+            logger.error(payload_info)
+            response = f"{trb}\n{payload_info}"
             if isinstance(err, KeyError):
                 response = f"{trb}\n{list(self.server_calls.keys())}"
                 logger.error(f"Available server calls:\n{list(self.server_calls.keys())}")
-            if isinstance(err, pydantic.ValidationError):
-                logger.error(f"Payload contents:\n{payload}")
             client_socket.sendall(str(response).encode("utf-8"))
         else:
             if response:
