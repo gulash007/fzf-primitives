@@ -161,6 +161,8 @@ class Previewer[T, S]:
             self._action_menu.add(
                 preview.event, preview.preview_change_binding, conflict_resolution=conflict_resolution
             )
+        else:
+            self._action_menu.add_server_calls(preview.preview_change_binding)
 
     def resolve_main_preview(self, prompt_data: PromptData[T, S]):
         if self._current_preview:

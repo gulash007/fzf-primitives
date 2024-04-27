@@ -84,13 +84,13 @@ def test_cycle_preview_functions():
 
 def get_cycle_previews_prompt():
     prompt = Prompt(obj=[])
+    prompt.mod.preview("ctrl-x").custom("third", record_preview_name("third"))
     prompt.mod.preview("ctrl-y").cycle_previews(
         [
-            Preview("first", record_preview_name("first"), "alt-0"),
-            Preview("second", record_preview_name("second"), "alt-1", window_size="10%", window_position="up"),
+            Preview("first", record_preview_name("first")),
+            Preview("second", record_preview_name("second"), window_size="10%", window_position="up"),
         ]
     )
-    prompt.mod.preview("ctrl-x").custom("third", record_preview_name("third"))
     return prompt
 
 
@@ -104,7 +104,7 @@ def test_cycle_previews():
     prompt.mod.automate(config.DEFAULT_ACCEPT_HOTKEY)
 
     prompt.run()
-    assert prompt.obj[1:] == ["first", "second", "first", "third", "first"]
+    assert prompt.obj[1:] == ["third", "first", "second", "third", "second"]
 
 
 if __name__ == "__main__":
