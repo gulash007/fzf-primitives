@@ -13,13 +13,21 @@ if TYPE_CHECKING:
     from .prompt_data import PromptData
     from .server import PromptEndingAction, ServerCall
 from ..monitoring.Logger import get_logger
-from .action_menu.transformation import Transformation
 from .action_menu.binding import Binding, BindingConflict, ConflictResolution
 from .action_menu.parametrized_actions import Action, ShellCommand
+from .action_menu.transformation import Transformation
 from .exceptions import ExitLoop
 from .previewer import Preview, PreviewChangePreProcessor, PreviewFunction
 from .prompt_data import ChoicesGetter, PromptData, ReloadChoices, Result
-from .server import EndStatus, PostProcessor, PromptEndingAction, Server, ServerCall, ServerCallFunction
+from .server import (
+    SOCKET_NUMBER_ENV_VAR,
+    EndStatus,
+    PostProcessor,
+    PromptEndingAction,
+    Server,
+    ServerCall,
+    ServerCallFunction,
+)
 
 __all__ = [
     "run_fzf_prompt",
@@ -40,7 +48,7 @@ __all__ = [
     "Preview",
     "PreviewFunction",
     "PreviewChangePreProcessor",
-    "Transformation"
+    "Transformation",
 ]
 
 # Black magic layer
@@ -74,7 +82,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
     server.start()
     server_setup_finished.wait()
     env = os.environ.copy()
-    env["SOCKET_NUMBER"] = str(server.socket_number)
+    env[SOCKET_NUMBER_ENV_VAR] = str(server.socket_number)
 
     # TODO: catch 130 in mods.exit_round_on_no_selection (rename it appropriately)
     try:

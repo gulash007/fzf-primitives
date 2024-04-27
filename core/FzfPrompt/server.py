@@ -76,6 +76,9 @@ class PromptEndingAction[T, S](ServerCall):
         return f"{self.event}: end status '{self.end_status}' with {self.post_processor} post-processor: {super().__str__()}"
 
 
+SOCKET_NUMBER_ENV_VAR = "FZF_PRIMITIVES_SOCKET_NUMBER"
+
+
 @dataclass(frozen=True)
 class Request:
     server_call_name: str
@@ -96,7 +99,7 @@ class Request:
                 + "} + {kwargs:$ARGS.named}"
             ),
         ]
-        socket_request_command = ["nc", "localhost", '"$SOCKET_NUMBER"']
+        socket_request_command = ["nc", "localhost", f'"${SOCKET_NUMBER_ENV_VAR}"']
         for parameter in parameters:
             if isinstance(parameter.default, CommandOutput):
                 # HACK: when default value of a parameter of ServerCallFunction is of type CommandOutput
