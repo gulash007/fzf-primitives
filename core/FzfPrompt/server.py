@@ -91,24 +91,19 @@ class Request:
 
         parameters = Request.parse_function_parameters(function)
         command = [
-            "jq",
-            "--compact-output",
-            shlex.quote(
-                "{prompt_state:.} + {"
-                + f'server_call_name:"{server_call_id}",command_type:"{command_type}"'
-                + "} + {kwargs:$ARGS.named}"
-            ),
+            f"{SHELL_SCRIPTS.make_server_call} {shlex.quote(server_call_id)} {command_type}",
+            '{q} "{n}" {} "{+n}" "$(for x in {+}; do echo "$x"; done)"',  # making use of fzf placeholders
         ]
-        socket_request_command = ["nc", "localhost", f'"${SOCKET_NUMBER_ENV_VAR}"']
         for parameter in parameters:
             if isinstance(parameter.default, CommandOutput):
                 # HACK: when default value of a parameter of ServerCallFunction is of type CommandOutput
                 # then the parameter is going to be injected with the output of the value executed as shell command
-                command.extend(["--arg", parameter.name, f'"$({parameter.default})"'])
+                command.extend([parameter.name, f'"$({parameter.default})"'])
             else:
                 # otherwise it's going to be injected with a shell variable of the same name (mainly env vars)
-                command.extend(["--arg", parameter.name, f'"${parameter.name}"'])
-        return f'{PromptState.create_command()} |& {" ".join(command)} |& {" ".join(socket_request_command)}'
+                command.extend([parameter.name, f'"${parameter.name}"'])
+        socket_request_command = ["nc", "localhost", f'"${SOCKET_NUMBER_ENV_VAR}"']
+        return f'{" ".join(command)} |& {" ".join(socket_request_command)}'
 
     @staticmethod
     def parse_function_parameters(function: ServerCallFunction) -> list[inspect.Parameter]:
@@ -125,15 +120,6 @@ class Request:
         return cls(data["server_call_name"], data["command_type"], prompt_state, data["kwargs"])
 
 
-PLACEHOLDERS = {
-    "query": ["--arg", "query", "{q}"],  # type str
-    "single_index": ["--argjson", "single_index", '"$(x={n}; echo ${x:-null})"'],  # type int
-    "single_line": ["--argjson", "single_line", f'"$({SHELL_SCRIPTS.selection_to_json} {{}})"'],  # type str
-    "indices": ["--argjson", "indices", f'"$({SHELL_SCRIPTS.indices_to_json} {{+n}})"'],  # type list[int]
-    "lines": ["--argjson", "lines", f'"$({SHELL_SCRIPTS.selections_to_json} {{+}})"'],  # type list[str]
-}
-
-
 @dataclass(frozen=True)
 class PromptState:
     query: str
@@ -141,11 +127,6 @@ class PromptState:
     indices: list[int]
     single_line: str | None
     lines: list[str]
-
-    @staticmethod
-    def create_command() -> str:
-        command = ["jq", "--null-input", "'$ARGS.named'", *[x for y in PLACEHOLDERS.values() for x in y]]
-        return " ".join(command)
 
     @classmethod
     def from_json(cls, data: dict) -> Self:
