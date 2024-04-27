@@ -56,7 +56,7 @@ class Preview[T, S]:
             ),
             PreviewLabelChange(label),
         ]
-        self.preview_change_binding = Binding(f"Change preview to '{name}'", *actions)
+        self.preview_change_binding = Binding(f"Change preview to {name}", *actions)
 
     @property
     def output(self) -> str:
