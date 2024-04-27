@@ -39,7 +39,7 @@ class ActionMenu[T, S]:
     def add(
         self, event: Hotkey | Situation, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
     ):
-        logger.debug(f"🔗 Adding binding: {binding}")
+        logger.debug(f"🔗 Adding binding for '{event}': {binding} ({conflict_resolution} on conflict)")
         if event not in self.bindings:
             self.bindings[event] = binding
         else:
