@@ -21,14 +21,11 @@ __all__ = [
     "Transformation",
 ]
 
+
 # TODO: caching?
 # TODO: return to previous selection
 # TODO: return with previous query
 # TODO: Include fzf default --bind hotkeys (extra help)?
-# TODO: Show action menu as preview (to see hotkeys without restarting prompt); use preview(...)
-# TODO: - How to invoke it through --bind and recreate the action back in the owner prompt?
-
-
 class ActionMenu[T, S]:
     def __init__(self) -> None:
         self.bindings: dict[Hotkey | Situation, Binding] = {}

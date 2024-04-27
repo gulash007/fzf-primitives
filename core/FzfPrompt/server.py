@@ -64,9 +64,9 @@ class PromptEndingAction[T, S](ServerCall):
         self.end_status: EndStatus = end_status
         self.post_processor = post_processor
         self.event: Hotkey | Situation = event
-        super().__init__(self.pipe_results, command_type="execute-silent")
+        super().__init__(self._pipe_results, command_type="execute-silent")
 
-    def pipe_results(self, prompt_data: PromptData[T, S]):
+    def _pipe_results(self, prompt_data: PromptData[T, S]):
         prompt_data.finish(self.event, self.end_status)
         if self.post_processor:
             self.post_processor(prompt_data)
@@ -186,14 +186,14 @@ class Server[T, S](Thread):
                             logger.info("Server closing")
                             break
                         continue
-                    self.handle_request(client_socket, self.prompt_data)
+                    self._handle_request(client_socket, self.prompt_data)
         except Exception as e:
             logger.exception(e)
             raise
         finally:
             self.server_setup_finished.set()
 
-    def handle_request(self, client_socket: socket.socket, prompt_data: PromptData[T, S]):
+    def _handle_request(self, client_socket: socket.socket, prompt_data: PromptData[T, S]):
         payload_bytearray = bytearray()
         while r := client_socket.recv(1024):
             payload_bytearray.extend(r)

@@ -144,7 +144,7 @@ class OnEvent[T, S]:
 
     def view_logs_in_terminal(self, log_file_path: str | Path):
         command = f"less +F '{log_file_path}'"
-        return self.run("copy command to view logs in terminal", ServerCall(lambda pd: pyperclip.copy(command)))
+        return self.run_function("copy command to view logs in terminal", lambda pd: pyperclip.copy(command))
 
     def open_files(
         self, file_getter: Callable[[PromptData[T, S]], list[str]] | None = None, app: FileEditor = "VS Code"
