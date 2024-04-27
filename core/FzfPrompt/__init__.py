@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from .prompt_data import PromptData
     from .server import PromptEndingAction, ServerCall
 from ..monitoring.Logger import get_logger
+from .action_menu.transformation import Transformation
 from .action_menu.binding import Binding, BindingConflict, ConflictResolution
 from .action_menu.parametrized_actions import Action, ShellCommand
 from .exceptions import ExitLoop
@@ -39,6 +40,7 @@ __all__ = [
     "Preview",
     "PreviewFunction",
     "PreviewChangePreProcessor",
+    "Transformation"
 ]
 
 # Black magic layer

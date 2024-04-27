@@ -6,6 +6,7 @@ from ..options import Hotkey, Options, Situation
 from ..server import ServerCall
 from .binding import Binding, BindingConflict, ConflictResolution
 from .parametrized_actions import Action, ParametrizedAction, ShellCommand
+from .transformation import Transformation
 
 logger = Logger.get_logger()
 
@@ -17,6 +18,7 @@ __all__ = [
     "Action",
     "ParametrizedAction",
     "ShellCommand",
+    "Transformation",
 ]
 
 # TODO: caching?
