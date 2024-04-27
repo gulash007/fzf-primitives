@@ -109,6 +109,16 @@ class Options:
             raise ValueError(f"Pointer too long (should be max 2 chars): {pointer}")
         return self.add(shlex.join(["--pointer", pointer]))
 
+    def with_nth_column(self, field_index_expression: str, delimiter: str | None = None) -> Self:
+        """Transform the presentation of each line using field index expressions
+
+        Delimiter is AWK style by default
+        """
+        args = ["--with-nth", f"{field_index_expression}"]
+        if delimiter:
+            args.append(f"--delimiter={delimiter}")
+        return self.add(shlex.join(args))
+
     def add_header(self, header: str) -> Self:
         self._header_strings.append(header)
         return self
