@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from enum import Enum, auto
 
+import pyperclip
+
 from .. import Prompt
 from ..core.FzfPrompt.exceptions import ExitLoop
 from ..core.FzfPrompt.prompt_data import PromptData
@@ -35,10 +37,14 @@ TEST_CHOICES = list(DayOfTheWeek)
 TEST_PRESENTED_CHOICES = [day.name for day in TEST_CHOICES]
 
 
+def clip_socket_number(prompt_data, FZF_PRIMITIVES_SOCKET_NUMBER):
+    pyperclip.copy(FZF_PRIMITIVES_SOCKET_NUMBER)
+
+
 def prompt_builder():
     prompt = Prompt(TEST_CHOICES, TEST_PRESENTED_CHOICES)
     prompt.mod.options.multiselect
-    prompt.mod.on_situation().BACKWARD_EOF.run_shell_command("clip socket number", "echo $SOCKET_NUMBER | clip")
+    prompt.mod.on_situation().BACKWARD_EOF.run_function("clip socket number", clip_socket_number)
     prompt.mod.on_hotkey().CTRL_A.toggle_all
     prompt.mod.on_hotkey().CTRL_Q.quit
     prompt.mod.on_hotkey().CTRL_C.clip_current_preview.accept
