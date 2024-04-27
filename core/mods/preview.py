@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from itertools import cycle
 import json
+from itertools import cycle
 from pathlib import Path
 from typing import Any, Callable
-
-from thingies import shell_command
 
 from ..FzfPrompt import Binding, ConflictResolution, Preview, PreviewChangePreProcessor, PreviewFunction, PromptData
 from ..FzfPrompt.action_menu.transformation import Transformation
 from ..FzfPrompt.options import Hotkey, Position, RelativeWindowSize, Situation
+from ..FzfPrompt.shell import shell_command
 from ..monitoring import Logger
 
 logger = Logger.get_logger()

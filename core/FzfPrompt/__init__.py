@@ -7,8 +7,6 @@ from shutil import which
 from threading import Event
 from typing import TYPE_CHECKING
 
-from thingies.shell import MoreInformativeCalledProcessError
-
 if TYPE_CHECKING:
     from .prompt_data import PromptData
     from .server import PromptEndingAction, ServerCall
@@ -28,6 +26,7 @@ from .server import (
     ServerCall,
     ServerCallFunction,
 )
+from .shell import MoreInformativeCalledProcessError
 
 __all__ = [
     "run_fzf_prompt",
