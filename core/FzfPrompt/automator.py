@@ -4,7 +4,7 @@ import time
 from threading import Event, Thread
 from typing import TYPE_CHECKING
 
-import clipboard
+import pyperclip
 import requests
 
 if TYPE_CHECKING:
@@ -86,5 +86,5 @@ class Automator(Thread):
         """Utilizes the $FZF_PORT variable containing the port assigned to --listen option
         (or the one generated automatically when --listen=0)"""
         self.port = FZF_PORT
-        clipboard.copy(FZF_PORT)
+        pyperclip.copy(FZF_PORT)
         self.port_resolved.set()

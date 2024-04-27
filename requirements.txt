@@ -1,4 +1,3 @@
-clipboard
 loguru
 pydantic
 pyperclip

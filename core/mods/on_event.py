@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 from typing import Callable, Literal, Self
 
-import clipboard
+import pyperclip
 
 from ..FzfPrompt import (
     Action,
@@ -25,11 +25,11 @@ from ..FzfPrompt.options.events import Hotkey, Situation
 
 
 def clip_current_preview(prompt_data: PromptData):
-    clipboard.copy(prompt_data.get_current_preview())
+    pyperclip.copy(prompt_data.get_current_preview())
 
 
 def clip_options(prompt_data: PromptData):
-    clipboard.copy(str(prompt_data.options))
+    pyperclip.copy(str(prompt_data.options))
 
 
 type FileEditor = Literal["VS Code", "VS Code - Insiders", "NeoVim"]
@@ -141,7 +141,7 @@ class OnEvent[T, S]:
 
     def view_logs_in_terminal(self, log_file_path: str | Path):
         command = f"less +F '{log_file_path}'"
-        return self.run("copy command to view logs in terminal", ServerCall(lambda pd: clipboard.copy(command)))
+        return self.run("copy command to view logs in terminal", ServerCall(lambda pd: pyperclip.copy(command)))
 
     def open_files(self, file_getter: Callable[[PromptData], list[str]] | None = None, app: FileEditor = "VS Code"):
         """❗ VS Code doesn't handle files with leading or trailing spaces/tabs/newlines (it strips them)
