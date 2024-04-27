@@ -48,6 +48,10 @@ class ServerCall[T, S](ShellCommand):
     def __str__(self) -> str:
         return f"{self.id}: {super().__str__()}"
 
+    def run(self, prompt_data: PromptData[T, S], request: Request) -> Any:
+        prompt_data.set_current_state(request.prompt_state)
+        return self.function(prompt_data, **request.kwargs)
+
 
 type PostProcessor[T, S] = Callable[[PromptData[T, S]], Any]
 
@@ -190,9 +194,7 @@ class Server[T, S](Thread):
         try:
             request = Request.from_json(json.loads(payload))
             logger.debug(request.server_call_name)
-            prompt_data.set_current_state(request.prompt_state)
-            function = self.server_calls[request.server_call_name].function
-            response = function(prompt_data, **request.kwargs)
+            response = self.server_calls[request.server_call_name].run(prompt_data, request)
         except Exception as err:
             logger.error(trb := traceback.format_exc())
             payload_info = f"Payload contents:\n{payload}"
