@@ -9,7 +9,7 @@ import loguru
 from loguru import logger
 
 
-__all__ = ["get_logger", "HANDLERS", "remove_handler"]
+__all__ = ["get_logger", "HANDLERS", "remove_handler", "add_file_handler", "clear_log_file"]
 
 logger.remove()
 LOG_FORMAT = (
