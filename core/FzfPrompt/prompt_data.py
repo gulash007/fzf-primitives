@@ -4,8 +4,7 @@ import json
 from datetime import datetime
 from typing import Callable
 
-from .action_menu import ActionMenu
-from .automator import Automator
+from .action_menu import Action, ActionMenu, Binding
 from .decorators import single_use_method
 from .options import Hotkey, Options, Situation
 from .previewer import Previewer
@@ -30,7 +29,7 @@ class PromptData[T, S]:
         self.obj = obj
         self.action_menu = action_menu or ActionMenu()
         self.previewer = previewer or Previewer(self.action_menu)
-        self.automator = Automator(self.action_menu)
+        self.bindings_to_automate: list[Binding] = []
         self.options = options or Options()
         self.post_processors: list[PostProcessor] = []
         self._current_state: PromptState | None = None
@@ -95,9 +94,20 @@ class PromptData[T, S]:
         for post_processor in self.post_processors:
             post_processor(prompt_data)
 
+    # TODO: Also allow automating default fzf hotkeys (can be solved by creating appropriate bindings in the action menu)
+    def automate(self, *to_automate: Hotkey):
+        self.bindings_to_automate.extend(self.action_menu.bindings[hotkey] for hotkey in to_automate)
+
+    def automate_actions(self, *actions: Action, name: str | None = None):
+        self.bindings_to_automate.append(Binding(name or "anonymous actions", *actions))
+
+    @property
+    def should_run_automator(self) -> bool:
+        return bool(self.bindings_to_automate)
+
     @single_use_method
     def resolve_options(self) -> Options:
-        return self.options + self.action_menu.resolve_options() + self.automator.resolve_options()
+        return self.options + self.action_menu.resolve_options()
 
 
 class Result[T](list[T]):

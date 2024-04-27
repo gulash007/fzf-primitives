@@ -16,8 +16,8 @@ from ..monitoring.Logger import get_logger
 from .action_menu.binding import Binding, BindingConflict, ConflictResolution
 from .action_menu.parametrized_actions import Action, ShellCommand
 from .exceptions import ExitLoop
-from .previewer import Preview, PreviewFunction, PreviewChangePreProcessor
-from .prompt_data import PromptData, Result, ChoicesGetter, ReloadChoices
+from .previewer import Preview, PreviewChangePreProcessor, PreviewFunction
+from .prompt_data import ChoicesGetter, PromptData, ReloadChoices, Result
 from .server import EndStatus, PostProcessor, PromptEndingAction, Server, ServerCall, ServerCallFunction
 
 __all__ = [
@@ -58,8 +58,11 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
     else:
         raise SystemError(f"Cannot find 'fzf' installed on PATH. ({FZF_URL})")
 
-    if (automator := prompt_data.automator).should_run:
-        automator.prepare()
+    if prompt_data.should_run_automator:
+        from ..FzfPrompt.automator import Automator
+
+        automator = Automator()
+        automator.prepare(prompt_data)
         automator.start()
 
     prompt_data.previewer.resolve_main_preview(prompt_data)

@@ -8,12 +8,10 @@ import clipboard
 import requests
 
 if TYPE_CHECKING:
-    from .action_menu import ActionMenu
     from .prompt_data import PromptData
 from ..monitoring import Logger
 from . import action_menu as am
 from .decorators import single_use_method
-from .options import Hotkey, Options
 from .server import ServerCall
 
 logger = Logger.get_logger()
@@ -21,9 +19,8 @@ logger = Logger.get_logger()
 
 class Automator(Thread):
 
-    def __init__(self, action_menu: ActionMenu) -> None:
+    def __init__(self) -> None:
         self.__port: str | None = None
-        self.action_menu = action_menu
         self.bindings: list[am.Binding] = []
         self.port_resolved = Event()
         self.binding_executed = Event()
@@ -53,20 +50,15 @@ class Automator(Thread):
             raise
 
     @single_use_method
-    def prepare(self):
-        self.action_menu.add(
+    def prepare(self, prompt_data: PromptData):
+        self.bindings.extend(prompt_data.bindings_to_automate)
+        prompt_data.action_menu.add(
             "start",
             am.Binding("get prompt port number for automator", ServerCall(self.get_port_number)),
             conflict_resolution="prepend",
         )
-        self.action_menu.server_calls.append(self.move_to_next_binding_server_call)
-
-    # TODO: Also allow automating default fzf hotkeys (can be solved by creating appropriate bindings in the action menu)
-    def automate(self, *to_automate: Hotkey):
-        self.bindings.extend(self.action_menu.bindings[hotkey] for hotkey in to_automate)
-
-    def automate_actions(self, *actions: am.Action, name: str | None = None):
-        self.bindings.append(am.Binding(name or "anonymous actions", *actions))
+        prompt_data.action_menu.server_calls.append(self.move_to_next_binding_server_call)
+        prompt_data.options.listen()
 
     @property
     def should_run(self) -> bool:
@@ -96,7 +88,3 @@ class Automator(Thread):
         self.port = FZF_PORT
         clipboard.copy(FZF_PORT)
         self.port_resolved.set()
-
-    @single_use_method
-    def resolve_options(self) -> Options:
-        return Options().listen() if self.should_run else Options()

@@ -105,10 +105,10 @@ class Mod[T, S]:
     # TODO: custom (accepts function acting on PromptData)?
 
     def automate(self, *to_execute: Hotkey):
-        self._mods.append(lambda pd: pd.automator.automate(*to_execute))
+        self._mods.append(lambda pd: pd.automate(*to_execute))
 
     def automate_actions(self, *actions: Action):
-        self._mods.append(lambda pd: pd.automator.automate_actions(*actions))
+        self._mods.append(lambda pd: pd.automate_actions(*actions))
 
     # presets
     @property
