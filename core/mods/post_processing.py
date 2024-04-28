@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Callable
 
-from ..FzfPrompt.exceptions import ExitRound
 from ..FzfPrompt import PostProcessor, PromptData, Result
+from ..FzfPrompt.exceptions import Aborted
 
 
 class PostProcessing[T, S]:
@@ -24,15 +24,15 @@ class PostProcessing[T, S]:
         raise NotImplementedError("clip output not implemented yet")
 
     # TODO: Check correctness or if it's needed
-    def exit_round_on(self, predicate: Callable[[PromptData[T, S]], bool], message: str = ""):
-        def exit_round_on_predicate(prompt_data: PromptData[T, S]):
+    def raise_aborted_on(self, predicate: Callable[[PromptData[T, S]], bool], message: str = ""):
+        def raise_aborted_on_predicate(prompt_data: PromptData[T, S]):
             if predicate(prompt_data):
-                raise ExitRound(message, prompt_data.result)
+                raise Aborted(message, prompt_data.result)
 
-        return self.custom(exit_round_on_predicate)
+        return self.custom(raise_aborted_on_predicate)
 
-    def exit_round_when_aborted(self, message: str = "Aborted!"):
-        return self.exit_round_on(lambda prompt_data: prompt_data.result.end_status == "abort", message)
+    def raise_from_aborted_status(self, message: str = "Aborted!"):
+        return self.raise_aborted_on(lambda prompt_data: prompt_data.result.end_status == "abort", message)
 
-    def exit_round_on_empty_selections(self, message: str = "Selection empty!"):
-        return self.exit_round_on(lambda prompt_data: not prompt_data.result, message)
+    def raise_aborted_on_empty_selections(self, message: str = "Selection empty!"):
+        return self.raise_aborted_on(lambda prompt_data: not prompt_data.result, message)

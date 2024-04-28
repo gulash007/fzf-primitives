@@ -3,7 +3,7 @@ from __future__ import annotations
 import typer
 
 from .. import Prompt
-from ..core.FzfPrompt.exceptions import ExitLoop
+from ..core.FzfPrompt.exceptions import Quitting
 from ..core.monitoring.Logger import get_logger
 from . import BasePrompt
 
@@ -38,7 +38,7 @@ def main(
         prompt = DefaultPrompt(choices=BasePrompt.read_choices())
         prompt.mod.options.add(*options)
         output = prompt.run()
-    except ExitLoop as e:
+    except Quitting as e:
         print(f"Exiting loop: {e}")
         exit(0)
     typer.echo(output, color=True)

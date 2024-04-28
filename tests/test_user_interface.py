@@ -24,8 +24,8 @@ def test_mod_return_value_types():
     # test chaining post_processing
     assert type(prompt.mod.lastly) == PostProcessing
     assert type(prompt.mod.lastly.custom(lambda pd: None)) == PostProcessing
-    assert type(prompt.mod.lastly.exit_round_on(lambda pd: True)) == PostProcessing
-    assert type(prompt.mod.lastly.exit_round_when_aborted("Aborted!")) == PostProcessing
+    assert type(prompt.mod.lastly.raise_aborted_on(lambda pd: True)) == PostProcessing
+    assert type(prompt.mod.lastly.raise_from_aborted_status("Aborted!")) == PostProcessing
 
     # test chaining options
     assert type(prompt.mod.options) == Options

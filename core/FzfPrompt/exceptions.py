@@ -7,10 +7,9 @@ class PromptEnd(Exception):
         super().__init__(message)
 
 
-# TODO: rename exceptions to signal their use to end prompt
-class ExitRound(PromptEnd):
+class Aborted(PromptEnd):
     pass
 
 
-class ExitLoop(PromptEnd):
+class Quitting(PromptEnd):
     pass

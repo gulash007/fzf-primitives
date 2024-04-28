@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from ..config import DEFAULT_ABORT_HOTKEY, DEFAULT_ACCEPT_HOTKEY
-from ..core.FzfPrompt.exceptions import ExitLoop, ExitRound
+from ..core.FzfPrompt.exceptions import Quitting, Aborted
 from ..core.monitoring import Logger
 from . import TestPrompt
 from .Recording import Recording
@@ -38,16 +38,16 @@ def test_general():
 
 
 def test_quit():
-    with pytest.raises(ExitLoop) as exc:
+    with pytest.raises(Quitting) as exc:
         prompt = TestPrompt.prompt_builder()
         prompt.mod.automate("ctrl-q")
         prompt.run()
 
 
 def test_abort():
-    with pytest.raises(ExitRound) as exc:
+    with pytest.raises(Aborted) as exc:
         prompt = TestPrompt.prompt_builder()
-        prompt.mod.lastly.exit_round_when_aborted()
+        prompt.mod.lastly.raise_from_aborted_status()
         prompt.mod.automate(DEFAULT_ABORT_HOTKEY)
         prompt.run()
 

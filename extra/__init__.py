@@ -1,4 +1,4 @@
-from ..core.FzfPrompt.exceptions import ExitLoop, ExitRound
+from ..core.FzfPrompt.exceptions import Quitting, Aborted
 from ..core.monitoring import Logger
 
-__all__ = ["ExitLoop", "ExitRound", "Logger"]
+__all__ = ["Quitting", "Aborted", "Logger"]

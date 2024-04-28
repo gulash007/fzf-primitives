@@ -14,7 +14,7 @@ from ..monitoring.Logger import get_logger
 from .action_menu.binding import Binding, BindingConflict, ConflictResolution
 from .action_menu.parametrized_actions import Action, ShellCommand
 from .action_menu.transformation import Transformation
-from .exceptions import ExitLoop
+from .exceptions import Quitting
 from .previewer import Preview, PreviewChangePreProcessor, PreviewFunction
 from .prompt_data import ChoicesGetter, PromptData, ReloadChoices, Result
 from .server import (
@@ -105,6 +105,6 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         # TODO: This may be explicitly allowed in the future (need to test when it's not)
         raise RuntimeError("Prompt not finished (you aborted prompt without finishing PromptData)")
     if prompt_data.result.end_status == "quit":
-        raise ExitLoop(f"Exiting app with\n{prompt_data.result}", prompt_data.result)
+        raise Quitting(f"Exiting app with\n{prompt_data.result}", prompt_data.result)
     prompt_data.apply_common_post_processors(prompt_data)
     return prompt_data.result

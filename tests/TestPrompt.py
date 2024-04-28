@@ -5,7 +5,7 @@ from enum import Enum, auto
 import pyperclip
 
 from .. import Prompt
-from ..core.FzfPrompt.exceptions import ExitLoop
+from ..core.FzfPrompt.exceptions import Quitting
 from ..core.FzfPrompt.prompt_data import PromptData
 from ..core.monitoring import Logger
 from .Recording import Recording
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     save_recording = False
     try:
         result = prompt_builder().run()
-    except ExitLoop:
+    except Quitting:
         pass
     else:
         recording.save_result(result)

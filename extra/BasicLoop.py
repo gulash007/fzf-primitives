@@ -2,7 +2,7 @@ from typing import Callable
 
 from .. import Prompt
 from ..core.FzfPrompt import Result
-from ..core.FzfPrompt.exceptions import ExitLoop, ExitRound
+from ..core.FzfPrompt.exceptions import Quitting, Aborted
 from ..core.FzfPrompt.options import Hotkey
 from ..core.monitoring import Logger
 
@@ -26,10 +26,10 @@ def run_in_loop[
         try:
             prompt = prompt_builder()
             prompt.mod.on_hotkey(quit_hotkey).quit
-            prompt.mod.lastly.exit_round_when_aborted()
+            prompt.mod.lastly.raise_from_aborted_status()
             result_processor(prompt.run())
-        except ExitRound as e:
+        except Aborted as e:
             logger.info(f"ExitRound: {e}")
-        except ExitLoop as e:
+        except Quitting as e:
             print(f"Exiting loop: {e}")
             break
