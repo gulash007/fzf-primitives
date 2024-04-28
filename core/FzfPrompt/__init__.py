@@ -59,6 +59,7 @@ FZF_URL = "https://github.com/junegunn/fzf"
 
 # TODO: Allow propagation of exceptions through nested prompts (relevant for quit_app)
 # ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable
+# Inspired by https://github.com/nk412/pyfzf
 def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None) -> Result[T]:
     if executable_path:
         pass
