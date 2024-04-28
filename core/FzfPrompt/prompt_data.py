@@ -164,7 +164,7 @@ def check_choices_and_lines_length(choices: list, lines: list):
         raise ChoicesAndLinesMismatch(message)
 
 
-type ChoicesGetter[T, S] = Callable[[PromptData[T, S]], tuple[list[T], list[str]]]
+type ChoicesGetter[T, S] = Callable[[PromptData[T, S]], tuple[list[T], list[str] | None]]
 
 
 class ReloadChoices(ServerCall):
@@ -172,11 +172,14 @@ class ReloadChoices(ServerCall):
 
         def reload_choices(prompt_data: PromptData):
             choices, lines = choices_getter(prompt_data)
-            try:
-                check_choices_and_lines_length(choices, lines)
-            except ChoicesAndLinesMismatch as err:
-                input(str(err))
-                raise
+            if lines is None:
+                lines = [str(choice) for choice in choices]
+            else:
+                try:
+                    check_choices_and_lines_length(choices, lines)
+                except ChoicesAndLinesMismatch as err:
+                    input(str(err))
+                    raise
             prompt_data.choices = choices
             prompt_data.presented_choices = lines
             return "\n".join(lines)
