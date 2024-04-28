@@ -32,11 +32,14 @@ def clip_options(prompt_data: PromptData):
     pyperclip.copy(str(prompt_data.options))
 
 
-type FileEditor = Literal["VS Code", "VS Code - Insiders", "NeoVim"]
+type FileEditor = Literal["VS Code", "VS Code - Insiders", "Vi", "Vim", "NeoVim", "Nano"]
 FILE_EDITORS: dict[FileEditor, str] = {
     "VS Code": "code",
     "VS Code - Insiders": "code-insiders",
+    "Vi": "vi",
+    "Vim": "vim",
     "NeoVim": "nvim",
+    "Nano": "nano",
 }
 
 
