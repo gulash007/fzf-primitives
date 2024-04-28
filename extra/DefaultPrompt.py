@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from enum import Enum
+
 import typer
 
 from .. import Prompt
@@ -26,10 +28,16 @@ class DefaultPrompt[T, S](Prompt[T, S]):
         self.mod.default
 
 
+class LineInterpretation(Enum):
+    DEFAULT = "default"
+    PATH = "path"
+
+
 @app.command()
 def main(
     options: list[str] = typer.Argument(None, help="fzf options passed as string. Pass them after --"),
     log: bool = False,
+    lines_as: LineInterpretation = LineInterpretation.DEFAULT,
 ):
     if log:
         logger.enable("")
@@ -37,6 +45,8 @@ def main(
     try:
         prompt = DefaultPrompt(choices=BasePrompt.read_choices())
         prompt.mod.options.add(*options)
+        if lines_as == LineInterpretation.PATH:
+            prompt.mod.on_hotkey().CTRL_O.open_files(app="Vim")
         output = prompt.run()
     except Quitting as e:
         print(f"Exiting loop: {e}")
