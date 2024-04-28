@@ -109,7 +109,7 @@ class OnEvent[T, S]:
 
     @property
     def select_all(self):
-        return self.run("select", "select-all")
+        return self.run("select all", "select-all")
 
     @property
     def toggle(self):
