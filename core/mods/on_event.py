@@ -75,6 +75,7 @@ class OnEvent[T, S]:
     def end_prompt(
         self, name: str, end_status: EndStatus, post_processor: Callable[[PromptData[T, S]], None] | None = None
     ):
+        """Post-processor is called after the prompt has ended and before common post-processors are applied (defined in Mod.lastly)"""
         for event in self._events:
             self._add_binding(event, name, PromptEndingAction(end_status, event, post_processor))
 

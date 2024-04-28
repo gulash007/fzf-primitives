@@ -90,9 +90,14 @@ class PromptData[T, S]:
     def add_post_processor(self, post_processor: PostProcessor):
         self.post_processors.append(post_processor)
 
-    def apply_common_post_processors(self, prompt_data: PromptData[T, S]):
+    def apply_post_processors(self):
+        event = self.result.event
+        if not (final_action := self.action_menu.bindings[event].final_action):
+            raise RuntimeError("Prompt ended on event that doesn't have final action. How did we get here?")
+        if final_action.post_processor:
+            final_action.post_processor(self)
         for post_processor in self.post_processors:
-            post_processor(prompt_data)
+            post_processor(self)
 
     # TODO: Also allow automating default fzf hotkeys (can be solved by creating appropriate bindings in the action menu)
     def automate(self, *to_automate: Hotkey):

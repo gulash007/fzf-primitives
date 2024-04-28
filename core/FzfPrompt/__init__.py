@@ -107,5 +107,5 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         raise RuntimeError("Prompt not finished (you aborted prompt without finishing PromptData)")
     if prompt_data.result.end_status == "quit":
         raise Quitting(f"Exiting app with\n{prompt_data.result}", prompt_data.result)
-    prompt_data.apply_common_post_processors(prompt_data)
+    prompt_data.apply_post_processors()
     return prompt_data.result

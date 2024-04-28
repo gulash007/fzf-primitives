@@ -68,8 +68,6 @@ class PromptEndingAction[T, S](ServerCall):
 
     def _pipe_results(self, prompt_data: PromptData[T, S]):
         prompt_data.finish(self.event, self.end_status)
-        if self.post_processor:
-            self.post_processor(prompt_data)
         logger.debug(f"Piping results:\n{prompt_data.result}")
 
     def __str__(self) -> str:
