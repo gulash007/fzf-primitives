@@ -9,6 +9,7 @@ from ..core.FzfPrompt.exceptions import Quitting
 from ..core.FzfPrompt.prompt_data import PromptData
 from ..core.monitoring import Logger
 from .Recording import Recording
+from ..config import Config
 
 # TEST ALL KINDS OF STUFF
 
@@ -57,6 +58,7 @@ def prompt_builder():
 
 
 if __name__ == "__main__":
+    Config.logging_enabled = True
     Logger.remove_handler("MAIN_LOG_FILE")
     Logger.remove_handler("STDERR")
     Logger.add_file_handler("TestPrompt", level="TRACE")

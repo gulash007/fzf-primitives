@@ -6,23 +6,22 @@ from typing import Callable, Self, overload
 
 from ..FzfPrompt import Action, ConflictResolution, PromptData
 from ..FzfPrompt.options import Hotkey, Options, Position, RelativeWindowSize, Situation
-from ..monitoring.Logger import get_logger
+from ..monitoring import LoggedComponent
 from .EventAdder import HotkeyAdder, SituationAdder
 from .on_event import OnEvent
 from .post_processing import PostProcessing
 from .preview import PreviewMod
 
-logger = get_logger()
 
-
-class Mod[T, S]:
+class Mod[T, S](LoggedComponent):
     def __init__(self, prompt_data: PromptData[T, S]):
+        super().__init__()
         self._prompt_data = prompt_data
         self._mods: list[Callable[[PromptData], None]] = []
         self._options = Options()
 
     def apply(self):
-        logger.info("---------- Applying mods ----------")
+        self.logger.info("---------- Applying mods ----------")
         try:
             for mod in self._mods:
                 mod(self._prompt_data)

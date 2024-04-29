@@ -1,4 +1,4 @@
 from ..core.FzfPrompt.exceptions import Quitting, Aborted
-from ..core.monitoring import Logger
+from ..core.monitoring import LoggedComponent
 
-__all__ = ["Quitting", "Aborted", "Logger"]
+__all__ = ["Quitting", "Aborted", "LoggedComponent"]

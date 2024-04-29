@@ -1,4 +1,5 @@
-from .. import Prompt, PromptData, config
+from .. import Prompt, PromptData
+from ..config import Config
 
 
 def double_choices(prompt_data: PromptData):
@@ -14,7 +15,7 @@ def test_reloading_choices():
     prompt.mod.automate("ctrl-r")
     prompt.mod.automate("ctrl-r")
     prompt.mod.automate("ctrl-a")
-    prompt.mod.automate(config.DEFAULT_ACCEPT_HOTKEY)
+    prompt.mod.automate(Config.default_accept_hotkey)
 
     result = prompt.run()
     assert list(result) == [4, 8, 12]

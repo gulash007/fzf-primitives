@@ -12,12 +12,10 @@ from typing import TYPE_CHECKING, Any, Callable, Concatenate, ParamSpec, Self, T
 
 if TYPE_CHECKING:
     from .prompt_data import PromptData
-from ..monitoring import Logger
+from ..monitoring import LoggedComponent
 from .action_menu.parametrized_actions import ShellCommand
 from .options import EndStatus, Hotkey, ShellCommandActionType, Situation
 from .shell import SHELL_SCRIPTS
-
-logger = Logger.get_logger()
 
 
 class CommandOutput(str): ...
@@ -57,10 +55,11 @@ class ServerCall[T, S](ShellCommand):
 type PostProcessor[T, S] = Callable[[PromptData[T, S]], Any]
 
 
-class PromptEndingAction[T, S](ServerCall):
+class PromptEndingAction[T, S](ServerCall, LoggedComponent):
     def __init__(
         self, end_status: EndStatus, event: Hotkey | Situation, post_processor: PostProcessor[T, S] | None = None
     ) -> None:
+        LoggedComponent.__init__(self)
         self.end_status: EndStatus = end_status
         self.post_processor = post_processor
         self.event: Hotkey | Situation = event
@@ -68,7 +67,7 @@ class PromptEndingAction[T, S](ServerCall):
 
     def _pipe_results(self, prompt_data: PromptData[T, S]):
         prompt_data.finish(self.event, self.end_status)
-        logger.debug(f"Piping results:\n{prompt_data.result}")
+        self.logger.debug(f"Piping results:\n{prompt_data.result}")
 
     def __str__(self) -> str:
         return f"{self.event}: end status '{self.end_status}' with {self.post_processor} post-processor: {super().__str__()}"
@@ -131,13 +130,14 @@ class PromptState:
         return cls(**data)
 
 
-class Server[T, S](Thread):
+class Server[T, S](Thread, LoggedComponent):
     def __init__(
         self,
         prompt_data: PromptData[T, S],
         server_setup_finished: Event,
         server_should_close: Event,
     ) -> None:
+        LoggedComponent.__init__(self)
         super().__init__(name="Server")
         self.prompt_data = prompt_data
         self.server_setup_finished = server_setup_finished
@@ -153,7 +153,7 @@ class Server[T, S](Thread):
                 socket_specs = server_socket.getsockname()
                 self.socket_number = socket_specs[1]
                 server_socket.listen()
-                logger.info(f"Server listening on {socket_specs}...")
+                self.logger.info(f"Server listening on {socket_specs}...")
 
                 self.server_setup_finished.set()
                 server_socket.settimeout(0.05)
@@ -162,12 +162,12 @@ class Server[T, S](Thread):
                         client_socket, addr = server_socket.accept()
                     except TimeoutError:
                         if self.server_should_close.is_set():
-                            logger.info("Server closing")
+                            self.logger.info("Server closing")
                             break
                         continue
                     self._handle_request(client_socket, self.prompt_data)
         except Exception as e:
-            logger.exception(e)
+            self.logger.exception(e)
             raise
         finally:
             self.server_setup_finished.set()
@@ -179,16 +179,16 @@ class Server[T, S](Thread):
         payload = payload_bytearray.decode("utf-8").strip()
         try:
             request = Request.from_json(json.loads(payload))
-            logger.debug(request.server_call_name)
+            self.logger.debug(request.server_call_name)
             response = self.server_calls[request.server_call_name].run(prompt_data, request)
         except Exception as err:
-            logger.error(trb := traceback.format_exc())
+            self.logger.error(trb := traceback.format_exc())
             payload_info = f"Payload contents:\n{payload}"
-            logger.error(payload_info)
+            self.logger.error(payload_info)
             response = f"{trb}\n{payload_info}"
             if isinstance(err, KeyError):
                 response = f"{trb}\n{list(self.server_calls.keys())}"
-                logger.error(f"Available server calls:\n{list(self.server_calls.keys())}")
+                self.logger.error(f"Available server calls:\n{list(self.server_calls.keys())}")
             client_socket.sendall(str(response).encode("utf-8"))
         else:
             if response:

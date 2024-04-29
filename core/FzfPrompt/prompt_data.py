@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 from typing import Callable
 
+from ..monitoring import LoggedComponent
 from .action_menu import Action, ActionMenu, Binding
 from .decorators import single_use_method
 from .options import Hotkey, Options, Situation
@@ -11,7 +12,7 @@ from .previewer import Previewer
 from .server import EndStatus, PostProcessor, PromptState, ServerCall
 
 
-class PromptData[T, S]:
+class PromptData[T, S](LoggedComponent):
     """Accessed from fzf process through socket Server"""
 
     def __init__(
@@ -23,6 +24,8 @@ class PromptData[T, S]:
         action_menu: ActionMenu[T, S] | None = None,
         options: Options | None = None,
     ):
+        super().__init__()
+        self.logger.debug("PromptData created")
         self.choices = choices or []
         self.presented_choices = presented_choices or [str(choice) for choice in self.choices]
         check_choices_and_lines_length(self.choices, self.presented_choices)

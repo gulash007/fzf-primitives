@@ -1,21 +1,20 @@
 from __future__ import annotations
 
-from ...monitoring import Logger
+from ...monitoring import LoggedComponent
 from ..decorators import single_use_method
 from ..options import Hotkey, Options, Situation
 from ..server import ServerCall
 from .binding import Binding, BindingConflict, ConflictResolution
 from .parametrized_actions import Action
 
-logger = Logger.get_logger()
-
 
 # TODO: caching?
 # TODO: return to previous selection
 # TODO: return with previous query
 # TODO: Include fzf default --bind hotkeys (extra help)?
-class ActionMenu[T, S]:
+class ActionMenu[T, S](LoggedComponent):
     def __init__(self) -> None:
+        super().__init__()
         self.bindings: dict[Hotkey | Situation, Binding] = {}
         self.server_calls: list[ServerCall] = []
 
@@ -26,7 +25,7 @@ class ActionMenu[T, S]:
     def add(
         self, event: Hotkey | Situation, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
     ):
-        logger.debug(f"🔗 Adding binding for '{event}': {binding} ({conflict_resolution} on conflict)")
+        self.logger.debug(f"🔗 Adding binding for '{event}': {binding} ({conflict_resolution} on conflict)")
         if event not in self.bindings:
             self.bindings[event] = binding
         else:
@@ -46,7 +45,7 @@ class ActionMenu[T, S]:
     def add_server_calls(self, binding: Binding):
         for action in binding.actions:
             if isinstance(action, ServerCall):
-                logger.debug(f"🤙 Adding server call: {action}")
+                self.logger.debug(f"🤙 Adding server call: {action}")
                 self.server_calls.append(action)
 
     # TODO: silent binding (doesn't appear in header help)?

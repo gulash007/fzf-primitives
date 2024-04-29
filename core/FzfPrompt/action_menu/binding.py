@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from typing import Literal, Self
 
-from ...monitoring import Logger
+from ...monitoring import LoggedComponent
 from ..server import PromptEndingAction
 from .parametrized_actions import Action, ParametrizedAction
 
-logger = Logger.get_logger()
 
 
-class Binding:
+class Binding(LoggedComponent):
     def __init__(self, name: str, /, *actions: Action):
+        super().__init__()
         self.name = name  # only descriptive function
         self.actions: list[Action] = []
         self.final_action: PromptEndingAction | None = None

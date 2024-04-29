@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .prompt_data import PromptData
     from .server import PromptEndingAction, ServerCall
-from ..monitoring.Logger import get_logger
+from ..monitoring import Logger
 from .action_menu.binding import Binding, BindingConflict, ConflictResolution
 from .action_menu.parametrized_actions import Action, ShellCommand
 from .action_menu.transformation import Transformation
@@ -52,7 +52,7 @@ __all__ = [
 
 # Black magic layer
 # - Among other things, ensures communication between Python script and running fzf process
-logger = get_logger()
+
 
 FZF_URL = "https://github.com/junegunn/fzf"
 
@@ -61,6 +61,7 @@ FZF_URL = "https://github.com/junegunn/fzf"
 # ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable
 # Inspired by https://github.com/nk412/pyfzf
 def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None) -> Result[T]:
+    logger = Logger.get_logger()
     if executable_path:
         pass
     elif which("fzf"):

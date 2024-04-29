@@ -4,12 +4,11 @@ from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
     from .prompt_data import PromptData
-from ..monitoring import Logger
+from ..monitoring import LoggedComponent
 from .action_menu import Action, ActionMenu, Binding, ConflictResolution, ParametrizedAction, ShellCommand
 from .options import Hotkey, Position, RelativeWindowSize, Situation
 from .server import CommandOutput, ServerCall, ServerCallFunctionGeneric
 
-logger = Logger.get_logger()
 
 type PreviewFunction[T, S] = ServerCallFunctionGeneric[T, S, str]
 type PreviewChangePreProcessor[T, S] = Callable[[PromptData[T, S], Preview[T, S]], Any]
@@ -71,25 +70,27 @@ class Preview[T, S]:
         self._output = value
 
 
-class PreviewChange(ServerCall):
+class PreviewChange(ServerCall, LoggedComponent):
     def __init__(self, preview: Preview, before_change_do: PreviewChangePreProcessor | None = None) -> None:
+        LoggedComponent.__init__(self)
 
         def change_current_preview(prompt_data: PromptData):
             if before_change_do:
                 before_change_do(prompt_data, preview)
             prompt_data.previewer.set_current_preview(preview.id)
-            logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
+            self.logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
 
         super().__init__(change_current_preview, command_type="execute-silent")
 
 
-class InvokeCurrentPreview(ServerCall):
+class InvokeCurrentPreview(ServerCall, LoggedComponent):
     def __init__(self, preview_function: PreviewFunction, preview: Preview) -> None:
+        LoggedComponent.__init__(self)
         action_type = "change-preview"
 
         def get_current_preview(prompt_data: PromptData, **kwargs):
             preview.output = preview_function(prompt_data, **kwargs)
-            logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
+            self.logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
             return preview.output
 
         super().__init__(preview_function, f"Show preview of {preview.name}", command_type=action_type)
@@ -97,12 +98,13 @@ class InvokeCurrentPreview(ServerCall):
         self.function = get_current_preview
 
 
-class StorePreviewOutput(ServerCall):
+class StorePreviewOutput(ServerCall, LoggedComponent):
     def __init__(self, preview_command: str, preview: Preview) -> None:
+        LoggedComponent.__init__(self)
 
         def store_preview_output(prompt_data: PromptData, preview_output: str = CommandOutput("echo $preview_output")):
             preview.output = preview_output
-            logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
+            self.logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
 
         super().__init__(store_preview_output, f"Store preview of {preview.name}", "change-preview")
         # HACK ❗
@@ -126,10 +128,11 @@ class PreviewLabelChange(ParametrizedAction):
         super().__init__(label, "change-preview-label")
 
 
-class Previewer[T, S]:
+class Previewer[T, S](LoggedComponent):
     """Handles storing preview outputs and tracking current preview and possibly other logic associated with previews"""
 
     def __init__(self, action_menu: ActionMenu) -> None:
+        super().__init__()
         self._previews: dict[str, Preview[T, S]] = {}
         self._current_preview: Preview[T, S] | None = None
         self._action_menu = action_menu
@@ -153,7 +156,7 @@ class Previewer[T, S]:
     def add(
         self, preview: Preview[T, S], *, conflict_resolution: ConflictResolution = "raise error", main: bool = False
     ):
-        logger.debug(f"📺 Adding preview '{preview.name}'")
+        self.logger.debug(f"📺 Adding preview '{preview.name}'")
         if main or not self._previews:
             self._current_preview = preview
         self._previews[preview.id] = preview

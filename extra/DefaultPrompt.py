@@ -5,11 +5,9 @@ from enum import Enum
 import typer
 
 from .. import Prompt
+from ..config import Config
 from ..core.FzfPrompt.exceptions import Quitting
-from ..core.monitoring.Logger import get_logger
 from . import BasePrompt
-
-logger = get_logger()
 
 app = typer.Typer()
 
@@ -40,7 +38,7 @@ def main(
     lines_as: LineInterpretation = LineInterpretation.DEFAULT,
 ):
     if log:
-        logger.enable("")
+        Config.logging_enabled = True
     options = options or []
     try:
         prompt = DefaultPrompt(choices=BasePrompt.read_choices())

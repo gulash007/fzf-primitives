@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
-import loguru
+if TYPE_CHECKING:
+    import loguru
 import pydantic
 
 from ..core.FzfPrompt import EndStatus, Result
 from ..core.FzfPrompt.options import Hotkey, Situation
-from ..core.monitoring.Logger import get_logger
+from ..core.monitoring import Logger
 
 RECORDINGS_DIR = Path(__file__).parent.joinpath("recordings/")
 
@@ -60,7 +61,7 @@ class Recording(pydantic.BaseModel):
         return self.events == other.events
 
     def enable_logging(self):
-        logger = get_logger()
+        logger = Logger.get_logger()
         logger.add(self, level="TRACE", filter=lambda record: record["level"].no == 5, serialize=True, enqueue=True)
         logger.enable("")
 

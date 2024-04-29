@@ -1,4 +1,8 @@
-# Basic enter/esc for accept/abort
-USE_BASIC_HOTKEYS = True
-DEFAULT_ACCEPT_HOTKEY = "enter"
-DEFAULT_ABORT_HOTKEY = "esc"
+from .core.FzfPrompt.options.events import Hotkey
+
+
+class Config:
+    logging_enabled: bool = True
+    use_basic_hotkeys: bool = True
+    default_accept_hotkey: Hotkey = "enter"
+    default_abort_hotkey: Hotkey = "esc"

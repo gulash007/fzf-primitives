@@ -9,9 +9,7 @@ from ..FzfPrompt import Binding, ConflictResolution, Preview, PreviewChangePrePr
 from ..FzfPrompt.action_menu.transformation import Transformation
 from ..FzfPrompt.options import Hotkey, Position, RelativeWindowSize, Situation
 from ..FzfPrompt.shell import shell_command
-from ..monitoring import Logger
-
-logger = Logger.get_logger()
+from ..monitoring import LoggedComponent
 
 
 def preview_basic(prompt_data: PromptData):
@@ -166,8 +164,9 @@ class PreviewMod[T, S]:
 
 # HACK: ❗This object pretends to be a preview but when transformation is invoked it injects its previews cyclically
 # into Previewer as current previews (it's never itself a current preview).
-class CyclicalPreview[T, S](Preview[T, S]):
+class CyclicalPreview[T, S](Preview[T, S], LoggedComponent):
     def __init__(self, name: str, previews: list[Preview[T, S]], event: Hotkey | Situation | None = None):
+        LoggedComponent.__init__(self)
         super().__init__(name, "", event)
         self._previews = cycle(previews)
         self.preview_change_binding = Binding(name, Transformation(self.next))
@@ -175,13 +174,14 @@ class CyclicalPreview[T, S](Preview[T, S]):
 
     def next(self, prompt_data: PromptData[T, S]) -> Binding:
         if self._current_preview.id == prompt_data.previewer.current_preview.id:
-            logger.debug(f"Changing preview to next in cycle: {self._current_preview.name}")
+            self.logger.debug(f"Changing preview to next in cycle: {self._current_preview.name}")
             self._current_preview = next(self._previews)
         return self._current_preview.preview_change_binding
 
 
-class PreviewCycler:
+class PreviewCycler(LoggedComponent):
     def __init__(self, preview_functions: dict[str, PreviewFunction]):
+        super().__init__()
         self._preview_functions = preview_functions
         self._keys = cycle(preview_functions.keys())
         self._current_key: str
@@ -192,4 +192,4 @@ class PreviewCycler:
     def next(self, prompt_data: PromptData, preview: Preview):
         if prompt_data.previewer.current_preview.id == preview.id:
             self._current_key = next(self._keys)
-            logger.debug(f"Changing preview to next in cycle: {self._current_key}")
+            self.logger.debug(f"Changing preview to next in cycle: {self._current_key}")

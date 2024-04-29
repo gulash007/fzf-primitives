@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import typer
 
+from ..config import Config
 from ..core.FzfPrompt.exceptions import Quitting
-from ..core.monitoring.Logger import get_logger
 from . import BasePrompt, DefaultPrompt
-
-logger = get_logger()
 
 app = typer.Typer()
 
@@ -31,7 +29,7 @@ def main(
     log: bool = False,
 ):
     if log:
-        logger.enable("")
+        Config.logging_enabled = True
     options = options or []
     try:
         prompt = DefaultMultiselectPrompt(choices=BasePrompt.read_choices())

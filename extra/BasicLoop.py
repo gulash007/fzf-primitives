@@ -6,8 +6,6 @@ from ..core.FzfPrompt.exceptions import Quitting, Aborted
 from ..core.FzfPrompt.options import Hotkey
 from ..core.monitoring import Logger
 
-logger = Logger.get_logger()
-
 
 # TODO: Rename to Executor or something
 
@@ -22,6 +20,7 @@ def run_in_loop[
     result_processor: ResultProcessor[T] = lambda x: None,
     quit_hotkey: Hotkey = "ctrl-q",
 ):
+    logger = Logger.get_logger()
     while True:
         try:
             prompt = prompt_builder()

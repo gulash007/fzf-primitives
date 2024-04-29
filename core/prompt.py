@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from .. import config
+from ..config import Config
 from .FzfPrompt import PromptData, Result, run_fzf_prompt
 from .FzfPrompt.decorators import single_use_method
 from .mods import Mod
@@ -9,6 +9,8 @@ from .mods import Mod
 # TODO: Presented choices should have the same length as choices
 # TODO: Add choice of logging level
 class Prompt[T, S]:
+    config = Config
+
     def __init__(
         self,
         choices: list[T] | None = None,
@@ -20,10 +22,10 @@ class Prompt[T, S]:
         self._prompt_data = PromptData(choices=choices, presented_choices=presented_choices, obj=obj)
         self._mod = Mod(self._prompt_data)  # TODO: prevent from using after run
         if use_basic_hotkeys is None:
-            use_basic_hotkeys = config.USE_BASIC_HOTKEYS
+            use_basic_hotkeys = Config.use_basic_hotkeys
         if use_basic_hotkeys:
-            self._mod.on_hotkey(config.DEFAULT_ACCEPT_HOTKEY).accept
-            self._mod.on_hotkey(config.DEFAULT_ABORT_HOTKEY).abort
+            self._mod.on_hotkey(Config.default_accept_hotkey).accept
+            self._mod.on_hotkey(Config.default_abort_hotkey).abort
 
     @property
     def mod(self) -> Mod[T, S]:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..config import DEFAULT_ABORT_HOTKEY, DEFAULT_ACCEPT_HOTKEY
+from ..config import Config
 from ..core.FzfPrompt.exceptions import Quitting, Aborted
 from ..core.monitoring import Logger
 from . import TestPrompt
@@ -13,6 +13,7 @@ from .Recording import Recording
 
 # ❗ Checking events might be non-deterministic. Try running this test multiple times
 def test_general():
+    Config.logging_enabled = True
     Logger.remove_handler("MAIN_LOG_FILE")
     Logger.remove_handler("STDERR")
     Logger.add_file_handler("AutomatedTestPrompt", level="TRACE")
@@ -24,7 +25,7 @@ def test_general():
     prompt.mod.automate("ctrl-y")
     prompt.mod.automate("ctrl-6")
     prompt.mod.automate("ctrl-a")
-    prompt.mod.automate(DEFAULT_ACCEPT_HOTKEY)
+    prompt.mod.automate(Config.default_accept_hotkey)
     result = prompt.run()
     recording.save_result(result)
     recording.save()
@@ -48,7 +49,7 @@ def test_abort():
     with pytest.raises(Aborted) as exc:
         prompt = TestPrompt.prompt_builder()
         prompt.mod.lastly.raise_from_aborted_status()
-        prompt.mod.automate(DEFAULT_ABORT_HOTKEY)
+        prompt.mod.automate(Config.default_abort_hotkey)
         prompt.run()
 
 
