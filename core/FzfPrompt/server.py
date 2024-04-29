@@ -96,7 +96,7 @@ class Request:
             if isinstance(parameter.default, CommandOutput):
                 # HACK: when default value of a parameter of ServerCallFunction is of type CommandOutput
                 # then the parameter is going to be injected with the output of the value executed as shell command
-                command.extend([parameter.name, f'"$({parameter.default})"'])
+                command.extend([parameter.name, f'"$({parameter.default} 2>&1)"'])
             else:
                 # otherwise it's going to be injected with a shell variable of the same name (mainly env vars)
                 command.extend([parameter.name, f'"${parameter.name}"'])
