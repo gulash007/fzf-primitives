@@ -1,6 +1,7 @@
 from typing import Any
 
 from .. import Preview, Prompt, PromptData, config
+from ..core.FzfPrompt.server import CommandOutput
 from ..core.mods.preview import FileViewer
 from ..core.monitoring import Logger
 
@@ -34,6 +35,20 @@ def test_no_explicit_main_preview_having_first_added_as_main():
     prompt.mod.automate(config.DEFAULT_ACCEPT_HOTKEY)
     prompt.run()
     assert prompt.obj[1:] == ["first"]
+
+
+def test_preview_with_preview_function_that_has_command_output():
+    prompt = Prompt(obj="")
+    command = "printf 'hello\\nworld'"
+
+    def preview_function_with_command_output(prompt_data: PromptData, command_output: str = CommandOutput(command)):
+        return command_output
+
+    prompt.mod.preview().custom("first", preview_function_with_command_output)
+
+    prompt.mod.automate(config.DEFAULT_ACCEPT_HOTKEY)
+    prompt.run()
+    assert prompt.current_preview == "hello\nworld"
 
 
 def test_storing_preview_output():

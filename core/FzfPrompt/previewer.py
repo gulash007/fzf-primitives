@@ -88,7 +88,7 @@ class InvokeCurrentPreview(ServerCall):
         action_type = "change-preview"
 
         def get_current_preview(prompt_data: PromptData, **kwargs):
-            preview.output = preview_function(prompt_data)
+            preview.output = preview_function(prompt_data, **kwargs)
             logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
             return preview.output
 
