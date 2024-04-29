@@ -2,6 +2,7 @@ from pathlib import Path
 
 from .. import config
 from .FzfPrompt import PromptData, Result, run_fzf_prompt
+from .FzfPrompt.decorators import single_use_method
 from .mods import Mod
 
 
@@ -44,6 +45,7 @@ class Prompt[T, S]:
     def current_preview(self):
         return self._prompt_data.get_current_preview()
 
+    @single_use_method
     def run(self, executable_path: str | Path | None = None) -> Result[T]:
         self.mod.apply()
         return run_fzf_prompt(self._prompt_data, executable_path=executable_path)
