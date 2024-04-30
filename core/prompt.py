@@ -6,8 +6,6 @@ from .FzfPrompt.decorators import single_use_method
 from .mods import Mod
 
 
-# TODO: Presented choices should have the same length as choices
-# TODO: Add choice of logging level
 class Prompt[T, S]:
     config = Config
 
@@ -20,7 +18,7 @@ class Prompt[T, S]:
         use_basic_hotkeys: bool | None = None,
     ):
         self._prompt_data = PromptData(choices=choices, presented_choices=presented_choices, obj=obj)
-        self._mod = Mod(self._prompt_data)  # TODO: prevent from using after run
+        self._mod = Mod(self._prompt_data)
         if use_basic_hotkeys is None:
             use_basic_hotkeys = Config.use_basic_hotkeys
         if use_basic_hotkeys:

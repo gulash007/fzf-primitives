@@ -93,7 +93,6 @@ def remove_handler(handler_id: HandlerID):
 
 logger.level("WEIRDNESS", no=42, icon="🤖", color="<MAGENTA><bold>")
 logger.__class__.weirdness = partialmethod(logger.__class__.log, "WEIRDNESS")  # type: ignore
-logger.disable("")  # Disabled by default
 
 
 def get_logger() -> loguru.Logger:
