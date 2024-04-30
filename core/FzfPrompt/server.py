@@ -6,7 +6,6 @@ import json
 import shlex
 import socket
 import traceback
-from dataclasses import dataclass
 from threading import Event, Thread
 from typing import TYPE_CHECKING, Any, Callable, Concatenate, ParamSpec, Self, TypeVar
 
@@ -76,12 +75,14 @@ class PromptEndingAction[T, S](ServerCall, LoggedComponent):
 SOCKET_NUMBER_ENV_VAR = "FZF_PRIMITIVES_SOCKET_NUMBER"
 
 
-@dataclass(frozen=True)
 class Request:
-    server_call_name: str
-    command_type: ShellCommandActionType
-    prompt_state: PromptState
-    kwargs: dict
+    def __init__(
+        self, server_call_name: str, command_type: ShellCommandActionType, prompt_state: PromptState, kwargs: dict
+    ):
+        self.server_call_name = server_call_name
+        self.command_type: ShellCommandActionType = command_type
+        self.prompt_state = prompt_state
+        self.kwargs = kwargs
 
     @staticmethod
     def create_command(server_call_id: str, function: ServerCallFunction, command_type: ShellCommandActionType) -> str:
@@ -117,13 +118,20 @@ class Request:
         return cls(data["server_call_name"], data["command_type"], prompt_state, data["kwargs"])
 
 
-@dataclass(frozen=True)
 class PromptState:
-    query: str
-    single_index: int | None
-    indices: list[int]
-    single_line: str | None
-    lines: list[str]
+    def __init__(
+        self,
+        query: str,
+        single_index: int | None,
+        indices: list[int],
+        single_line: str | None,
+        lines: list[str],
+    ):
+        self.query = query
+        self.single_index = single_index
+        self.indices = indices
+        self.single_line = single_line
+        self.lines = lines
 
     @classmethod
     def from_json(cls, data: dict) -> Self:
