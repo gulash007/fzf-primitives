@@ -73,9 +73,10 @@ BaseAction = Literal[
     "toggle-sort",
     "toggle-track",
     "toggle+up",
-    "track",
+    "track-current",
     "unix-line-discard",
     "unix-word-rubout",
+    "untrack-current",
     "up",
     "yank",
 ]
