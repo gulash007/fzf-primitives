@@ -8,17 +8,15 @@ import requests
 
 if TYPE_CHECKING:
     from .prompt_data import PromptData
-from ..monitoring import Logger
+from ..monitoring import LoggedComponent
 from . import action_menu as am
 from .decorators import single_use_method
 from .server import ServerCall
 
-logger = Logger.get_logger()
 
-
-class Automator(Thread):
-
+class Automator(Thread, LoggedComponent):
     def __init__(self) -> None:
+        LoggedComponent.__init__(self)
         self.__port: str | None = None
         self._bindings: list[am.Binding] = []
         self._port_resolved = Event()
@@ -40,11 +38,11 @@ class Automator(Thread):
         try:
             while not self._port_resolved.is_set():
                 if not self._port_resolved.wait(timeout=5):
-                    logger.warning("Waiting for port to be resolved…")
+                    self.logger.warning("Waiting for port to be resolved…")
             for binding_to_automate in self._bindings:
                 self.execute_binding(binding_to_automate)
         except Exception as e:
-            logger.exception(e)
+            self.logger.exception(e)
             raise
 
     @single_use_method
@@ -60,14 +58,14 @@ class Automator(Thread):
 
     def execute_binding(self, binding: am.Binding):
         time.sleep(0.25)
-        logger.debug(f">>>>> Automating {binding}")
+        self.logger.debug(f">>>>> Automating {binding}")
         if not binding.final_action:
             binding += am.Binding("move to next automated binding", self.move_to_next_binding_server_call)
         self._binding_executed.clear()
         response = requests.post(f"http://localhost:{self.port}", data=binding.to_action_string())
         if message := response.text:
             if not message.startswith("unknown action:"):
-                logger.weirdness(message)  # type: ignore
+                self.logger.weirdness(message)  # type: ignore
             raise RuntimeError(message)
         if binding.final_action:
             return
@@ -80,5 +78,5 @@ class Automator(Thread):
         """Utilizes the $FZF_PORT variable containing the port assigned to --listen option
         (or the one generated automatically when --listen=0)"""
         self.port = FZF_PORT
-        logger.debug(f"Automated prompt listens on {self.port}")
+        self.logger.debug(f"Automated prompt listens on {self.port}")
         self._port_resolved.set()

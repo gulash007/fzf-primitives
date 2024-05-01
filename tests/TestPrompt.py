@@ -5,11 +5,12 @@ from enum import Enum, auto
 import pyperclip
 
 from .. import Prompt
+from ..config import Config
 from ..core.FzfPrompt.exceptions import Quitting
 from ..core.FzfPrompt.prompt_data import PromptData
 from ..core.monitoring import Logger
+from ..core.monitoring.constants import INTERNAL_LOG_DIR
 from .Recording import Recording
-from ..config import Config
 
 # TEST ALL KINDS OF STUFF
 
@@ -51,17 +52,20 @@ def prompt_builder():
     prompt.mod.on_hotkey().CTRL_C.clip_current_preview.accept
     prompt.mod.on_hotkey().CTRL_O.clip_options
     prompt.mod.on_hotkey().CTRL_N.run_function("wait", wait_for_input)
+    prompt.mod.on_hotkey().CTRL_L.view_logs_in_terminal(LOG_FILE_PATH)
     # prompt.mod.on_hotkey().CTRL_X.run_function("wait", bad_server_call_function) # uncomment to reveal error
     prompt.mod.preview("ctrl-y", label="basic").basic
     prompt.mod.preview("ctrl-6", "50%", "up", "basic 2").custom(name="'basic 2'", command="echo {}", store_output=True)
     return prompt
 
 
+LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath("TestPrompt.log")
+
 if __name__ == "__main__":
     Config.logging_enabled = True
-    Logger.remove_handler("MAIN_LOG_FILE")
-    Logger.remove_handler("STDERR")
-    Logger.add_file_handler("TestPrompt", level="TRACE")
+    Logger.remove_preset_handlers()
+    Logger.add_file_handler(LOG_FILE_PATH, "TRACE", format="default")
+    Logger.add_file_handler(INTERNAL_LOG_DIR.joinpath("TestPrompt.oneline.log"), "DEBUG", format="stackline")
     recording = Recording(name="TestPrompt")
     recording.enable_logging()
     save_recording = False

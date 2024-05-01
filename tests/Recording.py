@@ -63,7 +63,6 @@ class Recording(pydantic.BaseModel):
     def enable_logging(self):
         logger = Logger.get_logger()
         logger.add(self, level="TRACE", filter=lambda record: record["level"].no == 5, serialize=True, enqueue=True)
-        logger.enable("")
 
     def save(self):
         path = self.get_path(self.name)

@@ -5,8 +5,7 @@ from ..config import Config
 from ..core.FzfPrompt.server import CommandOutput
 from ..core.mods.preview import FileViewer
 from ..core.monitoring import Logger
-
-logger = Logger.get_logger()
+from ..core.monitoring.constants import INTERNAL_LOG_DIR
 
 
 class record_preview_name:
@@ -124,8 +123,7 @@ def test_cycle_previews():
 
 
 if __name__ == "__main__":
-    Logger.remove_handler("STDERR")
-    Logger.remove_handler("MAIN_LOG_FILE")
-    Logger.add_file_handler("TraceLog", None, level="TRACE")
-    logger.enable("")
+    logger = Logger.get_logger()
+    Logger.remove_preset_handlers()
+    Logger.add_file_handler(INTERNAL_LOG_DIR.joinpath("logger"), "TRACE")
     get_cycle_previews_prompt().run()

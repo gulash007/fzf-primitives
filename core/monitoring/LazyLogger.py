@@ -1,30 +1,28 @@
 from typing import TYPE_CHECKING
+
 from ... import config
 
 if TYPE_CHECKING:
-    from ._Logger import get_logger, remove_handler, add_file_handler, clear_log_file
+    from ._Logger import get_logger, remove_preset_handlers, add_file_handler
 
-__all__ = ["get_logger", "remove_handler", "add_file_handler", "clear_log_file"]
-
-# type: ignore
+__all__ = ["get_logger", "remove_preset_handlers", "add_file_handler"]
 
 
 _dynamic_imports = {
     "get_logger": (__package__, "._Logger"),
-    "remove_handler": (__package__, "._Logger"),
+    "remove_preset_handlers": (__package__, "._Logger"),
     "add_file_handler": (__package__, "._Logger"),
-    "clear_log_file": (__package__, "._Logger"),
 }
 
 
 def __getattr__(attr_name: str) -> object:
-    dynamic_attr = _dynamic_imports[attr_name]
-    package, module_name = dynamic_attr
+    if not config.Config.logging_enabled:
+        return _DummyObject()
 
     from importlib import import_module
 
-    if not config.Config.logging_enabled:
-        return _DummyObject()
+    dynamic_attr = _dynamic_imports[attr_name]
+    package, module_name = dynamic_attr
     module = import_module(module_name, package=package)
     return getattr(module, attr_name)
 

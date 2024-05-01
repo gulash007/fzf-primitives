@@ -3,8 +3,9 @@ from __future__ import annotations
 import pytest
 
 from ..config import Config
-from ..core.FzfPrompt.exceptions import Quitting, Aborted
+from ..core.FzfPrompt.exceptions import Aborted, Quitting
 from ..core.monitoring import Logger
+from ..core.monitoring.constants import INTERNAL_LOG_DIR
 from . import TestPrompt
 from .Recording import Recording
 
@@ -14,9 +15,8 @@ from .Recording import Recording
 # ❗ Checking events might be non-deterministic. Try running this test multiple times
 def test_general():
     Config.logging_enabled = True
-    Logger.remove_handler("MAIN_LOG_FILE")
-    Logger.remove_handler("STDERR")
-    Logger.add_file_handler("AutomatedTestPrompt", level="TRACE")
+    Logger.remove_preset_handlers()
+    Logger.add_file_handler(INTERNAL_LOG_DIR.joinpath("AutomatedTestPrompt.log"), "TRACE")
     recording = Recording(name="AutomatedTestPrompt")
     recording.enable_logging()  # HACK: ❗Utilizes trace logging so using logger.trace() in the code might break this
     prompt = TestPrompt.prompt_builder()
@@ -39,14 +39,14 @@ def test_general():
 
 
 def test_quit():
-    with pytest.raises(Quitting) as exc:
+    with pytest.raises(Quitting):
         prompt = TestPrompt.prompt_builder()
         prompt.mod.automate("ctrl-q")
         prompt.run()
 
 
 def test_abort():
-    with pytest.raises(Aborted) as exc:
+    with pytest.raises(Aborted):
         prompt = TestPrompt.prompt_builder()
         prompt.mod.lastly.raise_from_aborted_status()
         prompt.mod.automate(Config.default_abort_hotkey)
