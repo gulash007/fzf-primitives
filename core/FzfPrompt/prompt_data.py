@@ -170,10 +170,9 @@ def check_choices_and_lines_length(choices: list, lines: list):
 type ChoicesGetter[T, S] = Callable[[PromptData[T, S]], tuple[list[T], list[str] | None]]
 
 
-class ReloadChoices(ServerCall):
-    def __init__(self, choices_getter: ChoicesGetter, *, sync: bool = False):
-
-        def reload_choices(prompt_data: PromptData):
+class ReloadChoices[T, S](ServerCall[T, S]):
+    def __init__(self, choices_getter: ChoicesGetter[T, S], *, sync: bool = False):
+        def reload_choices(prompt_data: PromptData[T, S]):
             choices, lines = choices_getter(prompt_data)
             if lines is None:
                 lines = [str(choice) for choice in choices]
