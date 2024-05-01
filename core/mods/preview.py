@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from itertools import cycle
+import itertools
 from pathlib import Path
 from typing import Any, Callable
 
@@ -60,7 +60,6 @@ class preview_preset:
 
 
 class PreviewMod[T, S]:
-
     def __init__(
         self,
         event: Hotkey | Situation | None = None,
@@ -138,10 +137,13 @@ class PreviewMod[T, S]:
         if not name:
             name = f'[{"|".join(preview.name for preview in previews)}]'
         cyclical_preview = CyclicalPreview(name, previews, self._event)
-        self._preview_adder = lambda prompt_data: (
-            prompt_data.previewer.add(cyclical_preview, conflict_resolution=self._conflict_resolution, main=self._main),
-            *(prompt_data.previewer.add(preview) for preview in previews),
-        )
+
+        def add_cyclical_preview(prompt_data: PromptData[T, S]):
+            prompt_data.previewer.add(cyclical_preview, conflict_resolution=self._conflict_resolution, main=self._main)
+            for preview in previews:
+                prompt_data.previewer.add(preview)
+
+        self._preview_adder = add_cyclical_preview
 
     def cycle_functions(self, preview_functions: dict[str, PreviewFunction[T, S]], name: str = ""):
         preview_cycler = PreviewCycler(preview_functions)
@@ -168,7 +170,7 @@ class CyclicalPreview[T, S](Preview[T, S], LoggedComponent):
     def __init__(self, name: str, previews: list[Preview[T, S]], event: Hotkey | Situation | None = None):
         LoggedComponent.__init__(self)
         super().__init__(name, "", event)
-        self._previews = cycle(previews)
+        self._previews = itertools.cycle(previews)
         self.preview_change_binding = Binding(name, Transformation(self.next))
         self._current_preview = next(self._previews)
 
@@ -183,7 +185,7 @@ class PreviewCycler(LoggedComponent):
     def __init__(self, preview_functions: dict[str, PreviewFunction]):
         super().__init__()
         self._preview_functions = preview_functions
-        self._keys = cycle(preview_functions.keys())
+        self._keys = itertools.cycle(preview_functions.keys())
         self._current_key: str
 
     def __call__(self, prompt_data: PromptData):
