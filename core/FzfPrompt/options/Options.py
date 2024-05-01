@@ -63,6 +63,9 @@ class Options:
     def initial_query(self, query: str) -> Self:
         return self.add(shlex.join(["--query", query]))
 
+    def multiselect_with_limit(self, limit: int) -> Self:
+        return self.add(f"--multi={limit}")
+
     def preview(self, command: str) -> Self:
         return self.add(shlex.join(["--preview", f"{command}"]))
 
