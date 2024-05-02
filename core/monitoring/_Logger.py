@@ -31,7 +31,7 @@ def add_file_handler(
 HandlerID = Literal["STDERR", "MAIN_LOG_FILE"]
 
 PRESET_HANDLERS: dict[HandlerID, int] = {
-    "STDERR": logger.add(sys.stderr, level="DEBUG", format="default", colorize=True),
+    "STDERR": logger.add(sys.stderr, level="DEBUG", format=LOG_FORMATS["default"], colorize=True),
     "MAIN_LOG_FILE": add_file_handler(MAIN_LOG_FILE_PATH, "DEBUG", format="default", colorize=True),
 }
 
