@@ -86,7 +86,6 @@ class Request:
 
     @staticmethod
     def create_command(server_call_id: str, function: ServerCallFunction, command_type: ShellCommandActionType) -> str:
-
         parameters = Request.parse_function_parameters(function)
         command = [
             f"{SHELL_SCRIPTS.make_server_call} {shlex.quote(server_call_id)} {command_type}",
@@ -136,6 +135,9 @@ class PromptState:
     @classmethod
     def from_json(cls, data: dict) -> Self:
         return cls(**data)
+
+    def __str__(self) -> str:
+        return json.dumps(self.__dict__, indent=4)
 
 
 class Server[T, S](Thread, LoggedComponent):
