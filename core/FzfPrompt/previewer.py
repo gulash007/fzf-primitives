@@ -77,7 +77,7 @@ class PreviewChange(ServerCall, LoggedComponent):
         def change_current_preview(prompt_data: PromptData):
             if before_change_do:
                 before_change_do(prompt_data, preview)
-            prompt_data.previewer.set_current_preview(preview.id)
+            prompt_data.previewer.set_current_preview(preview)
             self.logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
 
         super().__init__(change_current_preview, command_type="execute-silent")
@@ -143,11 +143,8 @@ class Previewer[T, S](LoggedComponent):
             raise RuntimeError("No current preview set")
         return self._current_preview
 
-    def set_current_preview(self, preview_id: str):
-        self._current_preview = self.get_preview(preview_id)
-
-    def get_preview(self, preview_id: str) -> Preview[T, S]:
-        return self._previews[preview_id]
+    def set_current_preview(self, preview: Preview[T, S]):
+        self._current_preview = preview
 
     @property
     def previews(self) -> list[Preview[T, S]]:
