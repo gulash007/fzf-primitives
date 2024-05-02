@@ -189,7 +189,9 @@ class Server[T, S](Thread, LoggedComponent):
         payload = payload_bytearray.decode("utf-8").strip()
         try:
             request = Request.from_json(json.loads(payload))
-            self.logger.debug(request.server_call_name)
+            self.logger.debug(
+                f"Resolving '{request.server_call_name}' ({len(self.server_calls)} server calls registered)"
+            )
             response = self.server_calls[request.server_call_name].run(prompt_data, request)
         except Exception as err:
             self.logger.error(trb := traceback.format_exc())
