@@ -152,7 +152,7 @@ class Server[T, S](Thread, LoggedComponent):
         self.prompt_data = prompt_data
         self.server_setup_finished = server_setup_finished
         self.server_should_close = server_should_close
-        self.server_calls: dict[str, ServerCall[T, S]] = {sc.id: sc for sc in prompt_data.action_menu.server_calls}
+        self.server_calls: dict[str, ServerCall[T, S]] = prompt_data.action_menu.server_calls
         self.socket_number: int
 
     # TODO: Use automator to end running prompt and propagate errors

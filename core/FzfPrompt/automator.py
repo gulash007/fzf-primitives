@@ -53,7 +53,7 @@ class Automator(Thread, LoggedComponent):
             am.Binding("get prompt port number for automator", ServerCall(self._get_port_number)),
             conflict_resolution="prepend",
         )
-        prompt_data.action_menu.server_calls.append(self.move_to_next_binding_server_call)
+        prompt_data.action_menu.add_server_call(self.move_to_next_binding_server_call)
         prompt_data.options.listen()
 
     def execute_binding(self, binding: am.Binding):

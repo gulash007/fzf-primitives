@@ -16,7 +16,7 @@ class ActionMenu[T, S](LoggedComponent):
     def __init__(self) -> None:
         super().__init__()
         self.bindings: dict[Hotkey | Situation, Binding] = {}
-        self.server_calls: list[ServerCall] = []
+        self.server_calls: dict[str, ServerCall] = {}
 
     @property
     def actions(self) -> list[Action]:
@@ -45,8 +45,11 @@ class ActionMenu[T, S](LoggedComponent):
     def add_server_calls(self, binding: Binding):
         for action in binding.actions:
             if isinstance(action, ServerCall):
-                self.logger.debug(f"🤙 Adding server call: {action}")
-                self.server_calls.append(action)
+                self.add_server_call(action)
+
+    def add_server_call(self, server_call: ServerCall):
+        self.logger.debug(f"🤙 Adding server call: {server_call}")
+        self.server_calls[server_call.id] = server_call
 
     # TODO: silent binding (doesn't appear in header help)?
     @single_use_method
