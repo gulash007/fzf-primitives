@@ -130,33 +130,15 @@ class PreviewMod[T, S]:
         """If you don't need separate Preview specs for each preview, you can use cycle_functions"""
         if not name:
             name = f'[{"|".join(preview.name for preview in previews)}]'
-        cyclical_preview = CyclicalPreview(name, previews)
-
-        def add_cyclical_preview(prompt_data: PromptData[T, S]):
-            prompt_data.previewer.add(
-                cyclical_preview, self._event, conflict_resolution=self._conflict_resolution, main=self._main
-            )
-            for preview in previews:
-                prompt_data.previewer.add(preview)
-
-        self._preview_adder = add_cyclical_preview
+        self._preview_adder = lambda prompt_data: prompt_data.previewer.add(
+            CyclicalPreview(name, previews), self._event, conflict_resolution=self._conflict_resolution, main=self._main
+        )
 
     def cycle_functions(self, preview_functions: dict[str, PreviewFunction[T, S]], name: str = ""):
         preview_cycler = PreviewCycler(preview_functions)
         if not name:
             name = f'[{"|".join(preview_functions.keys())}]'
-        preview = Preview(
-            name,
-            preview_cycler,
-            window_size=self._window_size,
-            window_position=self._window_position,
-            label=self._label,
-            before_change_do=preview_cycler.next,
-            line_wrap=self._line_wrap,
-        )
-        self._preview_adder = lambda prompt_data: prompt_data.previewer.add(
-            preview, self._event, conflict_resolution=self._conflict_resolution, main=self._main
-        )
+        self.custom(name, preview_cycler, preview_cycler.next)
 
 
 # HACK: ❗This object pretends to be a preview but when transformation is invoked it injects its previews cyclically
