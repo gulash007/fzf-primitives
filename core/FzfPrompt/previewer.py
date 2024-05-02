@@ -20,7 +20,6 @@ class Preview[T, S]:
         self,
         name: str,
         command: str | PreviewFunction[T, S],
-        event: Hotkey | Situation | None = None,
         window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
         label: str = "",
@@ -32,7 +31,6 @@ class Preview[T, S]:
         self.name = name
         self.id = f"{name} ({id(self)})"
         self.command = command
-        self.event: Hotkey | Situation | None = event
         self.window_size: int | RelativeWindowSize = window_size
         self.window_position: Position = window_position
         self.label = label
@@ -151,16 +149,19 @@ class Previewer[T, S](LoggedComponent):
         return list(self._previews.values())
 
     def add(
-        self, preview: Preview[T, S], *, conflict_resolution: ConflictResolution = "raise error", main: bool = False
+        self,
+        preview: Preview[T, S],
+        event: Hotkey | Situation | None = None,
+        *,
+        conflict_resolution: ConflictResolution = "raise error",
+        main: bool = False,
     ):
         self.logger.debug(f"📺 Adding preview '{preview.name}'")
         if main or not self._previews:
             self._current_preview = preview
         self._previews[preview.id] = preview
-        if preview.event:
-            self._action_menu.add(
-                preview.event, preview.preview_change_binding, conflict_resolution=conflict_resolution
-            )
+        if event:
+            self._action_menu.add(event, preview.preview_change_binding, conflict_resolution=conflict_resolution)
         else:
             self._action_menu.add_server_calls(preview.preview_change_binding)
 

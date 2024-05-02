@@ -85,7 +85,6 @@ class PreviewMod[T, S]:
             Preview[T, S](
                 name,
                 command,
-                self._event,
                 self._window_size,
                 self._window_position,
                 self._label,
@@ -93,6 +92,7 @@ class PreviewMod[T, S]:
                 line_wrap=self._line_wrap,
                 store_output=store_output,
             ),
+            self._event,
             conflict_resolution=self._conflict_resolution,
             main=self._main,
         )
@@ -130,10 +130,12 @@ class PreviewMod[T, S]:
         """If you don't need separate Preview specs for each preview, you can use cycle_functions"""
         if not name:
             name = f'[{"|".join(preview.name for preview in previews)}]'
-        cyclical_preview = CyclicalPreview(name, previews, self._event)
+        cyclical_preview = CyclicalPreview(name, previews)
 
         def add_cyclical_preview(prompt_data: PromptData[T, S]):
-            prompt_data.previewer.add(cyclical_preview, conflict_resolution=self._conflict_resolution, main=self._main)
+            prompt_data.previewer.add(
+                cyclical_preview, self._event, conflict_resolution=self._conflict_resolution, main=self._main
+            )
             for preview in previews:
                 prompt_data.previewer.add(preview)
 
@@ -146,7 +148,6 @@ class PreviewMod[T, S]:
         preview = Preview(
             name,
             preview_cycler,
-            self._event,
             window_size=self._window_size,
             window_position=self._window_position,
             label=self._label,
@@ -154,7 +155,7 @@ class PreviewMod[T, S]:
             line_wrap=self._line_wrap,
         )
         self._preview_adder = lambda prompt_data: prompt_data.previewer.add(
-            preview, conflict_resolution=self._conflict_resolution, main=self._main
+            preview, self._event, conflict_resolution=self._conflict_resolution, main=self._main
         )
 
 
@@ -163,7 +164,7 @@ class PreviewMod[T, S]:
 class CyclicalPreview[T, S](Preview[T, S], LoggedComponent):
     def __init__(self, name: str, previews: list[Preview[T, S]], event: Hotkey | Situation | None = None):
         LoggedComponent.__init__(self)
-        super().__init__(name, "", event)
+        super().__init__(name, "")
         self._previews = itertools.cycle(previews)
         self.preview_change_binding = Binding(name, Transformation(self.next))
         self._current_preview = next(self._previews)
