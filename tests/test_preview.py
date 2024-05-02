@@ -3,7 +3,7 @@ from typing import Any
 from .. import Preview, Prompt, PromptData
 from ..config import Config
 from ..core.FzfPrompt.server import CommandOutput
-from ..core.mods.preview import FileViewer
+from ..core.mods.preview_mod import FileViewer
 from ..core.monitoring import Logger
 from ..core.monitoring.constants import INTERNAL_LOG_DIR
 

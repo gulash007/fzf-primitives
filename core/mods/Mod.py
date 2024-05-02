@@ -10,7 +10,7 @@ from ..monitoring import LoggedComponent
 from .EventAdder import HotkeyAdder, SituationAdder
 from .on_event import OnEvent
 from .post_processing import PostProcessing
-from .preview import PreviewMod
+from .preview_mod import PreviewMod
 
 
 class Mod[T, S](LoggedComponent):
