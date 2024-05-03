@@ -133,10 +133,10 @@ class PreviewMod[T, S]:
         )
 
     def cycle_functions(self, preview_functions: dict[str, PreviewFunction[T, S]], name: str = ""):
-        preview_cycler = PreviewCycler(preview_functions)
+        cyclical_preview_function = CyclicalPreviewFunction(preview_functions)
         if not name:
             name = f'[{"|".join(preview_functions.keys())}]'
-        self.custom(name, preview_cycler, preview_cycler.next)
+        self.custom(name, cyclical_preview_function, cyclical_preview_function.next)
 
 
 # HACK: ❗This object pretends to be a preview but when transformation is invoked it injects its previews cyclically
@@ -156,7 +156,7 @@ class CyclicalPreview[T, S](Preview[T, S], LoggedComponent):
         return self._current_preview.preview_change_binding
 
 
-class PreviewCycler(LoggedComponent):
+class CyclicalPreviewFunction(LoggedComponent):
     def __init__(self, preview_functions: dict[str, PreviewFunction]):
         super().__init__()
         self._preview_functions = preview_functions
