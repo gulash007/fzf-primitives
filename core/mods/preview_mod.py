@@ -65,7 +65,7 @@ class PreviewMod[T, S]:
         conflict_resolution: ConflictResolution = "raise error",
         main: bool = False,
     ):
-        self._preview_adder: Callable[[PromptData[T, S]], Any]
+        self._preview_adder: Callable[[PromptData[T, S]], Any] = lambda _: None
         self._event: Hotkey | Situation | None = event
         self._window_size: int | RelativeWindowSize = window_size
         self._window_position: Position = window_position
