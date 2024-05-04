@@ -62,7 +62,7 @@
       "thread": "Server",
       "function": "change_current_preview",
       "extra": {
-        "preview": "basic"
+        "preview": "Hello World"
       }
     },
     {
@@ -70,7 +70,7 @@
       "thread": "Server",
       "function": "store_preview_output",
       "extra": {
-        "preview": "basic"
+        "preview": "Hello World"
       }
     },
     {
@@ -78,7 +78,7 @@
       "thread": "Server",
       "function": "store_preview_output",
       "extra": {
-        "preview": "basic"
+        "preview": "Hello World"
       }
     }
   ],
