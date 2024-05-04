@@ -125,7 +125,7 @@ class PreviewMod[T, S](LoggedComponent):
                 ),
                 *preview.preview_change_binding.actions,
             )
-            prompt_data.action_menu.add(event, binding, conflict_resolution=conflict_resolution)
+            prompt_data.add_binding(event, binding, conflict_resolution=conflict_resolution)
 
         self._mutator_adders.append(add_preview_mutator)
 
@@ -135,7 +135,7 @@ class PreviewMod[T, S](LoggedComponent):
         except AttributeError:
             self.logger.warning("PreviewMod has no effect as its Preview has not been set")
             return
-        prompt_data.previewer.add(preview, self._event, conflict_resolution=self._conflict_resolution, main=self._main)
+        prompt_data.add_preview(preview, self._event, conflict_resolution=self._conflict_resolution, main=self._main)
         for mutator_adder in self._mutator_adders:
             mutator_adder(prompt_data, preview)
 

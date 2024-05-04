@@ -84,7 +84,7 @@ class OnEvent[T, S]:
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         for event, binding in self._bindings.items():
-            prompt_data.action_menu.add(event, binding, conflict_resolution=self._conflict_resolution)
+            prompt_data.add_binding(event, binding, conflict_resolution=self._conflict_resolution)
 
     # presets
     @property

@@ -5,10 +5,10 @@ from datetime import datetime
 from typing import Callable
 
 from ..monitoring import LoggedComponent
-from .action_menu import Action, ActionMenu, Binding
+from .action_menu import Action, ActionMenu, Binding, ConflictResolution
 from .decorators import single_use_method
 from .options import Hotkey, Options, Situation
-from .previewer import Previewer
+from .previewer import Preview, Previewer
 from .server import EndStatus, PostProcessor, PromptState, ServerCall
 
 
@@ -89,6 +89,21 @@ class PromptData[T, S](LoggedComponent):
 
     def get_current_preview(self) -> str:
         return self.previewer.current_preview.output
+
+    def add_binding(
+        self, event: Hotkey | Situation, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
+    ):
+        self.action_menu.add(event, binding, conflict_resolution=conflict_resolution)
+
+    def add_preview(
+        self,
+        preview: Preview[T, S],
+        event: Hotkey | Situation | None = None,
+        *,
+        conflict_resolution: ConflictResolution = "raise error",
+        main: bool = False,
+    ):
+        self.previewer.add(preview, event, conflict_resolution=conflict_resolution, main=main)
 
     def add_post_processor(self, post_processor: PostProcessor):
         self.post_processors.append(post_processor)

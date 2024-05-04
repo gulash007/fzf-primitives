@@ -48,7 +48,7 @@ class Automator(Thread, LoggedComponent):
     @single_use_method
     def prepare(self, prompt_data: PromptData):
         self._bindings.extend(prompt_data.bindings_to_automate)
-        prompt_data.action_menu.add(
+        prompt_data.add_binding(
             "start",
             am.Binding("get prompt port number for automator", ServerCall(self._get_port_number)),
             conflict_resolution="prepend",
