@@ -196,3 +196,5 @@ class CyclicalPreviewFunction(LoggedComponent):
         if prompt_data.previewer.current_preview.id == preview.id:
             self._current_key = next(self._keys)
             self.logger.debug(f"Changing preview to next in cycle: {self._current_key}")
+        if not hasattr(self, "_current_key"):
+            self._current_key = next(self._keys)
