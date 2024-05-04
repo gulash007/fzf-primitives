@@ -79,7 +79,7 @@ if __name__ == "__main__":
     Config.logging_enabled = True
     Logger.remove_preset_handlers()
     Logger.add_file_handler(LOG_FILE_PATH, "TRACE", format="default")
-    Logger.add_file_handler(INTERNAL_LOG_DIR.joinpath("TestPrompt.oneline.log"), "DEBUG", format="stackline")
+    Logger.add_file_handler(INTERNAL_LOG_DIR.joinpath("TestPrompt.stackline.log"), "DEBUG", format="stackline")
     recording = Recording(name="TestPrompt")
     recording.enable_logging()
     save_recording = False
