@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal, Self
+from typing import Literal
 
 from ...monitoring import LoggedComponent
 from ..server import PromptEndingAction
 from .parametrized_actions import Action, ParametrizedAction
-
 
 
 class Binding(LoggedComponent):
@@ -30,9 +29,9 @@ class Binding(LoggedComponent):
         ]
         return "+".join(action_strings)
 
-    def __add__(self, other: Self) -> Self:
+    def __add__(self, other: Binding) -> Binding:
         name = "+".join(n for n in [self.name, other.name] if n)
-        return self.__class__(name, *(self.actions + other.actions))
+        return Binding(name, *(self.actions + other.actions))
 
     def __str__(self) -> str:
         actions = [f"'{str(action)}'" for action in self.actions]
