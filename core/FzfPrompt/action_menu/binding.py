@@ -21,6 +21,7 @@ class Binding(LoggedComponent):
                 self.final_action = action
 
     def to_action_string(self) -> str:
+        self.logger.debug(f"Turning binding ({self.name}) to action string")
         actions = self.actions.copy()
         if self.final_action:
             actions.append("abort")
