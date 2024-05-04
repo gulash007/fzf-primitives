@@ -48,8 +48,9 @@ class ActionMenu[T, S](LoggedComponent):
                 self.add_server_call(action)
 
     def add_server_call(self, server_call: ServerCall):
-        self.logger.debug(f"🤙 Adding server call: {server_call}")
-        self.server_calls[server_call.id] = server_call
+        if server_call.id not in self.server_calls:
+            self.logger.debug(f"🤙 Adding server call: {server_call}")
+            self.server_calls[server_call.id] = server_call
 
     # TODO: silent binding (doesn't appear in header help)?
     @single_use_method
