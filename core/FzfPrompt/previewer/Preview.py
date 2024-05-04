@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, TypedDict, Unpack
+from typing import TYPE_CHECKING, Any, Callable, TypedDict, Unpack, override
 
 if TYPE_CHECKING:
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
 from ..action_menu import Binding, ParametrizedAction, ShellCommand, Transformation
 from ..options import WindowPosition, RelativeWindowSize
-from ..server import CommandOutput, ServerCall, ServerCallFunctionGeneric
+from ..server import CommandOutput, Request, ServerCall, ServerCallFunctionGeneric
 
 type PreviewFunction[T, S] = ServerCallFunctionGeneric[T, S, str]
 type PreviewChangePreProcessor[T, S] = Callable[[PromptData[T, S], Preview[T, S]], Any]
@@ -100,17 +100,21 @@ class SetAsCurrentPreview[T, S](ServerCall[T, S], LoggedComponent):
 class PreviewServerCall[T, S](ServerCall[T, S], LoggedComponent):
     def __init__(self, preview_function: PreviewFunction[T, S], preview: Preview[T, S]) -> None:
         LoggedComponent.__init__(self)
-
-        def resolve_preview_function(prompt_data: PromptData[T, S], **kwargs):
-            output = preview_function(prompt_data, **kwargs)
-            if preview.store_output:
-                preview.output = output
-            self.logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
-            return output
-
+        self.preview = preview
         super().__init__(preview_function, f"Resolve preview function of {preview.name}", command_type="change-preview")
-        # HACK: wanna ServerCall to parse parameters of enclosed function first to create the right template
-        self.function = resolve_preview_function
+
+    @property
+    @override
+    def id(self) -> str:
+        return f"{super().id} (preview_id={self.preview.id})"
+
+    @override
+    def run(self, prompt_data: PromptData[T, S], request: Request):
+        output = super().run(prompt_data, request)
+        if self.preview.store_output:
+            self.preview.output = output
+        self.logger.trace(f"Showing preview '{self.preview.name}'", preview=self.preview.name)
+        return output
 
 
 def get_preview_shell_command(command: str, preview: Preview):
@@ -122,14 +126,21 @@ def get_preview_shell_command(command: str, preview: Preview):
 class ShowAndStorePreviewOutput(ServerCall, LoggedComponent):
     def __init__(self, command: str, preview: Preview) -> None:
         LoggedComponent.__init__(self)
+        name = f"Store preview of {preview.name}"
+        self._id = f"{name} (preview_id={preview.id}) (command hash {hash(command)})"
 
         def store_preview_output(prompt_data: PromptData, preview_output: str = CommandOutput("echo $preview_output")):
             preview.output = preview_output
             self.logger.trace(f"Storing preview output of '{preview.name}'", preview=preview.name)
 
-        super().__init__(store_preview_output, f"Store preview of {preview.name}", "change-preview")
+        super().__init__(store_preview_output, name, "change-preview")
         # HACK ❗
         self.action_value = f'preview_output="$({command})"; echo $preview_output && {self.command}'
+
+    @property
+    @override
+    def id(self) -> str:
+        return self._id
 
 
 class ChangePreviewWindow(ParametrizedAction):

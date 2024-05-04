@@ -38,10 +38,13 @@ class ServerCall[T, S](ShellCommand):
     ) -> None:
         self.function = function
         self.name = custom_name or function.__name__
-        self.id = f"{self.name} ({id(self)})"
 
         command = Request.create_command(self.id, function, command_type)
         super().__init__(command, command_type)
+
+    @property
+    def id(self) -> str:
+        return f"{self.name} ({id(self.function)})"
 
     def __str__(self) -> str:
         return f"{self.id}: {super().__str__()}"
