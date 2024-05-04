@@ -64,6 +64,22 @@
       "extra": {
         "preview": "basic"
       }
+    },
+    {
+      "process": "MainProcess",
+      "thread": "Server",
+      "function": "store_preview_output",
+      "extra": {
+        "preview": "basic"
+      }
+    },
+    {
+      "process": "MainProcess",
+      "thread": "Server",
+      "function": "store_preview_output",
+      "extra": {
+        "preview": "basic"
+      }
     }
   ],
   "end_status": "accept",

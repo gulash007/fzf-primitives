@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Iterable
 
 if TYPE_CHECKING:
+    from ..action_menu import Action
     from ..prompt_data import PromptData
-    from .binding import Binding
 from ...monitoring import LoggedComponent
 from ..server import ServerCall
+from .binding import Binding
 
-type TransformationFunction[T, S] = Callable[[PromptData[T, S]], Binding]
+type TransformationFunction[T, S] = Callable[[PromptData[T, S]], Iterable[Action]]
 
 
 class Transformation[T, S](ServerCall[T, S], LoggedComponent):
@@ -17,9 +18,7 @@ class Transformation[T, S](ServerCall[T, S], LoggedComponent):
 
         def get_transformation_string(prompt_data: PromptData[T, S]) -> str:
             self.logger.debug(f"Transformation: {self.name}")
-            binding = transformation_function(prompt_data)
-            # register the binding's ServerCalls
-            # TODO: This might bloat memory, need to somehow merge server calls that use the same function
+            binding = Binding(f"Created by Transformation ({self.name})", *transformation_function(prompt_data))
             prompt_data.action_menu.add_server_calls(binding)
             return binding.to_action_string()
 

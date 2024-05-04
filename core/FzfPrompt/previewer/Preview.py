@@ -50,7 +50,7 @@ class Preview[T, S]:
                     if isinstance(self.output_generator, str)
                     else PreviewServerCall(self.output_generator, self),
                     ChangePreviewLabel(self.label),
-                )
+                ).actions
             ),
         )
 

@@ -175,11 +175,11 @@ class CyclicalPreview[T, S](Preview[T, S], LoggedComponent):
         self.preview_change_binding = Binding(name, Transformation(self.next))
         self._current_preview = next(self._previews)
 
-    def next(self, prompt_data: PromptData[T, S]) -> Binding:
+    def next(self, prompt_data: PromptData[T, S]):
         if self._current_preview.id == prompt_data.previewer.current_preview.id:
             self.logger.debug(f"Changing preview to next in cycle: {self._current_preview.name}")
             self._current_preview = next(self._previews)
-        return self._current_preview.preview_change_binding
+        return self._current_preview.preview_change_binding.actions
 
 
 class CyclicalPreviewFunction(LoggedComponent):
