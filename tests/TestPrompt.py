@@ -6,8 +6,8 @@ import pyperclip
 
 from .. import Prompt
 from ..config import Config
+from ..core.FzfPrompt import PromptData, PreviewMutationArgs
 from ..core.FzfPrompt.exceptions import Quitting
-from ..core.FzfPrompt.prompt_data import PromptData
 from ..core.monitoring import Logger
 from ..core.monitoring.constants import INTERNAL_LOG_DIR
 from .Recording import Recording
@@ -55,7 +55,21 @@ def prompt_builder():
     prompt.mod.on_hotkey().CTRL_L.view_logs_in_terminal(LOG_FILE_PATH)
     # prompt.mod.on_hotkey().CTRL_X.run_function("wait", bad_server_call_function) # uncomment to reveal error
     prompt.mod.preview("ctrl-y", label="basic").basic
-    prompt.mod.preview("ctrl-6", "50%", "up", "basic 2").custom(name="'basic 2'", command="echo {}", store_output=True)
+    # prompt.mod.preview("ctrl-6", "50%", "up", "basic 2").custom(name="'basic 2'", output_generator="echo {}", store_output=True)
+
+    lines_or_indices_preview = prompt.mod.preview("ctrl-6")
+    lines_or_indices_preview.custom("basic", "echo {+}")
+    lines_or_indices_preview.mutate_preview(
+        "change to indices",
+        "ctrl-x",
+        lambda pd: PreviewMutationArgs(window_position="up", output_generator="echo {+n}", label="indices"),
+    )
+    lines_or_indices_preview.mutate_preview(
+        "change to lines",
+        "ctrl-z",
+        lambda pd: {"window_position": "left", "output_generator": "echo {+}", "label": "lines"},
+        mutate_only_when_already_focused=False,
+    )
     return prompt
 
 

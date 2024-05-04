@@ -12,7 +12,7 @@
     {
       "process": "MainProcess",
       "thread": "Server",
-      "function": "get_current_preview",
+      "function": "resolve_preview_function",
       "extra": {
         "preview": "basic"
       }
@@ -20,7 +20,7 @@
     {
       "process": "MainProcess",
       "thread": "Server",
-      "function": "get_current_preview",
+      "function": "resolve_preview_function",
       "extra": {
         "preview": "basic"
       }
@@ -28,7 +28,7 @@
     {
       "process": "MainProcess",
       "thread": "Server",
-      "function": "get_current_preview",
+      "function": "resolve_preview_function",
       "extra": {
         "preview": "basic"
       }
@@ -36,7 +36,23 @@
     {
       "process": "MainProcess",
       "thread": "Server",
-      "function": "get_current_preview",
+      "function": "resolve_preview_function",
+      "extra": {
+        "preview": "basic"
+      }
+    },
+    {
+      "process": "MainProcess",
+      "thread": "Server",
+      "function": "change_current_preview",
+      "extra": {
+        "preview": "basic"
+      }
+    },
+    {
+      "process": "MainProcess",
+      "thread": "Server",
+      "function": "resolve_preview_function",
       "extra": {
         "preview": "basic"
       }
@@ -52,7 +68,7 @@
     {
       "process": "MainProcess",
       "thread": "Server",
-      "function": "get_current_preview",
+      "function": "store_preview_output",
       "extra": {
         "preview": "basic"
       }
@@ -60,25 +76,9 @@
     {
       "process": "MainProcess",
       "thread": "Server",
-      "function": "change_current_preview",
-      "extra": {
-        "preview": "'basic 2'"
-      }
-    },
-    {
-      "process": "MainProcess",
-      "thread": "Server",
       "function": "store_preview_output",
       "extra": {
-        "preview": "'basic 2'"
-      }
-    },
-    {
-      "process": "MainProcess",
-      "thread": "Server",
-      "function": "store_preview_output",
-      "extra": {
-        "preview": "'basic 2'"
+        "preview": "basic"
       }
     }
   ],

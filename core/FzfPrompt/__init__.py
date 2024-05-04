@@ -15,7 +15,7 @@ from .action_menu.binding import Binding, BindingConflict, ConflictResolution
 from .action_menu.parametrized_actions import Action, ShellCommand
 from .action_menu.transformation import Transformation
 from .exceptions import Quitting
-from .previewer import Preview, PreviewChangePreProcessor, PreviewFunction
+from .previewer import Preview, PreviewChangePreProcessor, PreviewFunction, PreviewMutationArgs, PreviewMutator
 from .prompt_data import ChoicesGetter, PromptData, ReloadChoices, Result
 from .server import (
     SOCKET_NUMBER_ENV_VAR,

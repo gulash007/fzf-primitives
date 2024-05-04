@@ -1,19 +1,21 @@
-from .previewer import Previewer
 from .Preview import (
     Preview,
-    PreviewFunction,
-    PreviewChange,
     PreviewChangePreProcessor,
-    PreviewWindowChange,
-    PreviewLabelChange,
+    PreviewFunction,
+    PreviewMutationArgs,
+    PreviewMutator,
+    ChangePreviewWindow,
+    ChangePreviewLabel
 )
+from .previewer import Previewer
 
 __all__ = [
     "Previewer",
     "Preview",
     "PreviewFunction",
-    "PreviewChange",
+    "PreviewMutationArgs",
+    "PreviewMutator",
     "PreviewChangePreProcessor",
-    "PreviewWindowChange",
-    "PreviewLabelChange",
+    "ChangePreviewWindow",
+    "ChangePreviewLabel"
 ]

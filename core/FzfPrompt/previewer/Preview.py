@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, TypedDict, Unpack
 
 if TYPE_CHECKING:
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
-from ..action_menu import Action, Binding, ParametrizedAction, ShellCommand
+from ..action_menu import Binding, ParametrizedAction, ShellCommand, Transformation
 from ..options import Position, RelativeWindowSize
 from ..server import CommandOutput, ServerCall, ServerCallFunctionGeneric
 
@@ -18,7 +18,7 @@ class Preview[T, S]:
     def __init__(
         self,
         name: str,
-        command: str | PreviewFunction[T, S],
+        output_generator: str | PreviewFunction[T, S],
         window_size: int | RelativeWindowSize = "50%",
         window_position: Position = "right",
         label: str = "",
@@ -29,7 +29,7 @@ class Preview[T, S]:
     ):
         self.name = name
         self.id = f"{name} ({id(self)})"
-        self.command = command
+        self.output_generator = output_generator
         self.window_size: int | RelativeWindowSize = window_size
         self.window_position: Position = window_position
         self.label = label
@@ -37,22 +37,26 @@ class Preview[T, S]:
         self.store_output = store_output
         self._output: str | None = None
 
-        # ❗ It's crucial that window change happens before preview change
-        actions: list[Action] = [
-            PreviewWindowChange(window_size, window_position, line_wrap=line_wrap),
-            PreviewChange(self, before_change_do),
-            (
-                (
-                    StorePreviewOutput(self.command, self)
-                    if store_output
-                    else ShellCommand(self.command, "change-preview")
+        set_current_preview = SetAsCurrentPreview(self, before_change_do)
+        self.preview_change_binding = Binding(
+            f"Change preview to {name}",
+            Transformation(
+                # ❗ It's crucial that window change happens before creating output
+                lambda pd: Binding(
+                    "",
+                    set_current_preview,
+                    ChangePreviewWindow(self.window_size, self.window_position, line_wrap=self.line_wrap),
+                    get_preview_shell_command(self.output_generator, self)
+                    if isinstance(self.output_generator, str)
+                    else PreviewServerCall(self.output_generator, self),
+                    ChangePreviewLabel(self.label),
                 )
-                if isinstance(self.command, str)
-                else InvokeCurrentPreview(self.command, self)
             ),
-            PreviewLabelChange(label),
-        ]
-        self.preview_change_binding = Binding(f"Change preview to {name}", *actions)
+        )
+
+    def update(self, **kwargs: Unpack[PreviewMutationArgs[T, S]]):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     @property
     def output(self) -> str:
@@ -67,11 +71,24 @@ class Preview[T, S]:
         self._output = value
 
 
-class PreviewChange(ServerCall, LoggedComponent):
-    def __init__(self, preview: Preview, before_change_do: PreviewChangePreProcessor | None = None) -> None:
+type PreviewMutator[T, S] = Callable[[PromptData[T, S]], PreviewMutationArgs[T, S]]
+
+
+class PreviewMutationArgs[T, S](TypedDict, total=False):
+    name: str
+    output_generator: str | PreviewFunction[T, S]
+    window_size: int | RelativeWindowSize
+    window_position: Position
+    label: str
+    line_wrap: bool
+    store_output: bool
+
+
+class SetAsCurrentPreview[T, S](ServerCall[T, S], LoggedComponent):
+    def __init__(self, preview: Preview[T, S], before_change_do: PreviewChangePreProcessor[T, S] | None = None) -> None:
         LoggedComponent.__init__(self)
 
-        def change_current_preview(prompt_data: PromptData):
+        def change_current_preview(prompt_data: PromptData[T, S]):
             if before_change_do:
                 before_change_do(prompt_data, preview)
             prompt_data.previewer.set_current_preview(preview)
@@ -80,35 +97,42 @@ class PreviewChange(ServerCall, LoggedComponent):
         super().__init__(change_current_preview, command_type="execute-silent")
 
 
-class InvokeCurrentPreview(ServerCall, LoggedComponent):
-    def __init__(self, preview_function: PreviewFunction, preview: Preview) -> None:
+class PreviewServerCall[T, S](ServerCall[T, S], LoggedComponent):
+    def __init__(self, preview_function: PreviewFunction[T, S], preview: Preview[T, S]) -> None:
         LoggedComponent.__init__(self)
-        action_type = "change-preview"
 
-        def get_current_preview(prompt_data: PromptData, **kwargs):
-            preview.output = preview_function(prompt_data, **kwargs)
+        def resolve_preview_function(prompt_data: PromptData[T, S], **kwargs):
+            output = preview_function(prompt_data, **kwargs)
+            if preview.store_output:
+                preview.output = output
             self.logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
-            return preview.output
+            return output
 
-        super().__init__(preview_function, f"Show preview of {preview.name}", command_type=action_type)
+        super().__init__(preview_function, f"Resolve preview function of {preview.name}", command_type="change-preview")
         # HACK: wanna ServerCall to parse parameters of enclosed function first to create the right template
-        self.function = get_current_preview
+        self.function = resolve_preview_function
 
 
-class StorePreviewOutput(ServerCall, LoggedComponent):
-    def __init__(self, preview_command: str, preview: Preview) -> None:
+def get_preview_shell_command(command: str, preview: Preview):
+    if preview.store_output:
+        return ShowAndStorePreviewOutput(command, preview)
+    return ShellCommand(command)
+
+
+class ShowAndStorePreviewOutput(ServerCall, LoggedComponent):
+    def __init__(self, command: str, preview: Preview) -> None:
         LoggedComponent.__init__(self)
 
         def store_preview_output(prompt_data: PromptData, preview_output: str = CommandOutput("echo $preview_output")):
             preview.output = preview_output
-            self.logger.trace(f"Showing preview '{preview.name}'", preview=preview.name)
+            self.logger.trace(f"Storing preview output of '{preview.name}'", preview=preview.name)
 
         super().__init__(store_preview_output, f"Store preview of {preview.name}", "change-preview")
         # HACK ❗
-        self.action_value = f'preview_output="$({preview_command})"; echo $preview_output && {self.command}'
+        self.action_value = f'preview_output="$({command})"; echo $preview_output && {self.command}'
 
 
-class PreviewWindowChange(ParametrizedAction):
+class ChangePreviewWindow(ParametrizedAction):
     def __init__(
         self, window_size: int | RelativeWindowSize, window_position: Position, *, line_wrap: bool = True
     ) -> None:
@@ -120,6 +144,6 @@ class PreviewWindowChange(ParametrizedAction):
         )
 
 
-class PreviewLabelChange(ParametrizedAction):
+class ChangePreviewLabel(ParametrizedAction):
     def __init__(self, label: str) -> None:
         super().__init__(label, "change-preview-label")

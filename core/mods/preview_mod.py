@@ -2,9 +2,18 @@ from __future__ import annotations
 
 import itertools
 from pathlib import Path
-from typing import Any, Callable
+from typing import Callable
 
-from ..FzfPrompt import Binding, ConflictResolution, Preview, PreviewChangePreProcessor, PreviewFunction, PromptData
+from ..FzfPrompt import (
+    Binding,
+    ConflictResolution,
+    Preview,
+    PreviewChangePreProcessor,
+    PreviewFunction,
+    PreviewMutator,
+    PromptData,
+    ServerCall,
+)
 from ..FzfPrompt.action_menu.transformation import Transformation
 from ..FzfPrompt.options import Hotkey, Position, RelativeWindowSize, Situation
 from ..FzfPrompt.shell import shell_command
@@ -40,20 +49,20 @@ class preview_preset:
     def __init__(
         self,
         name: str,
-        command: str | PreviewFunction,
+        output_generator: str | PreviewFunction,
         before_change_do: PreviewChangePreProcessor | None = None,
         store_output: bool = True,
     ) -> None:
         self._name = name
-        self._command = command
+        self._output_generator = output_generator
         self._before_change_do = before_change_do
         self._store_output = store_output
 
     def __get__(self, obj: PreviewMod, objtype=None):
-        return obj.custom(self._name, self._command, self._before_change_do, self._store_output)
+        return obj.custom(self._name, self._output_generator, self._before_change_do, self._store_output)
 
 
-class PreviewMod[T, S]:
+class PreviewMod[T, S](LoggedComponent):
     def __init__(
         self,
         event: Hotkey | Situation | None = None,
@@ -65,7 +74,9 @@ class PreviewMod[T, S]:
         conflict_resolution: ConflictResolution = "raise error",
         main: bool = False,
     ):
-        self._preview_adder: Callable[[PromptData[T, S]], Any] = lambda _: None
+        super().__init__()
+        self._build_preview: Callable[[], Preview[T, S]]
+        self._mutator_adders: list[Callable[[PromptData[T, S], Preview[T, S]], None]] = []
         self._event: Hotkey | Situation | None = event
         self._window_size: int | RelativeWindowSize = window_size
         self._window_position: Position = window_position
@@ -77,28 +88,56 @@ class PreviewMod[T, S]:
     def custom(
         self,
         name: str,
-        command: str | PreviewFunction[T, S],
+        output_generator: str | PreviewFunction[T, S],
         before_change_do: PreviewChangePreProcessor[T, S] | None = None,
         store_output: bool = True,
     ) -> None:
-        self._preview_adder = lambda prompt_data: prompt_data.previewer.add(
-            Preview[T, S](
-                name,
-                command,
-                self._window_size,
-                self._window_position,
-                self._label,
-                before_change_do,
-                line_wrap=self._line_wrap,
-                store_output=store_output,
-            ),
-            self._event,
-            conflict_resolution=self._conflict_resolution,
-            main=self._main,
+        self._build_preview = lambda: Preview[T, S](
+            name,
+            output_generator,
+            self._window_size,
+            self._window_position,
+            self._label,
+            before_change_do,
+            line_wrap=self._line_wrap,
+            store_output=store_output,
         )
 
+    def mutate_preview(
+        self,
+        name: str,
+        event: Hotkey | Situation,
+        mutator: PreviewMutator[T, S],
+        *,
+        conflict_resolution: ConflictResolution = "raise error",
+        mutate_only_when_already_focused: bool = True,
+    ) -> None:
+        """This method can be called multiple times on the same PreviewMod object to add multiple mutators"""
+
+        def add_preview_mutator(prompt_data: PromptData[T, S], preview: Preview[T, S]):
+            binding = Binding(
+                name,
+                ServerCall[T, S](
+                    lambda pd: None
+                    if pd.previewer.current_preview.id != preview.id and mutate_only_when_already_focused
+                    else preview.update(**mutator(pd)),
+                    command_type="execute-silent",
+                ),
+                *preview.preview_change_binding.actions,
+            )
+            prompt_data.action_menu.add(event, binding, conflict_resolution=conflict_resolution)
+
+        self._mutator_adders.append(add_preview_mutator)
+
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
-        self._preview_adder(prompt_data)
+        try:
+            preview = self._build_preview()
+        except AttributeError:
+            self.logger.warning("PreviewMod has no effect as its Preview has not been set")
+            return
+        prompt_data.previewer.add(preview, self._event, conflict_resolution=self._conflict_resolution, main=self._main)
+        for mutator_adder in self._mutator_adders:
+            mutator_adder(prompt_data, preview)
 
     # presets
     basic = preview_preset("basic", preview_basic)
@@ -114,12 +153,10 @@ class PreviewMod[T, S]:
         self.custom("View File", view_file)
 
     def cycle_previews(self, previews: list[Preview[T, S]], name: str = ""):
-        """If you don't need separate Preview specs for each preview, you can use cycle_functions"""
+        """If you don't need to separate Preview style specs (size, label, line wrap,…) for each preview, you can use cycle_functions"""
         if not name:
             name = f'[{"|".join(preview.name for preview in previews)}]'
-        self._preview_adder = lambda prompt_data: prompt_data.previewer.add(
-            CyclicalPreview(name, previews), self._event, conflict_resolution=self._conflict_resolution, main=self._main
-        )
+        self._build_preview = lambda: CyclicalPreview(name, previews)
 
     def cycle_functions(self, preview_functions: dict[str, PreviewFunction[T, S]], name: str = ""):
         cyclical_preview_function = CyclicalPreviewFunction(preview_functions)
