@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
 from ..action_menu import Binding, ParametrizedAction, ShellCommand, Transformation
-from ..options import Position, RelativeWindowSize
+from ..options import WindowPosition, RelativeWindowSize
 from ..server import CommandOutput, ServerCall, ServerCallFunctionGeneric
 
 type PreviewFunction[T, S] = ServerCallFunctionGeneric[T, S, str]
@@ -20,7 +20,7 @@ class Preview[T, S]:
         name: str,
         output_generator: str | PreviewFunction[T, S],
         window_size: int | RelativeWindowSize = "50%",
-        window_position: Position = "right",
+        window_position: WindowPosition = "right",
         label: str = "",
         before_change_do: PreviewChangePreProcessor[T, S] | None = None,
         *,
@@ -31,7 +31,7 @@ class Preview[T, S]:
         self.id = f"{name} ({id(self)})"
         self.output_generator = output_generator
         self.window_size: int | RelativeWindowSize = window_size
-        self.window_position: Position = window_position
+        self.window_position: WindowPosition = window_position
         self.label = label
         self.line_wrap = line_wrap
         self.store_output = store_output
@@ -78,7 +78,7 @@ class PreviewMutationArgs[T, S](TypedDict, total=False):
     name: str
     output_generator: str | PreviewFunction[T, S]
     window_size: int | RelativeWindowSize
-    window_position: Position
+    window_position: WindowPosition
     label: str
     line_wrap: bool
     store_output: bool
@@ -134,7 +134,7 @@ class ShowAndStorePreviewOutput(ServerCall, LoggedComponent):
 
 class ChangePreviewWindow(ParametrizedAction):
     def __init__(
-        self, window_size: int | RelativeWindowSize, window_position: Position, *, line_wrap: bool = True
+        self, window_size: int | RelativeWindowSize, window_position: WindowPosition, *, line_wrap: bool = True
     ) -> None:
         """Window size: int - absolute, str - relative and should be in '<int>%' format"""
         self.window_size = window_size

@@ -15,7 +15,7 @@ from ..FzfPrompt import (
     ServerCall,
 )
 from ..FzfPrompt.action_menu.transformation import Transformation
-from ..FzfPrompt.options import Hotkey, Position, RelativeWindowSize, Situation
+from ..FzfPrompt.options import Hotkey, WindowPosition, RelativeWindowSize, Situation
 from ..FzfPrompt.shell import shell_command
 from ..monitoring import LoggedComponent
 
@@ -67,7 +67,7 @@ class PreviewMod[T, S](LoggedComponent):
         self,
         event: Hotkey | Situation | None = None,
         window_size: int | RelativeWindowSize = "50%",
-        window_position: Position = "right",
+        window_position: WindowPosition = "right",
         label: str = "",
         *,
         line_wrap: bool = True,
@@ -79,7 +79,7 @@ class PreviewMod[T, S](LoggedComponent):
         self._mutator_adders: list[Callable[[PromptData[T, S], Preview[T, S]], None]] = []
         self._event: Hotkey | Situation | None = event
         self._window_size: int | RelativeWindowSize = window_size
-        self._window_position: Position = window_position
+        self._window_position: WindowPosition = window_position
         self._label = label
         self._line_wrap = line_wrap
         self._conflict_resolution: ConflictResolution = conflict_resolution

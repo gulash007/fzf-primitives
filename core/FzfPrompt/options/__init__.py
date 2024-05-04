@@ -1,7 +1,7 @@
 from .actions import BaseAction, ParametrizedActionType, ShellCommandActionType
 from .events import Hotkey, Situation
 from .Options import Options
-from .values import Border, EndStatus, Layout, Position, RelativeWindowSize
+from .values import Border, EndStatus, Layout, WindowPosition, RelativeWindowSize
 
 __all__ = [
     "Options",
@@ -11,7 +11,7 @@ __all__ = [
     "Hotkey",
     "Situation",
     "EndStatus",
-    "Position",
+    "WindowPosition",
     "RelativeWindowSize",
     "Layout",
     "Border",

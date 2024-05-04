@@ -27,7 +27,7 @@ Border = Literal[
     "right",
     "none",
 ]
-Position = Literal[
+WindowPosition = Literal[
     "up",
     "down",
     "left",

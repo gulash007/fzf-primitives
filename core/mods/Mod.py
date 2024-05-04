@@ -5,7 +5,7 @@ import functools
 from typing import Callable, Self, overload
 
 from ..FzfPrompt import Action, ConflictResolution, PromptData
-from ..FzfPrompt.options import Hotkey, Options, Position, RelativeWindowSize, Situation
+from ..FzfPrompt.options import Hotkey, Options, WindowPosition, RelativeWindowSize, Situation
 from ..monitoring import LoggedComponent
 from .EventAdder import HotkeyAdder, SituationAdder
 from .on_event import OnEvent
@@ -71,7 +71,7 @@ class Mod[T, S](LoggedComponent):
         self,
         event: Hotkey | Situation | None = None,
         window_size: int | RelativeWindowSize = "50%",
-        window_position: Position = "right",
+        window_position: WindowPosition = "right",
         label: str = "",
         *,
         line_wrap: bool = True,
