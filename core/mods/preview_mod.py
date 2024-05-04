@@ -97,17 +97,6 @@ class PreviewMod[T, S]:
             main=self._main,
         )
 
-    def simple(self, command: str, name: str = ""):
-        """As if just passing --preview 'command' option (and --bind '<hotkey>:change-preview(...))') to fzf with no additional support"""
-
-        def add_simple_preview(prompt_data: PromptData[T, S]):
-            prompt_data.options.preview(command)
-            if self._event:
-                prompt_data.options.bind_shell_command(self._event, command, "change-preview")
-                prompt_data.options.add_header(f"{self._event}\t{name or command[:20]}")
-
-        self._preview_adder = add_simple_preview
-
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         self._preview_adder(prompt_data)
 
