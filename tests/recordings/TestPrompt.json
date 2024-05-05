@@ -6,7 +6,7 @@
       "thread": "Server",
       "function": "change_current_preview",
       "extra": {
-        "preview": "basic"
+        "preview": "fzf json"
       }
     },
     {
@@ -14,7 +14,7 @@
       "thread": "Server",
       "function": "run",
       "extra": {
-        "preview": "basic"
+        "preview": "fzf json"
       }
     },
     {
@@ -22,7 +22,7 @@
       "thread": "Server",
       "function": "run",
       "extra": {
-        "preview": "basic"
+        "preview": "fzf json"
       }
     },
     {
@@ -30,7 +30,7 @@
       "thread": "Server",
       "function": "run",
       "extra": {
-        "preview": "basic"
+        "preview": "fzf json"
       }
     },
     {
@@ -38,7 +38,7 @@
       "thread": "Server",
       "function": "run",
       "extra": {
-        "preview": "basic"
+        "preview": "fzf json"
       }
     },
     {
@@ -46,7 +46,7 @@
       "thread": "Server",
       "function": "change_current_preview",
       "extra": {
-        "preview": "basic"
+        "preview": "fzf json"
       }
     },
     {
@@ -54,7 +54,7 @@
       "thread": "Server",
       "function": "run",
       "extra": {
-        "preview": "basic"
+        "preview": "fzf json"
       }
     },
     {

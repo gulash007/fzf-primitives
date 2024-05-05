@@ -24,6 +24,13 @@ def preview_basic(prompt_data: PromptData):
     return str(prompt_data.current_state)
 
 
+def get_fzf_json(prompt_data: PromptData, FZF_PORT: str):
+    import requests
+    import json
+
+    return json.dumps(requests.get(f"http://127.0.0.1:{FZF_PORT}").json(), indent=2)
+
+
 class FileViewer:
     def __init__(self, language: str = "python", theme: str = "Solarized (light)", *, plain: bool = True):
         self.language = language
@@ -150,6 +157,7 @@ class PreviewMod[T, S](LoggedComponent):
 
     # presets
     basic = preview_preset("basic", preview_basic)
+    fzf_json = preview_preset("fzf json", get_fzf_json)
 
     def file(self, language: str = "python", theme: str = "Solarized (light)", plain: bool = True):
         """Parametrized preset for viewing files"""

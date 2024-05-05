@@ -88,6 +88,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
     # TODO: catch 130 in mods.exit_round_on_no_selection (rename it appropriately)
     try:
         options = prompt_data.resolve_options()
+        options.listen()  # TODO: For getting fzf JSON (contain this somewhere)
         logger.debug(f"Running fzf with options:\n{options.pretty()}")
         subprocess.run(
             [executable_path, *shlex.split(str(options))],
