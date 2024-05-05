@@ -15,7 +15,7 @@ from ..FzfPrompt import (
     ServerCall,
 )
 from ..FzfPrompt.action_menu.transformation import Transformation
-from ..FzfPrompt.options import Hotkey, WindowPosition, RelativeWindowSize, Situation
+from ..FzfPrompt.options import Hotkey, RelativeWindowSize, Situation, WindowPosition
 from ..FzfPrompt.shell import shell_command
 from ..monitoring import LoggedComponent
 
@@ -111,19 +111,28 @@ class PreviewMod[T, S](LoggedComponent):
         *,
         conflict_resolution: ConflictResolution = "raise error",
         mutate_only_when_already_focused: bool = True,
+        focus_preview: bool = True,
     ) -> None:
         """This method can be called multiple times on the same PreviewMod object to add multiple mutators"""
 
         def add_preview_mutator(prompt_data: PromptData[T, S], preview: Preview[T, S]):
             binding = Binding(
                 name,
-                ServerCall[T, S](
-                    lambda pd: None
-                    if pd.previewer.current_preview.id != preview.id and mutate_only_when_already_focused
-                    else preview.update(**mutator(pd)),
-                    command_type="execute-silent",
+                Transformation(
+                    lambda pd: (
+                        ServerCall[T, S](
+                            lambda pd: preview.update(**mutator(pd))
+                            if pd.previewer.current_preview.id == preview.id or not mutate_only_when_already_focused
+                            else None,
+                            command_type="execute-silent",
+                        ),
+                        *(
+                            preview.preview_change_binding.actions
+                            if focus_preview or preview.id == pd.previewer.current_preview.id
+                            else ()
+                        ),
+                    )
                 ),
-                *preview.preview_change_binding.actions,
             )
             prompt_data.add_binding(event, binding, conflict_resolution=conflict_resolution)
 
