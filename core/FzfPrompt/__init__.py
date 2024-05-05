@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 from ..monitoring import Logger
 from .action_menu.binding import Binding, BindingConflict, ConflictResolution
 from .action_menu.parametrized_actions import Action, ShellCommand
-from .action_menu.transformation import Transformation, TransformationFunction
+from .action_menu.transform import Transform, TransformFunction
 from .exceptions import Quitting
 from .previewer import Preview, PreviewChangePreProcessor, PreviewFunction, PreviewMutationArgs, PreviewMutator
 from .prompt_data import ChoicesGetter, PromptData, ReloadChoices, Result
@@ -49,8 +49,8 @@ __all__ = [
     "PreviewChangePreProcessor",
     "PreviewMutator",
     "PreviewMutationArgs",
-    "Transformation",
-    "TransformationFunction",
+    "Transform",
+    "TransformFunction",
 ]
 
 # Black magic layer

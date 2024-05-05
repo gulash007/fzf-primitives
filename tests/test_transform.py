@@ -1,12 +1,12 @@
 from .. import Prompt, PromptData
 from ..config import Config
-from ..core.FzfPrompt import Transformation
+from ..core.FzfPrompt import Transform
 from ..core.FzfPrompt.previewer import Preview
 
 
-def test_basic_transformation():
+def test_basic_transform():
     prompt = Prompt([1, 2, 3])
-    prompt.mod.on_hotkey("ctrl-a").run("test", Transformation(lambda pd: ["select-all"]))
+    prompt.mod.on_hotkey("ctrl-a").run("test", Transform(lambda pd: ["select-all"]))
     prompt.mod.automate("ctrl-a")
     prompt.mod.automate(Config.default_accept_hotkey)
     prompt.mod.options.multiselect
@@ -18,12 +18,12 @@ def test_basic_transformation():
 TEST_PREVIEW = Preview("test", lambda prompt_data: "test", window_size="20%", window_position="up")
 
 
-def test_transformation_with_server_calls():
+def test_transform_with_server_calls():
     def get_preview_change_actions(prompt_data: PromptData):
         return TEST_PREVIEW.preview_change_binding.actions
 
     prompt = Prompt()
-    prompt.mod.on_hotkey("ctrl-n").run("test", Transformation(get_preview_change_actions))
+    prompt.mod.on_hotkey("ctrl-n").run("test", Transform(get_preview_change_actions))
     prompt.mod.automate("ctrl-n")
     prompt.mod.automate(Config.default_accept_hotkey)
 

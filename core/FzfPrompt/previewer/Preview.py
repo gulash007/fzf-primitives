@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, TypedDict, Unpack
 
 if TYPE_CHECKING:
     from ..prompt_data import PromptData
-from ..action_menu import Binding, ShellCommand, Transformation
+from ..action_menu import Binding, ShellCommand, Transform
 from ..options import RelativeWindowSize, WindowPosition
 from ..server import ServerCallFunctionGeneric
 from .actions import (
@@ -44,7 +44,7 @@ class Preview[T, S]:
         self._output: str | None = None
 
         set_current_preview = SetAsCurrentPreview(self, before_change_do)
-        self.transform_preview = Transformation[T, S](
+        self.transform_preview = Transform[T, S](
             # ❗ It's crucial that window change happens before creating output
             lambda pd: (
                 set_current_preview,

@@ -14,7 +14,7 @@ from ..FzfPrompt import (
     PromptData,
     ServerCall,
 )
-from ..FzfPrompt.action_menu.transformation import Transformation
+from ..FzfPrompt.action_menu.transform import Transform
 from ..FzfPrompt.options import Hotkey, RelativeWindowSize, Situation, WindowPosition
 from ..FzfPrompt.shell import shell_command
 from ..monitoring import LoggedComponent
@@ -125,7 +125,7 @@ class PreviewMod[T, S](LoggedComponent):
         def add_preview_mutator(prompt_data: PromptData[T, S], preview: Preview[T, S]):
             binding = Binding(
                 name,
-                Transformation(
+                Transform(
                     lambda pd: (
                         ServerCall[T, S](
                             lambda pd: preview.update(**mutator(pd))
@@ -182,14 +182,14 @@ class PreviewMod[T, S](LoggedComponent):
         self.custom(name, cyclical_preview_function, cyclical_preview_function.next)
 
 
-# HACK: ❗This object pretends to be a preview but when transformation is invoked it injects its previews cyclically
+# HACK: ❗This object pretends to be a preview but when transform is invoked it injects its previews cyclically
 # into Previewer as current previews (it's never itself a current preview).
 class CyclicalPreview[T, S](Preview[T, S], LoggedComponent):
     def __init__(self, name: str, previews: list[Preview[T, S]], event: Hotkey | Situation | None = None):
         LoggedComponent.__init__(self)
         super().__init__(name, "")
         self._previews = itertools.cycle(previews)
-        self.preview_change_binding = Binding(name, Transformation(self.next))
+        self.preview_change_binding = Binding(name, Transform(self.next))
         self._current_preview = next(self._previews)
 
     def next(self, prompt_data: PromptData[T, S]):
