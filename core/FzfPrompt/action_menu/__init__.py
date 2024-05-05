@@ -1,7 +1,7 @@
 from .ActionMenu import ActionMenu
 from .binding import Binding, BindingConflict, ConflictResolution
 from .parametrized_actions import Action, ParametrizedAction, ShellCommand
-from .transformation import Transformation
+from .transformation import Transformation, TransformationFunction
 
 __all__ = [
     "ActionMenu",
@@ -12,4 +12,5 @@ __all__ = [
     "ParametrizedAction",
     "ShellCommand",
     "Transformation",
+    "TransformationFunction",
 ]

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum, auto
 
 import pyperclip
@@ -7,8 +8,9 @@ import pyperclip
 from .. import Prompt
 from ..config import Config
 from ..core.FzfPrompt import PreviewMutationArgs, PromptData
-from ..core.mods.multi_dimensional_generator import MultiDimensionalGenerator
 from ..core.FzfPrompt.exceptions import Quitting
+from ..core.FzfPrompt.previewer.Preview import ChangePreviewLabel
+from ..core.mods.multi_dimensional_generator import MultiDimensionalGenerator
 from ..core.monitoring import Logger
 from ..core.monitoring.constants import INTERNAL_LOG_DIR
 from .Recording import Recording
@@ -53,6 +55,7 @@ def prompt_builder():
     prompt.mod.on_hotkey().CTRL_C.clip_current_preview.accept
     prompt.mod.on_hotkey().CTRL_O.clip_options
     prompt.mod.on_hotkey().CTRL_N.run_function("wait", wait_for_input)
+    prompt.mod.on_hotkey().CTRL_ALT_N.run_transformation("wait", lambda pd: [ChangePreviewLabel(str(datetime.now()))])
     prompt.mod.on_hotkey().CTRL_L.view_logs_in_terminal(LOG_FILE_PATH)
     # prompt.mod.on_hotkey().CTRL_X.run_function("wait", bad_server_call_function) # uncomment to reveal error
     prompt.mod.preview("ctrl-y", label="fzf JSON").fzf_json
