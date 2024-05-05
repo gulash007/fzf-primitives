@@ -38,21 +38,18 @@ class Preview[T, S]:
         self._output: str | None = None
 
         set_current_preview = SetAsCurrentPreview(self, before_change_do)
-        self.preview_change_binding = Binding(
-            f"Change preview to {name}",
-            Transformation(
-                # ❗ It's crucial that window change happens before creating output
-                lambda pd: Binding(
-                    "",
-                    set_current_preview,
-                    ChangePreviewWindow(self.window_size, self.window_position, line_wrap=self.line_wrap),
-                    get_preview_shell_command(self.output_generator, self)
-                    if isinstance(self.output_generator, str)
-                    else PreviewServerCall(self.output_generator, self),
-                    ChangePreviewLabel(self.label),
-                ).actions
-            ),
+        self.transform_preview = Transformation[T, S](
+            # ❗ It's crucial that window change happens before creating output
+            lambda pd: (
+                set_current_preview,
+                ChangePreviewWindow(self.window_size, self.window_position, line_wrap=self.line_wrap),
+                get_preview_shell_command(self.output_generator, self)
+                if isinstance(self.output_generator, str)
+                else PreviewServerCall(self.output_generator, self),
+                ChangePreviewLabel(self.label),
+            )
         )
+        self.preview_change_binding = Binding(f"Change preview to {name}", self.transform_preview)
 
     def update(self, **kwargs: Unpack[PreviewMutationArgs[T, S]]):
         for key, value in kwargs.items():
