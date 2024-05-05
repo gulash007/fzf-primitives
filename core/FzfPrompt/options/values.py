@@ -133,5 +133,4 @@ RelativeWindowSize = Literal[
     "97%",
     "98%",
     "99%",
-    "100%",
 ]
