@@ -6,6 +6,7 @@ from .core.FzfPrompt.previewer.actions import (
     SetAsCurrentPreview,
     ShowAndStorePreviewOutput,
 )
+from .core.FzfPrompt.prompt_data import ReloadChoices
 from .core.FzfPrompt.server import PromptEndingAction, ServerCall
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     "Action",
     "Transformation",
     "ChangeBorderLabel",
+    "ReloadChoices",
     "ChangePreviewLabel",
     "ChangePreviewWindow",
     "SetAsCurrentPreview",
