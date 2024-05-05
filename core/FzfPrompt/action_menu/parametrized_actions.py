@@ -2,7 +2,6 @@ from ..options import BaseAction, ParametrizedActionType, ShellCommandActionType
 
 
 class ParametrizedAction:
-
     def __init__(self, action_value: str, action_type: ParametrizedActionType) -> None:
         self.action_value = action_value
         self.action_type: ParametrizedActionType = action_type
@@ -26,6 +25,11 @@ class ShellCommand(ParametrizedAction):
     @property
     def command_type(self) -> ShellCommandActionType:
         return self.action_type
+
+
+class ChangeBorderLabel(ParametrizedAction):
+    def __init__(self, label: str) -> None:
+        super().__init__(label, "change-border-label")
 
 
 # Action can just be a string if you know what you're doing (look in `man fzf` for what can be assigned to '--bind')

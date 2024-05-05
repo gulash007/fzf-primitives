@@ -1,4 +1,4 @@
-from .core.FzfPrompt.action_menu import Action, ParametrizedAction, ShellCommand, Transformation
+from .core.FzfPrompt.action_menu import Action, ChangeBorderLabel, ParametrizedAction, ShellCommand, Transformation
 from .core.FzfPrompt.options.actions import BaseAction
 from .core.FzfPrompt.previewer.actions import (
     ChangePreviewLabel,
@@ -13,6 +13,7 @@ __all__ = [
     "ShellCommand",
     "Action",
     "Transformation",
+    "ChangeBorderLabel",
     "ChangePreviewLabel",
     "ChangePreviewWindow",
     "SetAsCurrentPreview",
