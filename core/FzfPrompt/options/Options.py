@@ -89,6 +89,9 @@ class Options:
     def expect(self, *hotkeys: Hotkey) -> Self:
         return self.add(shlex.join(["--expect", f"{','.join(hotkeys)}"]))
 
+    def border(self, border: Border, label: str) -> Self:
+        return self.add(shlex.join(["--border", border, "--border-label", label]))
+
     def layout(self, layout: str) -> Self:
         return self.add(shlex.join(["--layout", layout]))
 
