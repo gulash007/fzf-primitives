@@ -5,7 +5,7 @@ from typing import Self
 
 from .actions import BaseAction, ParametrizedActionType, ShellCommandActionType
 from .events import Hotkey, Situation
-from .values import Border, EndStatus, Layout, WindowPosition, RelativeWindowSize
+from .values import Border, EndStatus, Layout, RelativeWindowSize, WindowPosition
 
 DEFAULT_OPTS = [
     "--layout=reverse",
@@ -69,7 +69,7 @@ class Options:
     def preview(self, command: str) -> Self:
         return self.add(shlex.join(["--preview", f"{command}"]))
 
-    def preview_window(self, position: WindowPosition, size: int | str, *, line_wrap: bool = True) -> Self:
+    def preview_window(self, position: WindowPosition, size: int | RelativeWindowSize, *, line_wrap: bool = True) -> Self:
         return self.add(shlex.join(["--preview-window", f"{position},{size}:{'wrap' if line_wrap else 'nowrap'}"]))
 
     def preview_label(self, label: str) -> Self:
