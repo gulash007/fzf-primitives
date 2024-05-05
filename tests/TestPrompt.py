@@ -7,6 +7,7 @@ import pyperclip
 from .. import Prompt
 from ..config import Config
 from ..core.FzfPrompt import PreviewMutationArgs, PromptData
+from ..core.mods.multi_dimensional_generator import MultiDimensionalGenerator
 from ..core.FzfPrompt.exceptions import Quitting
 from ..core.monitoring import Logger
 from ..core.monitoring.constants import INTERNAL_LOG_DIR
@@ -43,28 +44,6 @@ def clip_socket_number(prompt_data, FZF_PRIMITIVES_SOCKET_NUMBER):
     pyperclip.copy(FZF_PRIMITIVES_SOCKET_NUMBER)
 
 
-class HelloWorldMutationArgsGenerator:
-    def __init__(self):
-        self._hello = True
-        self._world = True
-
-    def next_hello(self):
-        self._hello = not self._hello
-        return self.generate()
-
-    def next_world(self):
-        self._world = not self._world
-        return self.generate()
-
-    def generate(self) -> PreviewMutationArgs:
-        output_generator = f"echo {'hello' if self._hello else 'bye'} {'world' if self._world else ''}"
-        return PreviewMutationArgs(
-            window_position="right" if self._hello else "left",
-            output_generator=output_generator,
-            label="world" if self._world else "",
-        )
-
-
 def prompt_builder():
     prompt = Prompt(TEST_CHOICES, TEST_PRESENTED_CHOICES)
     prompt.mod.options.multiselect
@@ -78,15 +57,36 @@ def prompt_builder():
     # prompt.mod.on_hotkey().CTRL_X.run_function("wait", bad_server_call_function) # uncomment to reveal error
     prompt.mod.preview("ctrl-y", label="basic").basic
     # prompt.mod.preview("ctrl-6", "50%", "up", "basic 2").custom(name="'basic 2'", output_generator="echo {}", store_output=True)
+    mutation_dict = {
+        "is hello": [True, False],
+        "has world": [True, False],
+    }
+
+    def get_mutation_args(is_hello, has_world) -> PreviewMutationArgs:
+        return PreviewMutationArgs(
+            output_generator=f"echo {'Hello' if is_hello else 'Bye'}{' World' if has_world else ''}",
+            window_position="right" if is_hello else "left",
+            label="world" if has_world else "",
+        )
 
     complex_preview = prompt.mod.preview("ctrl-6")
     complex_preview.custom("Hello World", "")  # TODO: How to assign first in cycle to main preview?
-    preview_mutation_generator = HelloWorldMutationArgsGenerator()
+    preview_mutation_generator = MultiDimensionalGenerator(mutation_dict, get_mutation_args)
     complex_preview.mutate_preview(
-        "Cycle between hello right/bye left", "ctrl-x", lambda pd: preview_mutation_generator.next_hello()
+        "",
+        "start",
+        lambda pd: preview_mutation_generator.current_result(),
+        mutate_only_when_already_focused=False,
+        focus_preview=False,
     )
     complex_preview.mutate_preview(
-        "Cycle between world/no world", "ctrl-z", lambda pd: preview_mutation_generator.next_world()
+        "[Hello World] Cycle between hello right/bye left",
+        "ctrl-x",
+        lambda pd: preview_mutation_generator.next("is hello"),
+        focus_preview=True,
+    )
+    complex_preview.mutate_preview(
+        "[Hello World] Cycle between world/no world", "ctrl-z", lambda pd: preview_mutation_generator.next("has world")
     )
     return prompt
 
