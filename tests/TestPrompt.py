@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+from time import perf_counter
+
+start = perf_counter()
+
+
 from datetime import datetime
 from enum import Enum, auto
 
@@ -15,6 +20,7 @@ from ..core.monitoring import Logger
 from ..core.monitoring.constants import INTERNAL_LOG_DIR
 from .Recording import Recording
 
+print(f"Imports: {perf_counter() - start} seconds")
 # TEST ALL KINDS OF STUFF
 
 
@@ -81,7 +87,7 @@ def prompt_builder():
         lambda pd: preview_mutation_generator.current_result(),
         mutate_only_when_already_focused=False,
         focus_preview=False,
-    )
+    )  # TODO: This takes about 100 ms, better to set startup preview specs in preview creation, not as a first preview mutation
     complex_preview.mutate_preview(
         "[Hello World] Cycle between hello right/bye left",
         "ctrl-x",
@@ -91,6 +97,11 @@ def prompt_builder():
     complex_preview.mutate_preview(
         "[Hello World] Cycle between world/no world", "ctrl-z", lambda pd: preview_mutation_generator.next("has world")
     )
+
+    def measure_startup_time(prompt_data):
+        print(f"Startup time: {perf_counter() - start} seconds")
+
+    prompt.mod.on_situation(on_conflict="append").START.run_function("measure startup time", measure_startup_time)
     return prompt
 
 
