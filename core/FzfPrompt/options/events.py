@@ -13,6 +13,8 @@ Situation = Literal[
     "one",
     "zero",
     "backward-eof",
+    "jump",
+    "jump-cancel"
 ]
 
 # TODO: Add more available keys

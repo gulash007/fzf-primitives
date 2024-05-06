@@ -56,6 +56,16 @@ class SituationAdder[M: OnEvent]:
         """Triggered when the query string is already empty and you try to delete it backward"""
         return self._set_and_return_mod("backward-eof")
 
+    @property
+    def JUMP(self) -> M:
+        """Triggered when successfully jumped to the target item in jump mode"""
+        return self._set_and_return_mod("backward-eof")
+
+    @property
+    def JUMP_CANCEL(self) -> M:
+        """Triggered when jump mode is cancelled"""
+        return self._set_and_return_mod("backward-eof")
+
 
 class HotkeyAdder[M: OnEvent]:
     def __init__(self, mod_adder: Callable[[Hotkey], M]):

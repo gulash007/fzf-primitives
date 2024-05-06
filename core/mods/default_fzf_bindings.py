@@ -13,6 +13,8 @@ FZF_EVENTS: dict[Situation, str] = {
     "one": "Triggered when there's only one match",
     "zero": "Triggered when there's no match",
     "backward-eof": "Triggered when the query string is already empty and you try to delete it backward",
+    "jump": "Triggered when successfully jumped to the target item in jump mode",
+    "jump-cancel": "Triggered when jump mode is cancelled",
 }
 
 DEFAULT_FZF_BINDINGS: dict[Hotkey, BaseAction | None] = {
