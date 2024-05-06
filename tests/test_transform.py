@@ -15,7 +15,7 @@ def test_basic_transform():
     assert list(result) == [1, 2, 3]
 
 
-TEST_PREVIEW = Preview("test", lambda prompt_data: "test", window_size="20%", window_position="up")
+TEST_PREVIEW = Preview("test", output_generator=lambda prompt_data: "test", window_size="20%", window_position="up")
 
 
 def test_transform_with_server_calls():

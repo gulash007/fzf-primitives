@@ -17,37 +17,51 @@ from .actions import (
 
 type PreviewFunction[T, S] = ServerCallFunctionGeneric[T, S, str]
 type PreviewChangePreProcessor[T, S] = Callable[[PromptData[T, S], Preview[T, S]], Any]
+type PreviewMutator[T, S] = Callable[[PromptData[T, S]], PreviewMutationArgs[T, S]]
+
+
+# TODO: Add defaults to Config?
+class PreviewStyleMutationArgs(TypedDict, total=False):
+    window_size: int | RelativeWindowSize
+    window_position: WindowPosition
+    label: str
+    line_wrap: bool
+
+
+class PreviewMutationArgs[T, S](PreviewStyleMutationArgs, total=False):
+    output_generator: str | PreviewFunction[T, S]
+    before_change_do: PreviewChangePreProcessor[T, S]
+    store_output: bool
+
+
+DEFAULT_OUTPUT_GENERATOR = ""
+DEFAULT_WINDOW_SIZE = "50%"
+DEFAULT_WINDOW_POSITION = "right"
+DEFAULT_LABEL = ""
+DEFAULT_LINE_WRAP = True
+DEFAULT_BEFORE_CHANGE_DO = lambda pd, preview: None
+DEFAULT_STORE_OUTPUT = True
 
 
 class Preview[T, S]:
     # TODO: line wrap
-    def __init__(
-        self,
-        name: str,
-        output_generator: str | PreviewFunction[T, S],
-        window_size: int | RelativeWindowSize = "50%",
-        window_position: WindowPosition = "right",
-        label: str = "",
-        before_change_do: PreviewChangePreProcessor[T, S] | None = None,
-        *,
-        line_wrap: bool = True,
-        store_output: bool = True,
-    ):
+    def __init__(self, name: str, **kwargs: Unpack[PreviewMutationArgs[T, S]]):
         self.name = name
         self.id = f"{name} ({id(self)})"
-        self.output_generator = output_generator
-        self.window_size: int | RelativeWindowSize = window_size
-        self.window_position: WindowPosition = window_position
-        self.label = label
-        self.line_wrap = line_wrap
-        self.store_output = store_output
+        self.output_generator = kwargs.get("output_generator", DEFAULT_OUTPUT_GENERATOR)
+        self.window_size: int | RelativeWindowSize = kwargs.get("window_size", DEFAULT_WINDOW_SIZE)
+        self.window_position: WindowPosition = kwargs.get("window_position", DEFAULT_WINDOW_POSITION)
+        self.label = kwargs.get("label", DEFAULT_LABEL)
+        self.line_wrap = kwargs.get("line_wrap", DEFAULT_LINE_WRAP)
+        self.before_change_do = kwargs.get("before_change_do", DEFAULT_BEFORE_CHANGE_DO)
+        self.store_output = kwargs.get("store_output", DEFAULT_STORE_OUTPUT)
         self._output: str | None = None
 
-        set_current_preview = SetAsCurrentPreview(self, before_change_do)
+        # Using a Transform so that mutations of Preview are expressed when switching to it using just its basic binding
         self.transform_preview = Transform[T, S](
             # ❗ It's crucial that window change happens before creating output
             lambda pd: (
-                set_current_preview,
+                SetAsCurrentPreview(self, self.before_change_do),
                 ChangePreviewWindow(self.window_size, self.window_position, line_wrap=self.line_wrap),
                 get_preview_shell_command(self.output_generator, self)
                 if isinstance(self.output_generator, str)
@@ -72,19 +86,6 @@ class Preview[T, S]:
     @output.setter
     def output(self, value: str):
         self._output = value
-
-
-type PreviewMutator[T, S] = Callable[[PromptData[T, S]], PreviewMutationArgs[T, S]]
-
-
-class PreviewMutationArgs[T, S](TypedDict, total=False):
-    name: str
-    output_generator: str | PreviewFunction[T, S]
-    window_size: int | RelativeWindowSize
-    window_position: WindowPosition
-    label: str
-    line_wrap: bool
-    store_output: bool
 
 
 def get_preview_shell_command(command: str, preview: Preview):

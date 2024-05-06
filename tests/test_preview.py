@@ -1,7 +1,8 @@
 from typing import Any
 
-from .. import Preview, Prompt, PromptData
+from .. import Prompt, PromptData
 from ..config import Config
+from ..core.FzfPrompt.previewer import Preview
 from ..core.FzfPrompt.server import CommandOutput
 from ..core.mods.preview_mod import FileViewer
 from ..core.monitoring import Logger
@@ -102,8 +103,8 @@ def get_cycle_previews_prompt():
     prompt.mod.preview("ctrl-x").custom("third", record_preview_name("third"))
     prompt.mod.preview("ctrl-y").cycle_previews(
         [
-            Preview("first", record_preview_name("first")),
-            Preview("second", record_preview_name("second"), window_size="10%", window_position="up"),
+            Preview("first", output_generator=record_preview_name("first")),
+            Preview("second", output_generator=record_preview_name("second"), window_size="10%", window_position="up"),
         ]
     )
     return prompt

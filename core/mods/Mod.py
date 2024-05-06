@@ -68,23 +68,11 @@ class Mod[T, S](LoggedComponent):
     def preview(
         self,
         event: Hotkey | Situation | None = None,
-        window_size: int | RelativeWindowSize = "50%",
-        window_position: WindowPosition = "right",
-        label: str = "",
         *,
-        line_wrap: bool = True,
         on_conflict: ConflictResolution = "raise error",
         main: bool = False,
     ):
-        preview_mod = PreviewMod[T, S](
-            event,
-            window_size,
-            window_position,
-            label,
-            line_wrap=line_wrap,
-            on_conflict=on_conflict,
-            main=main,
-        )
+        preview_mod = PreviewMod[T, S](event, on_conflict=on_conflict, main=main)
         self._mods.append(preview_mod)
         return preview_mod
 

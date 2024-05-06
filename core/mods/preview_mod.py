@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Unpack
 
 from ..FzfPrompt import (
     Binding,
@@ -10,12 +10,23 @@ from ..FzfPrompt import (
     Preview,
     PreviewChangePreProcessor,
     PreviewFunction,
+    PreviewMutationArgs,
     PreviewMutator,
+    PreviewStyleMutationArgs,
     PromptData,
     ServerCall,
 )
 from ..FzfPrompt.action_menu.transform import Transform
 from ..FzfPrompt.options import Hotkey, RelativeWindowSize, Situation, WindowPosition
+from ..FzfPrompt.previewer.Preview import (
+    DEFAULT_BEFORE_CHANGE_DO,
+    DEFAULT_LABEL,
+    DEFAULT_LINE_WRAP,
+    DEFAULT_OUTPUT_GENERATOR,
+    DEFAULT_STORE_OUTPUT,
+    DEFAULT_WINDOW_POSITION,
+    DEFAULT_WINDOW_SIZE,
+)
 from ..FzfPrompt.shell import shell_command
 from ..monitoring import LoggedComponent
 
@@ -25,8 +36,9 @@ def preview_basic(prompt_data: PromptData):
 
 
 def get_fzf_json(prompt_data: PromptData, FZF_PORT: str):
-    import requests
     import json
+
+    import requests
 
     return json.dumps(requests.get(f"http://127.0.0.1:{FZF_PORT}").json(), indent=2)
 
@@ -53,31 +65,19 @@ class FileViewer:
 
 
 class preview_preset:
-    def __init__(
-        self,
-        name: str,
-        output_generator: str | PreviewFunction,
-        before_change_do: PreviewChangePreProcessor | None = None,
-        store_output: bool = True,
-    ) -> None:
+    def __init__(self, name: str, **kwargs: Unpack[PreviewMutationArgs]) -> None:
         self._name = name
-        self._output_generator = output_generator
-        self._before_change_do = before_change_do
-        self._store_output = store_output
+        self._kwargs = kwargs
 
     def __get__(self, obj: PreviewMod, objtype=None):
-        return obj.custom(self._name, self._output_generator, self._before_change_do, self._store_output)
+        return obj.custom(self._name, **self._kwargs)
 
 
 class PreviewMod[T, S](LoggedComponent):
     def __init__(
         self,
         event: Hotkey | Situation | None = None,
-        window_size: int | RelativeWindowSize = "50%",
-        window_position: WindowPosition = "right",
-        label: str = "",
         *,
-        line_wrap: bool = True,
         on_conflict: ConflictResolution = "raise error",
         main: bool = False,
     ):
@@ -85,28 +85,29 @@ class PreviewMod[T, S](LoggedComponent):
         self._build_preview: Callable[[], Preview[T, S]]
         self._mutator_adders: list[Callable[[PromptData[T, S], Preview[T, S]], None]] = []
         self._event: Hotkey | Situation | None = event
-        self._window_size: int | RelativeWindowSize = window_size
-        self._window_position: WindowPosition = window_position
-        self._label = label
-        self._line_wrap = line_wrap
         self._on_conflict: ConflictResolution = on_conflict
         self._main = main
 
     def custom(
         self,
         name: str,
-        output_generator: str | PreviewFunction[T, S],
-        before_change_do: PreviewChangePreProcessor[T, S] | None = None,
-        store_output: bool = True,
+        output_generator: str | PreviewFunction[T, S] = DEFAULT_OUTPUT_GENERATOR,
+        window_size: int | RelativeWindowSize = DEFAULT_WINDOW_SIZE,
+        window_position: WindowPosition = DEFAULT_WINDOW_POSITION,
+        label: str = DEFAULT_LABEL,
+        *,
+        line_wrap: bool = DEFAULT_LINE_WRAP,
+        before_change_do: PreviewChangePreProcessor[T, S] = DEFAULT_BEFORE_CHANGE_DO,
+        store_output: bool = DEFAULT_STORE_OUTPUT,
     ) -> None:
         self._build_preview = lambda: Preview[T, S](
             name,
-            output_generator,
-            self._window_size,
-            self._window_position,
-            self._label,
-            before_change_do,
-            line_wrap=self._line_wrap,
+            output_generator=output_generator,
+            window_size=window_size,
+            window_position=window_position,
+            label=label,
+            line_wrap=line_wrap,
+            before_change_do=before_change_do,
             store_output=store_output,
         )
 
@@ -156,8 +157,8 @@ class PreviewMod[T, S](LoggedComponent):
             mutator_adder(prompt_data, preview)
 
     # presets
-    basic = preview_preset("basic", preview_basic)
-    fzf_json = preview_preset("fzf json", get_fzf_json)
+    basic = preview_preset("basic", output_generator=preview_basic, label="PromptData.current_state")
+    fzf_json = preview_preset("fzf json", output_generator=get_fzf_json, label="fzf JSON")
 
     def file(self, language: str = "python", theme: str = "Solarized (light)", plain: bool = True):
         """Parametrized preset for viewing files"""
@@ -169,17 +170,23 @@ class PreviewMod[T, S](LoggedComponent):
 
         self.custom("View File", view_file)
 
+    # TODO: previews: dict[name, mutation args]
     def cycle_previews(self, previews: list[Preview[T, S]], name: str = ""):
         """If you don't need to separate Preview style specs (size, label, line wrap,…) for each preview, you can use cycle_functions"""
         if not name:
             name = f'[{"|".join(preview.name for preview in previews)}]'
         self._build_preview = lambda: CyclicalPreview(name, previews)
 
-    def cycle_functions(self, preview_functions: dict[str, PreviewFunction[T, S]], name: str = ""):
+    def cycle_functions(
+        self,
+        preview_functions: dict[str, PreviewFunction[T, S]],
+        name: str = "",
+        **style_args: Unpack[PreviewStyleMutationArgs],
+    ):
         cyclical_preview_function = CyclicalPreviewFunction(preview_functions)
         if not name:
             name = f'[{"|".join(preview_functions.keys())}]'
-        self.custom(name, cyclical_preview_function, cyclical_preview_function.next)
+        self.custom(name, cyclical_preview_function, before_change_do=cyclical_preview_function.next, **style_args)
 
 
 # HACK: ❗This object pretends to be a preview but when transform is invoked it injects its previews cyclically
@@ -187,7 +194,7 @@ class PreviewMod[T, S](LoggedComponent):
 class CyclicalPreview[T, S](Preview[T, S], LoggedComponent):
     def __init__(self, name: str, previews: list[Preview[T, S]], event: Hotkey | Situation | None = None):
         LoggedComponent.__init__(self)
-        super().__init__(name, "")
+        super().__init__(name)
         self._previews = itertools.cycle(previews)
         self.preview_change_binding = Binding(name, Transform(self.next))
         self._current_preview = next(self._previews)

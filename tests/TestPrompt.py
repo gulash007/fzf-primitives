@@ -64,7 +64,7 @@ def prompt_builder():
     prompt.mod.on_hotkey().CTRL_ALT_N.run_transform("wait", lambda pd: [ChangePreviewLabel(str(datetime.now()))])
     prompt.mod.on_hotkey().CTRL_L.view_logs_in_terminal(LOG_FILE_PATH)
     # prompt.mod.on_hotkey().CTRL_X.run_function("wait", bad_server_call_function) # uncomment to reveal error
-    prompt.mod.preview("ctrl-y", label="fzf JSON").fzf_json
+    prompt.mod.preview("ctrl-y").fzf_json
     # prompt.mod.preview("ctrl-6", "50%", "up", "basic 2").custom(name="'basic 2'", output_generator="echo {}", store_output=True)
     mutation_dict = {
         "is hello": [True, False],
@@ -79,15 +79,8 @@ def prompt_builder():
         )
 
     complex_preview = prompt.mod.preview("ctrl-6")
-    complex_preview.custom("Hello World", "")  # TODO: How to assign first in cycle to main preview?
     preview_mutation_generator = MultiDimensionalGenerator(mutation_dict, get_mutation_args)
-    complex_preview.mutate_preview(
-        "",
-        "start",
-        lambda pd: preview_mutation_generator.current_result(),
-        mutate_only_when_already_focused=False,
-        focus_preview=False,
-    )  # TODO: This takes about 100 ms, better to set startup preview specs in preview creation, not as a first preview mutation
+    complex_preview.custom("Hello World", **preview_mutation_generator.current_result())
     complex_preview.mutate_preview(
         "[Hello World] Cycle between hello right/bye left",
         "ctrl-x",
