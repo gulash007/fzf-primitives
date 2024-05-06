@@ -91,19 +91,19 @@ class PromptData[T, S](LoggedComponent):
         return self.previewer.current_preview.output
 
     def add_binding(
-        self, event: Hotkey | Situation, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
+        self, event: Hotkey | Situation, binding: Binding, *, on_conflict: ConflictResolution = "raise error"
     ):
-        self.action_menu.add(event, binding, conflict_resolution=conflict_resolution)
+        self.action_menu.add(event, binding, on_conflict=on_conflict)
 
     def add_preview(
         self,
         preview: Preview[T, S],
         event: Hotkey | Situation | None = None,
         *,
-        conflict_resolution: ConflictResolution = "raise error",
+        on_conflict: ConflictResolution = "raise error",
         main: bool = False,
     ):
-        self.previewer.add(preview, event, conflict_resolution=conflict_resolution, main=main)
+        self.previewer.add(preview, event, on_conflict=on_conflict, main=main)
 
     def add_post_processor(self, post_processor: PostProcessor):
         self.post_processors.append(post_processor)

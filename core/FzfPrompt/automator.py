@@ -51,7 +51,7 @@ class Automator(Thread, LoggedComponent):
         prompt_data.add_binding(
             "start",
             am.Binding("get prompt port number for automator", ServerCall(self._get_port_number)),
-            conflict_resolution="prepend",
+            on_conflict="prepend",
         )
         prompt_data.action_menu.add_server_call(self.move_to_next_binding_server_call)
         prompt_data.options.listen()

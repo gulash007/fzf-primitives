@@ -37,7 +37,7 @@ class Previewer[T, S](LoggedComponent):
         preview: Preview[T, S],
         event: Hotkey | Situation | None = None,
         *,
-        conflict_resolution: ConflictResolution = "raise error",
+        on_conflict: ConflictResolution = "raise error",
         main: bool = False,
     ):
         self.logger.debug(f"📺 Adding preview '{preview.name}'")
@@ -45,10 +45,10 @@ class Previewer[T, S](LoggedComponent):
             self._current_preview = preview
         self._previews[preview.id] = preview
         if event:
-            self._action_menu.add(event, preview.preview_change_binding, conflict_resolution=conflict_resolution)
+            self._action_menu.add(event, preview.preview_change_binding, on_conflict=on_conflict)
         else:
             self._action_menu.add_server_calls(preview.preview_change_binding)
 
     def resolve_main_preview(self, prompt_data: PromptData[T, S]):
         if self._current_preview:
-            self._action_menu.add("start", self._current_preview.preview_change_binding, conflict_resolution="prepend")
+            self._action_menu.add("start", self._current_preview.preview_change_binding, on_conflict="prepend")

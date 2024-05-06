@@ -50,7 +50,7 @@ def test_checking_for_event_conflicts():
     # no conflict
     ## override previous binding
     prompt.mod.on_hotkey().CTRL_Y.toggle_all.accept
-    prompt.mod.on_hotkey(conflict_resolution="override").CTRL_Y.abort
+    prompt.mod.on_hotkey(on_conflict="override").CTRL_Y.abort
     prompt.mod.on_hotkey().CTRL_Z.abort
     prompt.mod.apply()
     assert (
@@ -60,7 +60,7 @@ def test_checking_for_event_conflicts():
 
     ## append binding
     prompt.mod.on_hotkey().CTRL_R.toggle
-    prompt.mod.on_hotkey(conflict_resolution="append").CTRL_R.select_all.accept
+    prompt.mod.on_hotkey(on_conflict="append").CTRL_R.select_all.accept
     prompt.mod.on_hotkey().CTRL_S.toggle.select_all.accept
     prompt.mod.apply()
     assert (
@@ -70,7 +70,7 @@ def test_checking_for_event_conflicts():
 
     ## prepend binding
     prompt.mod.on_hotkey().CTRL_B.accept
-    prompt.mod.on_hotkey(conflict_resolution="prepend").CTRL_B.toggle_preview.toggle_all
+    prompt.mod.on_hotkey(on_conflict="prepend").CTRL_B.toggle_preview.toggle_all
     prompt.mod.on_hotkey().CTRL_N.toggle_preview.toggle_all.accept
     prompt.mod.apply()
     assert (

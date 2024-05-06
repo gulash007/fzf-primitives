@@ -46,10 +46,10 @@ FILE_EDITORS: dict[FileEditor, str] = {
 
 
 class OnEvent[T, S]:
-    def __init__(self, *events: Hotkey | Situation, conflict_resolution: ConflictResolution = "raise error"):
+    def __init__(self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error"):
         self._bindings: dict[Hotkey | Situation, Binding] = {}
         self._events: list[Hotkey | Situation] = list(events)
-        self._conflict_resolution: ConflictResolution = conflict_resolution
+        self._on_conflict: ConflictResolution = on_conflict
 
     def run(self, name: str, *actions: Action) -> Self:
         for event in self._events:
@@ -89,7 +89,7 @@ class OnEvent[T, S]:
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         for event, binding in self._bindings.items():
-            prompt_data.add_binding(event, binding, conflict_resolution=self._conflict_resolution)
+            prompt_data.add_binding(event, binding, on_conflict=self._on_conflict)
 
     # presets
     @property

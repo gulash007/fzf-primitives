@@ -78,7 +78,7 @@ class PreviewMod[T, S](LoggedComponent):
         label: str = "",
         *,
         line_wrap: bool = True,
-        conflict_resolution: ConflictResolution = "raise error",
+        on_conflict: ConflictResolution = "raise error",
         main: bool = False,
     ):
         super().__init__()
@@ -89,7 +89,7 @@ class PreviewMod[T, S](LoggedComponent):
         self._window_position: WindowPosition = window_position
         self._label = label
         self._line_wrap = line_wrap
-        self._conflict_resolution: ConflictResolution = conflict_resolution
+        self._on_conflict: ConflictResolution = on_conflict
         self._main = main
 
     def custom(
@@ -116,7 +116,7 @@ class PreviewMod[T, S](LoggedComponent):
         event: Hotkey | Situation,
         mutator: PreviewMutator[T, S],
         *,
-        conflict_resolution: ConflictResolution = "raise error",
+        on_conflict: ConflictResolution = "raise error",
         mutate_only_when_already_focused: bool = True,
         focus_preview: bool = True,
     ) -> None:
@@ -141,7 +141,7 @@ class PreviewMod[T, S](LoggedComponent):
                     )
                 ),
             )
-            prompt_data.add_binding(event, binding, conflict_resolution=conflict_resolution)
+            prompt_data.add_binding(event, binding, on_conflict=on_conflict)
 
         self._mutator_adders.append(add_preview_mutator)
 
@@ -151,7 +151,7 @@ class PreviewMod[T, S](LoggedComponent):
         except AttributeError:
             self.logger.warning("PreviewMod has no effect as its Preview has not been set")
             return
-        prompt_data.add_preview(preview, self._event, conflict_resolution=self._conflict_resolution, main=self._main)
+        prompt_data.add_preview(preview, self._event, on_conflict=self._on_conflict, main=self._main)
         for mutator_adder in self._mutator_adders:
             mutator_adder(prompt_data, preview)
 

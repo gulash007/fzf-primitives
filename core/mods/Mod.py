@@ -35,35 +35,33 @@ class Mod[T, S](LoggedComponent):
 
     @overload
     def on_hotkey(
-        self, hotkey: Hotkey, *hotkeys: Hotkey, conflict_resolution: ConflictResolution = "raise error"
+        self, hotkey: Hotkey, *hotkeys: Hotkey, on_conflict: ConflictResolution = "raise error"
     ) -> OnEvent[T, S]: ...
     @overload
-    def on_hotkey(self, *, conflict_resolution: ConflictResolution = "raise error") -> HotkeyAdder[OnEvent[T, S]]: ...
+    def on_hotkey(self, *, on_conflict: ConflictResolution = "raise error") -> HotkeyAdder[OnEvent[T, S]]: ...
 
     def on_hotkey(
-        self, *hotkeys: Hotkey, conflict_resolution: ConflictResolution = "raise error"
+        self, *hotkeys: Hotkey, on_conflict: ConflictResolution = "raise error"
     ) -> OnEvent[T, S] | HotkeyAdder[OnEvent[T, S]]:
         if hotkeys:
-            return self.on_event(*hotkeys, conflict_resolution=conflict_resolution)
-        return HotkeyAdder(functools.partial(self.on_hotkey, conflict_resolution=conflict_resolution))
+            return self.on_event(*hotkeys, on_conflict=on_conflict)
+        return HotkeyAdder(functools.partial(self.on_hotkey, on_conflict=on_conflict))
 
     @overload
     def on_situation(
-        self, situation: Situation, *situations: Situation, conflict_resolution: ConflictResolution = "raise error"
+        self, situation: Situation, *situations: Situation, on_conflict: ConflictResolution = "raise error"
     ) -> OnEvent[T, S]: ...
     @overload
+    def on_situation(self, *, on_conflict: ConflictResolution = "raise error") -> SituationAdder[OnEvent[T, S]]: ...
     def on_situation(
-        self, *, conflict_resolution: ConflictResolution = "raise error"
-    ) -> SituationAdder[OnEvent[T, S]]: ...
-    def on_situation(
-        self, *situations: Situation, conflict_resolution: ConflictResolution = "raise error"
+        self, *situations: Situation, on_conflict: ConflictResolution = "raise error"
     ) -> OnEvent[T, S] | SituationAdder[OnEvent[T, S]]:
         if situations:
-            return self.on_event(*situations, conflict_resolution=conflict_resolution)
-        return SituationAdder(functools.partial(self.on_situation, conflict_resolution=conflict_resolution))
+            return self.on_event(*situations, on_conflict=on_conflict)
+        return SituationAdder(functools.partial(self.on_situation, on_conflict=on_conflict))
 
-    def on_event(self, *events: Hotkey | Situation, conflict_resolution: ConflictResolution = "raise error"):
-        on_event_mod = OnEvent[T, S](*events, conflict_resolution=conflict_resolution)
+    def on_event(self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error"):
+        on_event_mod = OnEvent[T, S](*events, on_conflict=on_conflict)
         self._mods.append(on_event_mod)
         return on_event_mod
 
@@ -75,7 +73,7 @@ class Mod[T, S](LoggedComponent):
         label: str = "",
         *,
         line_wrap: bool = True,
-        conflict_resolution: ConflictResolution = "raise error",
+        on_conflict: ConflictResolution = "raise error",
         main: bool = False,
     ):
         preview_mod = PreviewMod[T, S](
@@ -84,7 +82,7 @@ class Mod[T, S](LoggedComponent):
             window_position,
             label,
             line_wrap=line_wrap,
-            conflict_resolution=conflict_resolution,
+            on_conflict=on_conflict,
             main=main,
         )
         self._mods.append(preview_mod)

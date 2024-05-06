@@ -22,14 +22,12 @@ class ActionMenu[T, S](LoggedComponent):
     def actions(self) -> list[Action]:
         return [action for binding in self.bindings.values() for action in binding.actions]
 
-    def add(
-        self, event: Hotkey | Situation, binding: Binding, *, conflict_resolution: ConflictResolution = "raise error"
-    ):
-        self.logger.debug(f"🔗 Adding binding for '{event}': {binding} ({conflict_resolution} on conflict)")
+    def add(self, event: Hotkey | Situation, binding: Binding, *, on_conflict: ConflictResolution = "raise error"):
+        self.logger.debug(f"🔗 Adding binding for '{event}': {binding} ({on_conflict} on conflict)")
         if event not in self.bindings:
             self.bindings[event] = binding
         else:
-            match conflict_resolution:
+            match on_conflict:
                 case "raise error":
                     raise BindingConflict(f"Event {event} already has a binding: {self.bindings[event]}")
                 case "override":
@@ -39,7 +37,7 @@ class ActionMenu[T, S](LoggedComponent):
                 case "prepend":
                     self.bindings[event] = binding + self.bindings[event]
                 case _:
-                    raise ValueError(f"Invalid conflict resolution: {conflict_resolution}")
+                    raise ValueError(f"Invalid conflict resolution: {on_conflict}")
         self.add_server_calls(binding)
 
     def add_server_calls(self, binding: Binding):
