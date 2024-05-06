@@ -67,15 +67,26 @@ class ShowAndStorePreviewOutput(ServerCall, LoggedComponent):
         return self._id
 
 
+# TODO: Add more --preview-window options
 class ChangePreviewWindow(ParametrizedAction):
     def __init__(
-        self, window_size: int | RelativeWindowSize, window_position: WindowPosition, *, line_wrap: bool = True
+        self,
+        window_size: int | RelativeWindowSize | None = None,
+        window_position: WindowPosition | None = None,
+        *,
+        line_wrap: bool | None = None,
     ) -> None:
-        """Window size: int - absolute, str - relative and should be in '<int>%' format"""
+        """window_size: int - absolute, str - relative and should be in '<int>%' format (99% max)"""
         self.window_size = window_size
         self.window_position = window_position
+        self.line_wrap = line_wrap
         super().__init__(
-            f"{self.window_size},{self.window_position}:{'wrap' if line_wrap else 'nowrap'}", "change-preview-window"
+            ",".join(
+                val
+                for val in (str(self.window_size), self.window_position, "wrap" if self.line_wrap else "nowrap")
+                if val is not None
+            ),
+            "change-preview-window",
         )
 
 
