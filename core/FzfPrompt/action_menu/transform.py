@@ -9,16 +9,16 @@ from ...monitoring import LoggedComponent
 from ..server import ServerCall
 from .binding import Binding
 
-type TransformFunction[T, S] = Callable[[PromptData[T, S]], Iterable[Action]]
+type ActionsBuilder[T, S] = Callable[[PromptData[T, S]], Iterable[Action]]
 
 
 class Transform[T, S](ServerCall[T, S], LoggedComponent):
-    def __init__(self, transform_function: TransformFunction[T, S]) -> None:
+    def __init__(self, get_actions: ActionsBuilder[T, S]) -> None:
         LoggedComponent.__init__(self)
-        name = f"Transform ({transform_function.__name__})"
+        name = f"Transform ({get_actions.__name__})"
 
         def get_transform_string(prompt_data: PromptData[T, S]) -> str:
-            binding = Binding(f"Created by {name}", *transform_function(prompt_data))
+            binding = Binding(f"Created by {name}", *get_actions(prompt_data))
             prompt_data.action_menu.add_server_calls(binding)
             action_string = binding.to_action_string()
             self.logger.debug(f"Transform: {action_string}")

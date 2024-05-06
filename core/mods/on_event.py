@@ -19,7 +19,7 @@ from ..FzfPrompt import (
     ServerCallFunction,
     ShellCommand,
     Transform,
-    TransformFunction,
+    ActionsBuilder,
 )
 from ..FzfPrompt.constants import SHELL_COMMAND
 from ..FzfPrompt.options.actions import BaseAction, ShellCommandActionType
@@ -74,8 +74,8 @@ class OnEvent[T, S]:
     ) -> Self:
         return self.run(name, ShellCommand(command, command_type=command_type), *base_actions)
 
-    def run_transform(self, name: str, transform_function: TransformFunction[T, S], *base_actions: BaseAction) -> Self:
-        return self.run(name, Transform(transform_function), *base_actions)
+    def run_transform(self, name: str, get_actions: ActionsBuilder[T, S], *base_actions: BaseAction) -> Self:
+        return self.run(name, Transform(get_actions), *base_actions)
 
     def reload_choices(self, choices_getter: ChoicesGetter[T, S], *, sync: bool = False):
         return self.run(f"reload choices{' (sync)' if sync else ''}", ReloadChoices(choices_getter, sync=sync))
