@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import functools
 import itertools
 from pathlib import Path
-from typing import Unpack, overload
+from typing import Unpack
 
 from ..FzfPrompt import (
     Binding,
@@ -30,7 +29,8 @@ from ..FzfPrompt.previewer.Preview import (
 )
 from ..FzfPrompt.shell import shell_command
 from ..monitoring import LoggedComponent
-from .EventAdder import HotkeyAdder, SituationAdder
+from .EventAdder import attach_hotkey_adder, attach_situation_adder
+from .on_event import OnEventBase
 
 
 def preview_basic(prompt_data: PromptData):
@@ -75,19 +75,14 @@ class preview_preset:
         return obj.custom(self._name, **self._kwargs)
 
 
-class PreviewMod[T, S](LoggedComponent):
+class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
     def __init__(
-        self,
-        event: Hotkey | Situation | None = None,
-        *,
-        on_conflict: ConflictResolution = "raise error",
-        main: bool = False,
+        self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error", main: bool = False
     ):
-        super().__init__()
+        super().__init__(*events, on_conflict=on_conflict)
+        LoggedComponent.__init__(self)
         self._preview: Preview[T, S]
         self._mutation_mod: PreviewMutationMod[T, S] | None = None
-        self._event: Hotkey | Situation | None = event
-        self._on_conflict: ConflictResolution = on_conflict
         self._main = main
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
@@ -96,9 +91,13 @@ class PreviewMod[T, S](LoggedComponent):
         except AttributeError:
             self.logger.warning("PreviewMod has no effect as its Preview has not been set")
             return
-        prompt_data.add_preview(preview, self._event, on_conflict=self._on_conflict, main=self._main)
+        if not self._events:
+            prompt_data.add_preview(preview, on_conflict=self._on_conflict, main=self._main)
+        else:
+            for event in self._events:
+                prompt_data.add_preview(preview, event, on_conflict=self._on_conflict, main=self._main)
         if self._mutation_mod:
-            self._mutation_mod.apply(prompt_data)
+            self._mutation_mod.__call__(prompt_data)
 
     def custom(
         self,
@@ -155,7 +154,9 @@ class PreviewMod[T, S](LoggedComponent):
         cyclical_preview_function = CyclicalPreviewFunction(preview_functions)
         if not name:
             name = f'[{"|".join(preview_functions.keys())}]'
-        return self.custom(name, cyclical_preview_function, before_change_do=cyclical_preview_function.next, **style_args)
+        return self.custom(
+            name, cyclical_preview_function, before_change_do=cyclical_preview_function.next, **style_args
+        )
 
 
 # HACK: ❗This object pretends to be a preview but when transform is invoked it injects its previews cyclically
@@ -198,46 +199,27 @@ class PreviewMutationMod[T, S]:
         self._preview = preview
         self._mods: list[PreviewMutationOnEvent] = []
 
-    def apply(self, prompt_data: PromptData[T, S]):
+    def __call__(self, prompt_data: PromptData[T, S]):
         try:
             for mod in self._mods:
-                mod(prompt_data, self._preview)
+                mod(prompt_data)
         finally:
             self.clear()
 
     def clear(self):
         self._mods = []
 
-    @overload
-    def on_hotkey(
-        self, hotkey: Hotkey, *hotkeys: Hotkey, on_conflict: ConflictResolution = "raise error"
-    ) -> PreviewMutationOnEvent[T, S]: ...
-    @overload
-    def on_hotkey(
-        self, *, on_conflict: ConflictResolution = "raise error"
-    ) -> HotkeyAdder[PreviewMutationOnEvent[T, S]]: ...
-
+    @attach_hotkey_adder
     def on_hotkey(
         self, *hotkeys: Hotkey, on_conflict: ConflictResolution = "raise error"
-    ) -> PreviewMutationOnEvent[T, S] | HotkeyAdder[PreviewMutationOnEvent[T, S]]:
-        if hotkeys:
-            return self.on_event(*hotkeys, on_conflict=on_conflict)
-        return HotkeyAdder(functools.partial(self.on_hotkey, on_conflict=on_conflict))
+    ) -> PreviewMutationOnEvent[T, S]:
+        return self.on_event(*hotkeys, on_conflict=on_conflict)
 
-    @overload
-    def on_situation(
-        self, situation: Situation, *situations: Situation, on_conflict: ConflictResolution = "raise error"
-    ) -> PreviewMutationOnEvent[T, S]: ...
-    @overload
-    def on_situation(
-        self, *, on_conflict: ConflictResolution = "raise error"
-    ) -> SituationAdder[PreviewMutationOnEvent[T, S]]: ...
+    @attach_situation_adder
     def on_situation(
         self, *situations: Situation, on_conflict: ConflictResolution = "raise error"
-    ) -> PreviewMutationOnEvent[T, S] | SituationAdder[PreviewMutationOnEvent[T, S]]:
-        if situations:
-            return self.on_event(*situations, on_conflict=on_conflict)
-        return SituationAdder(functools.partial(self.on_situation, on_conflict=on_conflict))
+    ) -> PreviewMutationOnEvent[T, S]:
+        return self.on_event(*situations, on_conflict=on_conflict)
 
     def on_event(self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error"):
         on_event_mod = PreviewMutationOnEvent[T, S](*events, preview=self._preview, on_conflict=on_conflict)
@@ -245,18 +227,15 @@ class PreviewMutationMod[T, S]:
         return on_event_mod
 
 
-class PreviewMutationOnEvent[T, S]:
+class PreviewMutationOnEvent[T, S](OnEventBase[T, S]):
     def __init__(
         self, *events: Hotkey | Situation, preview: Preview[T, S], on_conflict: ConflictResolution = "raise error"
     ):
+        super().__init__(*events, on_conflict=on_conflict)
         self._preview = preview
         self._binding = Binding("")
-        if len(events) != len(set(events)):
-            raise ValueError(f"Duplicate events for this mod: {events}")
-        self._events: list[Hotkey | Situation] = list(events)
-        self._on_conflict: ConflictResolution = on_conflict
 
-    def __call__(self, prompt_data: PromptData[T, S], preview: Preview[T, S]) -> None:
+    def __call__(self, prompt_data: PromptData[T, S]) -> None:
         for event in self._events:
             prompt_data.add_binding(event, self._binding, on_conflict=self._on_conflict)
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import subprocess
 from pathlib import Path
 from typing import Callable, Literal, Self
@@ -45,13 +46,22 @@ FILE_EDITORS: dict[FileEditor, str] = {
 }
 
 
-class OnEvent[T, S]:
+class OnEventBase[T, S](ABC):
     def __init__(self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error"):
-        self._binding = Binding("")
         if len(events) != len(set(events)):
             raise ValueError(f"Duplicate events for this mod: {events}")
         self._events: list[Hotkey | Situation] = list(events)
         self._on_conflict: ConflictResolution = on_conflict
+
+    @abstractmethod
+    def __call__(self, prompt_data: PromptData[T, S]) -> None:
+        raise NotImplementedError
+
+
+class OnEvent[T, S](OnEventBase[T, S]):
+    def __init__(self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error"):
+        super().__init__(*events, on_conflict=on_conflict)
+        self._binding = Binding("")
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         for event in self._events:
