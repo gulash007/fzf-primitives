@@ -1,9 +1,9 @@
-from .core import Prompt
-from .core.FzfPrompt import Preview, PromptData, Result
-from .core.monitoring import LoggedComponent, Logger
-from .core.mods import MultiDimensionalGenerator
-from .extra import BasicLoop
 from . import actions
+from .core import Prompt
+from .core.FzfPrompt import Preview, PreviewMutationArgs, PromptData, Result
+from .core.mods import MultiDimensionalGenerator
+from .core.monitoring import LoggedComponent, Logger
+from .extra import BasicLoop
 
 __all__ = [
     "Prompt",
@@ -12,6 +12,7 @@ __all__ = [
     "Logger",
     "PromptData",
     "Preview",
+    "PreviewMutationArgs",
     "Result",
     "actions",
     "MultiDimensionalGenerator",
