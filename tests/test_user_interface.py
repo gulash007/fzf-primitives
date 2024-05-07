@@ -5,7 +5,7 @@ from ..core.FzfPrompt import BindingConflict
 from ..core.FzfPrompt.options import Options
 from ..core.mods import Mod, OnEvent, PostProcessing, PreviewMod
 from ..core.mods.EventAdder import HotkeyAdder, SituationAdder
-from ..core.mods.preview_mod import PreviewMutationMod, PreviewMutationOnEvent
+from ..core.mods.preview_mod import SpecificPreviewMod, SpecificPreviewOnEvent
 
 
 def test_mod_return_value_types():
@@ -21,8 +21,8 @@ def test_mod_return_value_types():
 
     # test preview modding
     assert type(prompt.mod.preview()) == PreviewMod
-    assert type(prompt.mod.preview().custom("some preview", "echo hello")) == PreviewMutationMod
-    assert type(prompt.mod.preview().custom("some preview", "echo hello").on_hotkey("ctrl-c")) == PreviewMutationOnEvent
+    assert type(prompt.mod.preview().custom("some preview", "echo hello")) == SpecificPreviewMod
+    assert type(prompt.mod.preview().custom("some preview", "echo hello").on_hotkey("ctrl-c")) == SpecificPreviewOnEvent
 
     # test chaining post_processing
     assert type(prompt.mod.lastly) == PostProcessing
@@ -95,5 +95,5 @@ def test_event_adder_usage():
     preview_mutation_mod = preview_mod.custom("some preview", "echo hello")
     assert type(preview_mutation_mod.on_hotkey()) == HotkeyAdder
     assert type(preview_mutation_mod.on_situation()) == SituationAdder
-    assert type(preview_mutation_mod.on_hotkey("ctrl-c")) == PreviewMutationOnEvent
-    assert type(preview_mutation_mod.on_situation("one")) == PreviewMutationOnEvent
+    assert type(preview_mutation_mod.on_hotkey("ctrl-c")) == SpecificPreviewOnEvent
+    assert type(preview_mutation_mod.on_situation("one")) == SpecificPreviewOnEvent

@@ -82,7 +82,7 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
         super().__init__(*events, on_conflict=on_conflict)
         LoggedComponent.__init__(self)
         self._preview: Preview[T, S]
-        self._mutation_mod: PreviewMutationMod[T, S] | None = None
+        self._specific_preview_mod: SpecificPreviewMod[T, S] | None = None
         self._main = main
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
@@ -96,8 +96,8 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
         else:
             for event in self._events:
                 prompt_data.add_preview(preview, event, on_conflict=self._on_conflict, main=self._main)
-        if self._mutation_mod:
-            self._mutation_mod.__call__(prompt_data)
+        if self._specific_preview_mod:
+            self._specific_preview_mod(prompt_data)
 
     def custom(
         self,
@@ -121,8 +121,8 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
             before_change_do=before_change_do,
             store_output=store_output,
         )
-        self._mutation_mod = PreviewMutationMod(self._preview)
-        return self._mutation_mod
+        self._specific_preview_mod = SpecificPreviewMod(self._preview)
+        return self._specific_preview_mod
 
     # presets
     basic = preview_preset("basic", output_generator=preview_basic, label="PromptData.current_state")
@@ -194,10 +194,10 @@ class CyclicalPreviewFunction(LoggedComponent):
             self._current_key = next(self._keys)
 
 
-class PreviewMutationMod[T, S]:
+class SpecificPreviewMod[T, S]:
     def __init__(self, preview: Preview[T, S]):
         self._preview = preview
-        self._mods: list[PreviewMutationOnEvent] = []
+        self._mods: list[SpecificPreviewOnEvent] = []
 
     def __call__(self, prompt_data: PromptData[T, S]):
         try:
@@ -212,22 +212,22 @@ class PreviewMutationMod[T, S]:
     @attach_hotkey_adder
     def on_hotkey(
         self, *hotkeys: Hotkey, on_conflict: ConflictResolution = "raise error"
-    ) -> PreviewMutationOnEvent[T, S]:
+    ) -> SpecificPreviewOnEvent[T, S]:
         return self.on_event(*hotkeys, on_conflict=on_conflict)
 
     @attach_situation_adder
     def on_situation(
         self, *situations: Situation, on_conflict: ConflictResolution = "raise error"
-    ) -> PreviewMutationOnEvent[T, S]:
+    ) -> SpecificPreviewOnEvent[T, S]:
         return self.on_event(*situations, on_conflict=on_conflict)
 
     def on_event(self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error"):
-        on_event_mod = PreviewMutationOnEvent[T, S](*events, preview=self._preview, on_conflict=on_conflict)
+        on_event_mod = SpecificPreviewOnEvent[T, S](*events, preview=self._preview, on_conflict=on_conflict)
         self._mods.append(on_event_mod)
         return on_event_mod
 
 
-class PreviewMutationOnEvent[T, S](OnEventBase[T, S]):
+class SpecificPreviewOnEvent[T, S](OnEventBase[T, S]):
     def __init__(
         self, *events: Hotkey | Situation, preview: Preview[T, S], on_conflict: ConflictResolution = "raise error"
     ):
