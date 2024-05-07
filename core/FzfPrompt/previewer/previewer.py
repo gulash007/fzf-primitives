@@ -49,6 +49,6 @@ class Previewer[T, S](LoggedComponent):
         else:
             self._action_menu.add_server_calls(preview.preview_change_binding)
 
-    def resolve_main_preview(self, prompt_data: PromptData[T, S]):
+    def resolve_main_preview(self):
         if self._current_preview:
             self._action_menu.add("start", self._current_preview.preview_change_binding, on_conflict="prepend")

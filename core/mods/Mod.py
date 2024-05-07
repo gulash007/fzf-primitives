@@ -24,6 +24,7 @@ class Mod[T, S](LoggedComponent):
             for mod in self._mods:
                 mod(prompt_data)
             prompt_data.options += self.options
+            prompt_data.previewer.resolve_main_preview()
         finally:
             self.clear()
 
