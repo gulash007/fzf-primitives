@@ -80,3 +80,20 @@ def test_checking_for_event_conflicts():
         prompt._prompt_data.action_menu.bindings["ctrl-b"].name
         == prompt._prompt_data.action_menu.bindings["ctrl-n"].name
     )
+
+
+def test_event_adder_usage():
+    prompt = Prompt()
+
+    assert type(prompt.mod.on_hotkey()) == HotkeyAdder
+    assert type(prompt.mod.on_situation()) == SituationAdder
+    assert type(prompt.mod.on_hotkey("ctrl-c")) == OnEvent
+    assert type(prompt.mod.on_situation("one")) == OnEvent
+
+    # used in PreviewMutationMod
+    preview_mod = prompt.mod.preview()
+    preview_mutation_mod = preview_mod.custom("some preview", "echo hello")
+    assert type(preview_mutation_mod.on_hotkey()) == HotkeyAdder
+    assert type(preview_mutation_mod.on_situation()) == SituationAdder
+    assert type(preview_mutation_mod.on_hotkey("ctrl-c")) == PreviewMutationOnEvent
+    assert type(preview_mutation_mod.on_situation("one")) == PreviewMutationOnEvent
