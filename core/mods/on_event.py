@@ -48,7 +48,8 @@ FILE_EDITORS: dict[FileEditor, str] = {
 class OnEvent[T, S]:
     def __init__(self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error"):
         self._binding = Binding("")
-        # TODO: deduplicate events
+        if len(events) != len(set(events)):
+            raise ValueError(f"Duplicate events for this mod: {events}")
         self._events: list[Hotkey | Situation] = list(events)
         self._on_conflict: ConflictResolution = on_conflict
 
