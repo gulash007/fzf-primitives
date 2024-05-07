@@ -67,7 +67,7 @@ def prompt_builder():
     prompt.mod.preview("ctrl-y").fzf_json
     # prompt.mod.preview("ctrl-6", "50%", "up", "basic 2").custom(name="'basic 2'", output_generator="echo {}", store_output=True)
     mutation_dict = {
-        "is hello": [True, False],
+        "is hello": [False, True],
         "has world": [True, False],
     }
 
@@ -79,11 +79,11 @@ def prompt_builder():
         )
 
     preview_mutation_generator = MultiDimensionalGenerator(mutation_dict, get_mutation_args)
-    complex_preview = prompt.mod.preview("ctrl-6").custom("Hello World", **preview_mutation_generator.current_result())
+    complex_preview = prompt.mod.preview("ctrl-6").custom("Hello World")
     complex_preview.on_hotkey().CTRL_X.mutate(
         "[Hello World] Cycle between hello right/bye left",
         lambda pd: preview_mutation_generator.next("is hello"),
-        focus_preview=True,
+        auto_apply_first=True,
     )
     complex_preview.on_hotkey().CTRL_Z.mutate(
         "[Hello World] Cycle between world/no world",

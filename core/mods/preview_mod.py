@@ -246,6 +246,7 @@ class PreviewMutationOnEvent[T, S](OnEventBase[T, S]):
         name: str,
         mutator: PreviewMutator[T, S],
         *,
+        auto_apply_first: bool = False,
         mutate_only_when_already_focused: bool = True,
         focus_preview: bool = True,
     ) -> None:
@@ -269,6 +270,8 @@ class PreviewMutationOnEvent[T, S](OnEventBase[T, S]):
                 )
             ),
         )
+        if auto_apply_first:
+            self._initial_mutation = lambda pd: self._preview.update(**mutator(pd))
 
     def cycle_mutators(
         self,
@@ -283,8 +286,7 @@ class PreviewMutationOnEvent[T, S](OnEventBase[T, S]):
         self.mutate(
             name,
             get_next,
+            auto_apply_first=auto_apply_first,
             mutate_only_when_already_focused=mutate_only_when_already_focused,
             focus_preview=focus_preview,
         )
-        if auto_apply_first:
-            self._initial_mutation = lambda pd: self._preview.update(**get_next(pd))
