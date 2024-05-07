@@ -47,20 +47,18 @@ FILE_EDITORS: dict[FileEditor, str] = {
 
 class OnEvent[T, S]:
     def __init__(self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error"):
-        self._bindings: dict[Hotkey | Situation, Binding] = {}
+        self._binding = Binding("")
+        # TODO: deduplicate events
         self._events: list[Hotkey | Situation] = list(events)
         self._on_conflict: ConflictResolution = on_conflict
 
-    def run(self, name: str, *actions: Action) -> Self:
+    def __call__(self, prompt_data: PromptData[T, S]) -> None:
         for event in self._events:
-            self._add_binding(event, name, *actions)
-        return self
+            prompt_data.add_binding(event, self._binding, on_conflict=self._on_conflict)
 
-    def _add_binding(self, event: Hotkey | Situation, name: str, *actions: Action):
-        if event not in self._bindings:
-            self._bindings[event] = Binding(name, *actions)
-        else:
-            self._bindings[event] += Binding(name, *actions)
+    def run(self, name: str, *actions: Action) -> Self:
+        self._binding += Binding(name, *actions)
+        return self
 
     def run_function(
         self, name: str, function: ServerCallFunction[T, S], *base_actions: BaseAction, silent: bool = False
@@ -85,11 +83,7 @@ class OnEvent[T, S]:
     ):
         """Post-processor is called after the prompt has ended and before common post-processors are applied (defined in Mod.lastly)"""
         for event in self._events:
-            self._add_binding(event, name, PromptEndingAction(end_status, event, post_processor))
-
-    def __call__(self, prompt_data: PromptData[T, S]) -> None:
-        for event, binding in self._bindings.items():
-            prompt_data.add_binding(event, binding, on_conflict=self._on_conflict)
+            self._binding += Binding(name, PromptEndingAction(end_status, event, post_processor))
 
     # presets
     @property
