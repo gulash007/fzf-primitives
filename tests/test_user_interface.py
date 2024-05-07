@@ -4,6 +4,8 @@ from .. import Prompt
 from ..core.FzfPrompt import BindingConflict
 from ..core.FzfPrompt.options import Options
 from ..core.mods import Mod, OnEvent, PostProcessing, PreviewMod
+from ..core.mods.EventAdder import HotkeyAdder, SituationAdder
+from ..core.mods.preview_mod import PreviewMutationMod, PreviewMutationOnEvent
 
 
 def test_mod_return_value_types():
@@ -17,9 +19,10 @@ def test_mod_return_value_types():
     assert prompt.mod.on_hotkey().CTRL_Q.end_prompt("accept", "accept") is None
     assert prompt.mod.on_hotkey().CTRL_C.accept is None
 
-    # test preview not being chainable
+    # test preview modding
     assert type(prompt.mod.preview()) == PreviewMod
-    assert prompt.mod.preview().custom("some preview", "echo hello") is None
+    assert type(prompt.mod.preview().custom("some preview", "echo hello")) == PreviewMutationMod
+    assert type(prompt.mod.preview().custom("some preview", "echo hello").on_hotkey("ctrl-c")) == PreviewMutationOnEvent
 
     # test chaining post_processing
     assert type(prompt.mod.lastly) == PostProcessing
@@ -41,7 +44,7 @@ def test_checking_for_event_conflicts():
     with pytest.raises(BindingConflict):
         prompt.mod.on_hotkey().CTRL_A.accept
         prompt.mod.on_hotkey().CTRL_A.abort
-        prompt.mod.apply()
+        prompt.mod.apply(prompt._prompt_data)
 
     # clear mod
     prompt.mod.clear()
@@ -52,28 +55,28 @@ def test_checking_for_event_conflicts():
     prompt.mod.on_hotkey().CTRL_Y.toggle_all.accept
     prompt.mod.on_hotkey(on_conflict="override").CTRL_Y.abort
     prompt.mod.on_hotkey().CTRL_Z.abort
-    prompt.mod.apply()
+    prompt.mod.apply(prompt._prompt_data)
     assert (
-        prompt.mod._prompt_data.action_menu.bindings["ctrl-y"].name
-        == prompt.mod._prompt_data.action_menu.bindings["ctrl-z"].name
+        prompt._prompt_data.action_menu.bindings["ctrl-y"].name
+        == prompt._prompt_data.action_menu.bindings["ctrl-z"].name
     )
 
     ## append binding
     prompt.mod.on_hotkey().CTRL_R.toggle
     prompt.mod.on_hotkey(on_conflict="append").CTRL_R.select_all.accept
     prompt.mod.on_hotkey().CTRL_S.toggle.select_all.accept
-    prompt.mod.apply()
+    prompt.mod.apply(prompt._prompt_data)
     assert (
-        prompt.mod._prompt_data.action_menu.bindings["ctrl-r"].name
-        == prompt.mod._prompt_data.action_menu.bindings["ctrl-s"].name
+        prompt._prompt_data.action_menu.bindings["ctrl-r"].name
+        == prompt._prompt_data.action_menu.bindings["ctrl-s"].name
     )
 
     ## prepend binding
     prompt.mod.on_hotkey().CTRL_B.accept
     prompt.mod.on_hotkey(on_conflict="prepend").CTRL_B.toggle_preview.toggle_all
     prompt.mod.on_hotkey().CTRL_N.toggle_preview.toggle_all.accept
-    prompt.mod.apply()
+    prompt.mod.apply(prompt._prompt_data)
     assert (
-        prompt.mod._prompt_data.action_menu.bindings["ctrl-b"].name
-        == prompt.mod._prompt_data.action_menu.bindings["ctrl-n"].name
+        prompt._prompt_data.action_menu.bindings["ctrl-b"].name
+        == prompt._prompt_data.action_menu.bindings["ctrl-n"].name
     )

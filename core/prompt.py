@@ -18,7 +18,7 @@ class Prompt[T, S]:
         use_basic_hotkeys: bool | None = None,
     ):
         self._prompt_data = PromptData(choices=choices, presented_choices=presented_choices, obj=obj)
-        self._mod = Mod(self._prompt_data)
+        self._mod = Mod()
         if use_basic_hotkeys is None:
             use_basic_hotkeys = Config.use_basic_hotkeys
         if use_basic_hotkeys:
@@ -47,5 +47,5 @@ class Prompt[T, S]:
 
     @single_use_method
     def run(self, executable_path: str | Path | None = None) -> Result[T]:
-        self.mod.apply()
+        self.mod.apply(self._prompt_data)
         return run_fzf_prompt(self._prompt_data, executable_path=executable_path)

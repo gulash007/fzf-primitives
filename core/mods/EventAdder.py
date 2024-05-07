@@ -1,10 +1,13 @@
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 from ..FzfPrompt.options import Hotkey, Situation
 from .on_event import OnEvent
 
+if TYPE_CHECKING:
+    from .preview_mod import PreviewMutationOnEvent
 
-class SituationAdder[M: OnEvent]:
+
+class SituationAdder[M: (OnEvent, PreviewMutationOnEvent)]:
     def __init__(self, mod_adder: Callable[[Situation], M]):
         self._mod_adder = mod_adder
 
@@ -67,7 +70,7 @@ class SituationAdder[M: OnEvent]:
         return self._set_and_return_mod("backward-eof")
 
 
-class HotkeyAdder[M: OnEvent]:
+class HotkeyAdder[M: (OnEvent, PreviewMutationOnEvent)]:
     def __init__(self, mod_adder: Callable[[Hotkey], M]):
         self._mod_adder = mod_adder
 

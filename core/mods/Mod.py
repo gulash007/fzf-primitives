@@ -14,18 +14,17 @@ from .preview_mod import PreviewMod
 
 
 class Mod[T, S](LoggedComponent):
-    def __init__(self, prompt_data: PromptData[T, S]):
+    def __init__(self):
         super().__init__()
-        self._prompt_data = prompt_data
         self._mods: list[Callable[[PromptData], None]] = []
         self._options = Options()
 
-    def apply(self):
+    def apply(self, prompt_data: PromptData[T, S]):
         self.logger.info("---------- Applying mods ----------")
         try:
             for mod in self._mods:
-                mod(self._prompt_data)
-            self._prompt_data.options += self.options
+                mod(prompt_data)
+            prompt_data.options += self.options
         finally:
             self.clear()
 

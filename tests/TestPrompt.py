@@ -78,17 +78,16 @@ def prompt_builder():
             label="world" if has_world else "",
         )
 
-    complex_preview = prompt.mod.preview("ctrl-6")
     preview_mutation_generator = MultiDimensionalGenerator(mutation_dict, get_mutation_args)
-    complex_preview.custom("Hello World", **preview_mutation_generator.current_result())
-    complex_preview.mutate_preview(
+    complex_preview = prompt.mod.preview("ctrl-6").custom("Hello World", **preview_mutation_generator.current_result())
+    complex_preview.on_hotkey().CTRL_X.mutate(
         "[Hello World] Cycle between hello right/bye left",
-        "ctrl-x",
         lambda pd: preview_mutation_generator.next("is hello"),
         focus_preview=True,
     )
-    complex_preview.mutate_preview(
-        "[Hello World] Cycle between world/no world", "ctrl-z", lambda pd: preview_mutation_generator.next("has world")
+    complex_preview.on_hotkey().CTRL_Z.mutate(
+        "[Hello World] Cycle between world/no world",
+        lambda pd: preview_mutation_generator.next("has world"),
     )
 
     def measure_startup_time(prompt_data):
