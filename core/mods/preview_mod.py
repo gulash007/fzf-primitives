@@ -12,7 +12,6 @@ from ..FzfPrompt import (
     PreviewFunction,
     PreviewMutationArgs,
     PreviewMutator,
-    PreviewStyleMutationArgs,
     PromptData,
     ServerCall,
 )
@@ -145,19 +144,6 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
             name = f'[{"|".join(preview.name for preview in previews)}]'
         self._preview = CyclicalPreview(name, previews)
 
-    def cycle_functions(
-        self,
-        preview_functions: dict[str, PreviewFunction[T, S]],
-        name: str = "",
-        **style_args: Unpack[PreviewStyleMutationArgs],
-    ):
-        cyclical_preview_function = CyclicalPreviewFunction(preview_functions)
-        if not name:
-            name = f'[{"|".join(preview_functions.keys())}]'
-        return self.custom(
-            name, cyclical_preview_function, before_change_do=cyclical_preview_function.next, **style_args
-        )
-
 
 # HACK: ❗This object pretends to be a preview but when transform is invoked it injects its previews cyclically
 # into Previewer as current previews (it's never itself a current preview).
@@ -174,24 +160,6 @@ class CyclicalPreview[T, S](Preview[T, S], LoggedComponent):
             self.logger.debug(f"Changing preview to next in cycle: {self._current_preview.name}")
             self._current_preview = next(self._previews)
         return self._current_preview.preview_change_binding.actions
-
-
-class CyclicalPreviewFunction(LoggedComponent):
-    def __init__(self, preview_functions: dict[str, PreviewFunction]):
-        super().__init__()
-        self._preview_functions = preview_functions
-        self._keys = itertools.cycle(preview_functions.keys())
-        self._current_key: str
-
-    def __call__(self, prompt_data: PromptData):
-        return self._preview_functions[self._current_key](prompt_data)
-
-    def next(self, prompt_data: PromptData, preview: Preview):
-        if prompt_data.previewer.current_preview.id == preview.id:
-            self._current_key = next(self._keys)
-            self.logger.debug(f"Changing preview to next in cycle: {self._current_key}")
-        if not hasattr(self, "_current_key"):
-            self._current_key = next(self._keys)
 
 
 class SpecificPreviewMod[T, S]:

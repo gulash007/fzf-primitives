@@ -76,28 +76,6 @@ def test_file_preview():
     assert prompt.current_preview == FileViewer().view(__file__)
 
 
-def get_cycle_preview_functions_prompt():
-    prompt = Prompt(obj=[])
-    prompt.mod.preview("ctrl-y").cycle_functions(
-        {"first": record_preview_name("first"), "second": record_preview_name("second")}
-    )
-    prompt.mod.preview("ctrl-x").custom("third", record_preview_name("third"))
-    return prompt
-
-
-def test_cycle_preview_functions():
-    prompt = get_cycle_preview_functions_prompt()
-
-    prompt.mod.automate("ctrl-y")
-    prompt.mod.automate("ctrl-y")
-    prompt.mod.automate("ctrl-x")
-    prompt.mod.automate("ctrl-y")
-    prompt.mod.automate(Config.default_accept_hotkey)
-
-    prompt.run()
-    assert prompt.obj[1:] == ["first", "second", "first", "third", "first"]
-
-
 def get_cycle_previews_prompt():
     prompt = Prompt(obj=[])
     prompt.mod.preview("ctrl-x").custom("third", record_preview_name("third"))
@@ -153,8 +131,11 @@ def test_cycle_mutators():
     assert prompt.obj[1:] == ["third", "first", "second", "third", "second"]
 
 
+LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath("test_preview.log")
 if __name__ == "__main__":
+    Config.logging_enabled = True
     logger = Logger.get_logger()
     Logger.remove_preset_handlers()
-    Logger.add_file_handler(INTERNAL_LOG_DIR.joinpath("logger"), "TRACE")
-    get_cycle_previews_prompt().run()
+    Logger.add_file_handler(LOG_FILE_PATH, "TRACE")
+    prompt = get_cycle_previews_prompt()
+    prompt.mod.on_hotkey().CTRL_L.view_logs_in_terminal(LOG_FILE_PATH)
