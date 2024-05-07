@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 from pathlib import Path
-from typing import Unpack
+from typing import Iterable, Unpack
 
 from ..FzfPrompt import (
     Binding,
@@ -234,10 +234,12 @@ class PreviewMutationOnEvent[T, S](OnEventBase[T, S]):
         super().__init__(*events, on_conflict=on_conflict)
         self._preview = preview
         self._binding = Binding("")
+        self._initial_mutation = lambda pd: None
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         for event in self._events:
             prompt_data.add_binding(event, self._binding, on_conflict=self._on_conflict)
+        self._initial_mutation(prompt_data)
 
     def mutate(
         self,
@@ -268,5 +270,21 @@ class PreviewMutationOnEvent[T, S](OnEventBase[T, S]):
             ),
         )
 
-    # TODO
-    # def generate mutations(...)
+    def cycle_mutators(
+        self,
+        name: str,
+        mutators: Iterable[PreviewMutator[T, S]],
+        auto_apply_first: bool = True,
+        mutate_only_when_already_focused: bool = True,
+        focus_preview: bool = True,
+    ):
+        mutators_cycle = itertools.cycle(mutators)
+        get_next = lambda pd: next(mutators_cycle)(pd)
+        self.mutate(
+            name,
+            get_next,
+            mutate_only_when_already_focused=mutate_only_when_already_focused,
+            focus_preview=focus_preview,
+        )
+        if auto_apply_first:
+            self._initial_mutation = lambda pd: self._preview.update(**get_next(pd))

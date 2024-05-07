@@ -123,6 +123,36 @@ def test_cycle_previews():
     assert prompt.obj[1:] == ["third", "first", "second", "third", "second"]
 
 
+def get_cycle_mutators_prompt():
+    prompt = Prompt(obj=[])
+    prompt.mod.preview("ctrl-x").custom("third", record_preview_name("third"))
+    prompt.mod.preview().custom("").on_hotkey().CTRL_Y.cycle_mutators(
+        "",
+        [
+            lambda pd: {"output_generator": record_preview_name("first")},
+            lambda pd: {
+                "output_generator": record_preview_name("second"),
+                "window_size": "10%",
+                "window_position": "up",
+            },
+        ],
+    )
+    return prompt
+
+
+def test_cycle_mutators():
+    prompt = get_cycle_mutators_prompt()
+
+    prompt.mod.automate("ctrl-y")
+    prompt.mod.automate("ctrl-y")
+    prompt.mod.automate("ctrl-x")
+    prompt.mod.automate("ctrl-y")
+    prompt.mod.automate(Config.default_accept_hotkey)
+
+    prompt.run()
+    assert prompt.obj[1:] == ["third", "first", "second", "third", "second"]
+
+
 if __name__ == "__main__":
     logger = Logger.get_logger()
     Logger.remove_preset_handlers()
