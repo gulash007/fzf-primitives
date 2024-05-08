@@ -43,7 +43,9 @@ class PromptData[T, S](LoggedComponent):
     @property
     def current_state(self) -> PromptState:
         if not self._current_state:
-            raise RuntimeError("Current state not set")
+            raise RuntimeError(
+                "Current state not set (you're probably accessing current state before prompt has started)"
+            )
         return self._current_state
 
     def set_current_state(self, prompt_state: PromptState):
