@@ -13,15 +13,17 @@ type ActionsBuilder[T, S] = Callable[[PromptData[T, S]], Iterable[Action]]
 
 
 class Transform[T, S](ServerCall[T, S], LoggedComponent):
-    def __init__(self, get_actions: ActionsBuilder[T, S]) -> None:
+    def __init__(self, get_actions: ActionsBuilder[T, S], description: str | None = None) -> None:
         LoggedComponent.__init__(self)
-        name = f"Transform ({get_actions.__name__})"
 
-        def get_transform_string(prompt_data: PromptData[T, S]) -> str:
-            binding = Binding(f"Created by {name}", *get_actions(prompt_data))
-            prompt_data.action_menu.add_server_calls(binding)
-            action_string = binding.to_action_string()
-            self.logger.debug(f"Transform: {action_string}")
-            return action_string
+        self.get_actions = get_actions
+        super().__init__(self.get_transform_string, description or self._get_function_name(get_actions), "transform")
 
-        super().__init__(get_transform_string, name, "transform")
+    def get_transform_string(self, prompt_data: PromptData[T, S]) -> str:
+        binding = Binding(None, *self.get_actions(prompt_data))
+        self.logger.debug(f"{self}: Created {binding}")
+        prompt_data.action_menu.add_server_calls(binding)
+        return binding.to_action_string()
+
+    def __str__(self) -> str:
+        return f"[T]({self.id})"

@@ -47,7 +47,7 @@ class Preview[T, S]:
     # TODO: line wrap
     def __init__(self, name: str, **kwargs: Unpack[PreviewMutationArgs[T, S]]):
         self.name = name
-        self.id = f"{name} ({id(self)})"
+        self.id = f"{name}#{id(self)}"
         self.output_generator = kwargs.get("output_generator", DEFAULT_OUTPUT_GENERATOR)
         self.window_size: int | RelativeWindowSize = kwargs.get("window_size", DEFAULT_WINDOW_SIZE)
         self.window_position: WindowPosition = kwargs.get("window_position", DEFAULT_WINDOW_POSITION)
@@ -67,7 +67,8 @@ class Preview[T, S]:
                 if isinstance(self.output_generator, str)
                 else PreviewServerCall(self.output_generator, self),
                 ChangePreviewLabel(self.label),
-            )
+            ),
+            f"Change preview to {name}",
         )
         self.preview_change_binding = Binding(f"Change preview to {name}", self.transform_preview)
 
@@ -86,6 +87,9 @@ class Preview[T, S]:
     @output.setter
     def output(self, value: str):
         self._output = value
+
+    def __str__(self) -> str:
+        return f"[Preview]({self.id})"
 
 
 def get_preview_shell_command(command: str, preview: Preview):

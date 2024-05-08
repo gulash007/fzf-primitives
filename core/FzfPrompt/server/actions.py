@@ -24,25 +24,28 @@ class ServerCall[T, S](ShellCommand):
     def __init__(
         self,
         function: ServerCallFunction[T, S],
-        custom_name: str | None = None,
+        description: str | None = None,
         command_type: ShellCommandActionType = "execute",
     ) -> None:
         self.function = function
-        self.name = custom_name or function.__name__
+        self.name = description or f"f:{self._get_function_name(function)}"
 
         command = Request.create_command(self.id, function, command_type)
         super().__init__(command, command_type)
 
     @property
     def id(self) -> str:
-        return f"{self.name} ({id(self.function)})"
-
-    def __str__(self) -> str:
-        return f"{self.id}: {super().__str__()}"
+        return f"{self.name}#{id(self.function)}"
 
     def run(self, prompt_data: PromptData[T, S], request: Request) -> Any:
         prompt_data.set_current_state(request.prompt_state)
         return self.function(prompt_data, **request.kwargs)
+
+    def _get_function_name(self, function: ServerCallFunction[T, S]) -> str:
+        return function.__name__ if hasattr(function, "__name__") else str(function)
+
+    def __str__(self) -> str:
+        return f"[SC]{self.command_type}({self.id})"
 
 
 type PostProcessor[T, S] = Callable[[PromptData[T, S]], Any]
@@ -63,7 +66,7 @@ class PromptEndingAction[T, S](ServerCall, LoggedComponent):
         self.logger.debug(f"Piping results:\n{prompt_data.result}")
 
     def __str__(self) -> str:
-        return f"{self.event}: end status '{self.end_status}' with {self.post_processor} post-processor: {super().__str__()}"
+        return f"[PEA]({self.event},{self.end_status},{self.post_processor.__name__ if self.post_processor else None})"
 
 
 class CommandOutput(str): ...

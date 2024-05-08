@@ -17,6 +17,9 @@ class record_preview_name:
         prompt_data.obj.append(self.name)
         return self.name
 
+    def __str__(self):
+        return f"{self.__class__.__name__}({self.name})"
+
 
 def test_main_preview_without_event():
     prompt = Prompt(obj=[])

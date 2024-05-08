@@ -204,3 +204,6 @@ class ReloadChoices[T, S](ServerCall[T, S]):
             return "\n".join(lines)
 
         super().__init__(reload_choices, command_type="reload-sync" if sync else "reload")
+
+    def __str__(self) -> str:
+        return f"[RC]({self.function.__name__})"

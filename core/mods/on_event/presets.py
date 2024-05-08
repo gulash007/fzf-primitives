@@ -58,8 +58,7 @@ class Repeater[T, S]:
             prompt_data, port, *self.actions, repeat_interval=self.repeat_interval, repeat_when=self.repeat_when
         )
 
-    @property
-    def __name__(self) -> str:
+    def __str__(self) -> str:
         return f"Repeater for {'->'.join(str(action) for action in self.actions)}"
 
 

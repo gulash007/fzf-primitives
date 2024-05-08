@@ -10,7 +10,7 @@ class ParametrizedAction:
         return f"{self.action_type}({self.action_value})"
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}: {self.action_type}({self.action_value if len(self.action_value) < 20 else f'{self.action_value[:20]}...'})"
+        return f"[PA]{self.action_type}({self.action_value if len(self.action_value) < 20 else f'{self.action_value[:20]}...'})"
 
 
 class ShellCommand(ParametrizedAction):
@@ -26,10 +26,16 @@ class ShellCommand(ParametrizedAction):
     def command_type(self) -> ShellCommandActionType:
         return self.action_type
 
+    def __str__(self) -> str:
+        return f"[ShC]{self.action_type}({self.action_value if len(self.action_value) < 20 else f'{self.action_value[:20]}...'})"
+
 
 class ChangeBorderLabel(ParametrizedAction):
     def __init__(self, label: str) -> None:
         super().__init__(label, "change-border-label")
+
+    def __str__(self) -> str:
+        return f"[CBL]({self.action_value})"
 
 
 # Action can just be a string if you know what you're doing (look in `man fzf` for what can be assigned to '--bind')
