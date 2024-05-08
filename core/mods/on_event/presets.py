@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import shlex
 import subprocess
+import time
 from threading import Thread
 from typing import Callable, Literal
 
@@ -47,11 +48,8 @@ class Repeater[T, S]:
         prompt_data.action_menu.add_server_calls(Binding("", *self.actions))
         if not self.thread:
             self.thread = self.create_automating_thread(prompt_data, FZF_PORT)
-            subprocess.Popen(["curl", "-XPOST", f"localhost:{FZF_PORT}", "-d", "change-prompt(Auto-updating...> )"])
             self.thread.start()
         else:
-            # TODO: reset prompt back to previous
-            subprocess.Popen(["curl", "-XPOST", f"localhost:{FZF_PORT}", "-d", "change-prompt(> )"])
             self.thread.should_stop = True
             self.thread = None
 
@@ -85,9 +83,7 @@ class AutomatingThread[T, S](Thread, LoggedComponent):
         self.repeat_when = repeat_when
 
     def run(self) -> None:
-        import subprocess
-        import time
-
+        subprocess.Popen(["curl", "-XPOST", f"localhost:{self.port}", "-d", "change-prompt(Auto-updating...> )"])
         while True:
             try:
                 if not self.repeat_when(self.prompt_data):
@@ -106,8 +102,11 @@ class AutomatingThread[T, S](Thread, LoggedComponent):
                 )
             except Exception as err:
                 self.logger.exception(err)
+                self.should_stop = True
                 continue
             finally:
                 if self.should_stop:
+                    # TODO: reset prompt back to previous
+                    subprocess.Popen(["curl", "-XPOST", f"localhost:{self.port}", "-d", "change-prompt(> )"])
                     break
                 time.sleep(self.repeat_interval)
