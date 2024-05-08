@@ -24,12 +24,12 @@ type PreviewMutator[T, S] = Callable[[PromptData[T, S]], PreviewMutationArgs[T, 
 class PreviewStyleMutationArgs(TypedDict, total=False):
     window_size: int | RelativeWindowSize
     window_position: WindowPosition
-    label: str
     line_wrap: bool
 
 
 class PreviewMutationArgs[T, S](PreviewStyleMutationArgs, total=False):
     output_generator: str | PreviewFunction[T, S]
+    label: str
     before_change_do: PreviewChangePreProcessor[T, S]
     store_output: bool
 

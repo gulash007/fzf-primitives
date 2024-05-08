@@ -25,6 +25,7 @@ from ..FzfPrompt.previewer.Preview import (
     DEFAULT_STORE_OUTPUT,
     DEFAULT_WINDOW_POSITION,
     DEFAULT_WINDOW_SIZE,
+    PreviewStyleMutationArgs,
 )
 from ..FzfPrompt.shell import shell_command
 from ..monitoring import LoggedComponent
@@ -127,7 +128,13 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
     basic = preview_preset("basic", output_generator=preview_basic, label="PromptData.current_state")
     fzf_json = preview_preset("fzf json", output_generator=get_fzf_json, label="fzf JSON")
 
-    def file(self, language: str = "python", theme: str = "Solarized (light)", plain: bool = True):
+    def file(
+        self,
+        language: str = "python",
+        theme: str = "Solarized (light)",
+        plain: bool = True,
+        **kwargs: Unpack[PreviewStyleMutationArgs],
+    ):
         """Parametrized preset for viewing files"""
 
         def view_file(prompt_data: PromptData[T, S]):
@@ -135,7 +142,7 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
                 return "No file selected"
             return FileViewer(language, theme, plain=plain).view(*files)
 
-        return self.custom("View File", view_file)
+        return self.custom("View File", view_file, label="View file", **kwargs)
 
     # TODO: previews: dict[name, mutation args]
     def cycle_previews(self, previews: list[Preview[T, S]], name: str = ""):
