@@ -69,17 +69,30 @@ class OnEvent[T, S](OnEventBase[T, S]):
         return self.run(name, Transform(get_actions), *base_actions)
 
     def reload_choices(
-        self, choices_getter: ChoicesGetter[T, S], *, sync: bool = False, repeat_interval: float | None = None
+        self,
+        choices_getter: ChoicesGetter[T, S],
+        *,
+        sync: bool = False,
+        repeat_interval: float | None = None,
+        repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
     ):
         name = f"reload choices{' (sync)' if sync else ''}"
         if repeat_interval is None:
             return self.run(name, ReloadChoices(choices_getter, sync=sync))
         if repeat_interval < 0.2:
             raise ValueError("repeat_interval must be at least 0.2")
-        return self.auto_repeat_run(name, ReloadChoices(choices_getter, sync=sync), repeat_interval=repeat_interval)
+        return self.auto_repeat_run(
+            name, ReloadChoices(choices_getter, sync=sync), repeat_interval=repeat_interval, repeat_when=repeat_when
+        )
 
-    def auto_repeat_run(self, name: str, *actions: Action, repeat_interval: float = 0.5) -> Self:
-        repeater = Repeater(*actions, repeat_interval=repeat_interval)
+    def auto_repeat_run(
+        self,
+        name: str,
+        *actions: Action,
+        repeat_interval: float = 0.5,
+        repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
+    ) -> Self:
+        repeater = Repeater(*actions, repeat_interval=repeat_interval, repeat_when=repeat_when)
         return self.run_function(f"Every {repeat_interval:.2f}s {name}", repeater)
 
     def end_prompt(

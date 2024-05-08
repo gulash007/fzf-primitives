@@ -3,7 +3,7 @@ from __future__ import annotations
 import shlex
 import subprocess
 from threading import Thread
-from typing import Literal
+from typing import Callable, Literal
 
 import pyperclip
 
@@ -31,44 +31,58 @@ FILE_EDITORS: dict[FileEditor, str] = {
 }
 
 
-class Repeater:
-    def __init__(self, *actions: Action, repeat_interval: float = 0.5) -> None:
+class Repeater[T, S]:
+    def __init__(
+        self,
+        *actions: Action,
+        repeat_interval: float = 0.5,
+        repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
+    ) -> None:
         self.actions = actions
         self.repeat_interval = repeat_interval
-        self.thread = self.create_automating_thread()
+        self.repeat_when = repeat_when
+        self.thread: AutomatingThread[T, S] | None = None
 
     def __call__(self, prompt_data: PromptData, FZF_PORT: str):
         prompt_data.action_menu.add_server_calls(Binding("", *self.actions))
-        self.thread.set_port(FZF_PORT)
-        if not self.thread.is_running:
-            subprocess.Popen(
-                shlex.join(["curl", "-XPOST", f"localhost:{FZF_PORT}", "-d", "change-prompt(Auto-updating...> )"]),
-                shell=True,
-            )
+        if not self.thread:
+            self.thread = self.create_automating_thread(prompt_data, FZF_PORT)
+            subprocess.Popen(["curl", "-XPOST", f"localhost:{FZF_PORT}", "-d", "change-prompt(Auto-updating...> )"])
             self.thread.start()
-            self.thread.is_running = True
         else:
             # TODO: reset prompt back to previous
-            subprocess.Popen(
-                shlex.join(["curl", "-XPOST", f"localhost:{FZF_PORT}", "-d", "change-prompt(> )"]),
-                shell=True,
-            )
+            subprocess.Popen(["curl", "-XPOST", f"localhost:{FZF_PORT}", "-d", "change-prompt(> )"])
             self.thread.should_stop = True
-            self.thread = self.create_automating_thread()
+            self.thread = None
 
-    def create_automating_thread(self):
-        return AutomatingThread(*self.actions, repeat_interval=self.repeat_interval)
+    def create_automating_thread(self, prompt_data: PromptData[T, S], port: str):
+        return AutomatingThread(
+            prompt_data, port, *self.actions, repeat_interval=self.repeat_interval, repeat_when=self.repeat_when
+        )
+
+    @property
+    def __name__(self) -> str:
+        return f"Repeater for {'->'.join(str(action) for action in self.actions)}"
 
 
-class AutomatingThread(Thread, LoggedComponent):
-    def __init__(self, *actions: Action, repeat_interval: float = 0.5) -> None:
+class AutomatingThread[T, S](Thread, LoggedComponent):
+    def __init__(
+        self,
+        prompt_data: PromptData[T, S],
+        port: str,
+        *actions: Action,
+        repeat_interval: float = 0.5,
+        repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
+    ) -> None:
         super().__init__(daemon=True)
         LoggedComponent.__init__(self)
         self.is_running = False
         self.should_stop = False
+        self.prompt_data = prompt_data
+        self.port = port
         self.actions = actions
         self.repeat_interval = repeat_interval
-        self.port: str
+        self.repeat_when = repeat_when
 
     def run(self) -> None:
         import subprocess
@@ -76,6 +90,8 @@ class AutomatingThread(Thread, LoggedComponent):
 
         while True:
             try:
+                if not self.repeat_when(self.prompt_data):
+                    continue
                 subprocess.Popen(
                     shlex.join(
                         [
@@ -88,13 +104,10 @@ class AutomatingThread(Thread, LoggedComponent):
                     ),
                     shell=True,  # ❗ required for getting FZF_PORT
                 )
-                if self.should_stop:
-                    break
             except Exception as err:
                 self.logger.exception(err)
                 continue
             finally:
+                if self.should_stop:
+                    break
                 time.sleep(self.repeat_interval)
-
-    def set_port(self, port: str):
-        self.port = port
