@@ -28,7 +28,7 @@ from ..FzfPrompt.previewer.Preview import (
 )
 from ..FzfPrompt.shell import shell_command
 from ..monitoring import LoggedComponent
-from .EventAdder import attach_hotkey_adder, attach_situation_adder
+from .event_adder import attach_hotkey_adder, attach_situation_adder
 from .on_event import OnEventBase
 
 

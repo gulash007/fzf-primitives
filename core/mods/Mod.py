@@ -6,7 +6,7 @@ from typing import Callable, Self
 from ..FzfPrompt import Action, ConflictResolution, PromptData
 from ..FzfPrompt.options import Hotkey, Options, Situation
 from ..monitoring import LoggedComponent
-from .EventAdder import attach_hotkey_adder, attach_situation_adder
+from .event_adder import attach_hotkey_adder, attach_situation_adder
 from .on_event import OnEvent
 from .post_processing import PostProcessing
 from .preview_mod import PreviewMod

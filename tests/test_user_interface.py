@@ -4,7 +4,7 @@ from .. import Prompt
 from ..core.FzfPrompt import BindingConflict
 from ..core.FzfPrompt.options import Options
 from ..core.mods import Mod, OnEvent, PostProcessing, PreviewMod
-from ..core.mods.EventAdder import HotkeyAdder, SituationAdder
+from ..core.mods.event_adder.EventAdder import HotkeyAdder, SituationAdder
 from ..core.mods.preview_mod import SpecificPreviewMod, SpecificPreviewOnEvent
 
 

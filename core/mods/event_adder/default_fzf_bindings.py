@@ -1,5 +1,5 @@
-from ..FzfPrompt.options.actions import BaseAction
-from ..FzfPrompt.options.events import Hotkey, Situation
+from ...FzfPrompt.options.actions import BaseAction
+from ...FzfPrompt.options.events import Hotkey, Situation
 
 
 # Used to generate EventAdder using AI
