@@ -35,6 +35,8 @@ PRESET_HANDLERS: dict[HandlerID, int] = {
     "MAIN_LOG_FILE": add_file_handler(MAIN_LOG_FILE_PATH, "DEBUG", format="default", colorize=True),
 }
 
+logger.level("WEIRDNESS", no=42, icon="🤖", color="<MAGENTA><bold>")
+
 
 def remove_preset_handlers(*handler_ids: HandlerID):
     if not handler_ids:

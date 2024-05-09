@@ -65,7 +65,7 @@ class Automator(Thread, LoggedComponent):
         response = requests.post(f"http://localhost:{self.port}", data=binding.to_action_string())
         if message := response.text:
             if not message.startswith("unknown action:"):
-                self.logger.weirdness(message)  # type: ignore
+                self.logger.log("WEIRDNESS", message)
             raise RuntimeError(message)
         if binding.final_action:
             return
