@@ -33,6 +33,9 @@ def test_binding_addition_associative():
 
     assert binding12_3.name == binding1_23.name
     assert binding12_3.description == binding1_23.description
+    assert [action for ag in binding12_3._action_groups.values() for action in ag.actions] == [
+        action for ag in binding1_23._action_groups.values() for action in ag.actions
+    ]
 
 
 def test_binding_cycling_closed_in_cycling():
@@ -45,7 +48,11 @@ def test_binding_cycling_closed_in_cycling():
     binding34 = binding3 | binding4
     binding1234 = binding12 | binding34
 
-    assert binding1234.name == (binding1 | binding2 | binding3 | binding4).name
+    assert binding1234.name == (ex := (binding1 | binding2 | binding3 | binding4)).name
+    assert binding1234.description == ex.description
+    assert [action for ag in binding1234._action_groups.values() for action in ag.actions] == [
+        action for ag in ex._action_groups.values() for action in ag.actions
+    ]
 
     # not closed in addition though
     with pytest.raises(NotImplementedError):
@@ -62,6 +69,9 @@ def test_binding_cycling_associative():
 
     assert binding12or3.name == binding1or23.name
     assert binding12or3.description == binding1or23.description
+    assert [action for ag in binding12or3._action_groups.values() for action in ag.actions] == [
+        action for ag in binding1or23._action_groups.values() for action in ag.actions
+    ]
 
 
 def test_addition_distributive_over_cycling():
@@ -76,6 +86,9 @@ def test_addition_distributive_over_cycling():
 
     assert binding_1_2or3.name == binding_1_2or1_3.name
     assert binding_1_2or3.description == binding_1_2or1_3.description
+    assert [action for ag in binding_1_2or3._action_groups.values() for action in ag.actions] == [
+        action for ag in binding_1_2or1_3._action_groups.values() for action in ag.actions
+    ]
 
     # distributive from right
     binding_1or2_3 = (binding1 | binding2) + binding3
@@ -83,6 +96,9 @@ def test_addition_distributive_over_cycling():
 
     assert binding_1or2_3.name == binding_1_3or2_3.name
     assert binding_1or2_3.description == binding_1_3or2_3.description
+    assert [action for ag in binding_1or2_3._action_groups.values() for action in ag.actions] == [
+        action for ag in binding_1_3or2_3._action_groups.values() for action in ag.actions
+    ]
 
 
 def test_binding_addition_closed():
