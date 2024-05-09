@@ -24,9 +24,9 @@ def grouper(iterable, n, *, incomplete="fill", fillvalue=None):
 
 if __name__ == "__main__":
     try:
-        server_call_name, command_type, query, single_index, single_line, indices, selections = sys.argv[1:8]
+        server_call_id, command_type, query, single_index, single_line, indices, selections = sys.argv[1:8]
         data = {
-            "server_call_name": server_call_name,
+            "server_call_id": server_call_id,
             "command_type": command_type,
             "prompt_state": {
                 "query": query,

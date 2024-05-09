@@ -82,9 +82,9 @@ class Server[T, S](Thread, LoggedComponent):
         try:
             request = Request.from_json(json.loads(payload))
             self.logger.debug(
-                f"Resolving '{request.server_call_name}' ({len(self.server_calls)} server calls registered)"
+                f"Resolving '{request.server_call_id}' ({len(self.server_calls)} server calls registered)"
             )
-            response = self.server_calls[request.server_call_name].run(prompt_data, request)
+            response = self.server_calls[request.server_call_id].run(prompt_data, request)
         except Exception as err:
             self.logger.error(trb := traceback.format_exc())
             payload_info = f"Payload contents:\n{payload}"

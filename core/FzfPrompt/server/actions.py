@@ -77,9 +77,9 @@ SOCKET_NUMBER_ENV_VAR = "FZF_PRIMITIVES_SOCKET_NUMBER"
 
 class Request:
     def __init__(
-        self, server_call_name: str, command_type: ShellCommandActionType, prompt_state: PromptState, kwargs: dict
+        self, server_call_id: str, command_type: ShellCommandActionType, prompt_state: PromptState, kwargs: dict
     ):
-        self.server_call_name = server_call_name
+        self.server_call_id = server_call_id
         self.command_type: ShellCommandActionType = command_type
         self.prompt_state = prompt_state
         self.kwargs = kwargs
@@ -114,7 +114,7 @@ class Request:
     @classmethod
     def from_json(cls, data: dict) -> Self:
         prompt_state = PromptState.from_json(data["prompt_state"])
-        return cls(data["server_call_name"], data["command_type"], prompt_state, data["kwargs"])
+        return cls(data["server_call_id"], data["command_type"], prompt_state, data["kwargs"])
 
 
 class PromptState:
