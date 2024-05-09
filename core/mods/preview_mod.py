@@ -46,7 +46,7 @@ def get_fzf_json(prompt_data: PromptData, FZF_PORT: str):
 
 
 class FileViewer:
-    def __init__(self, language: str = "python", theme: str = "Solarized (light)", *, plain: bool = True):
+    def __init__(self, language: str = "", theme: str = "Solarized (light)", *, plain: bool = True):
         self.language = language
         self.theme = theme
         self.plain = plain
@@ -130,7 +130,7 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
 
     def file(
         self,
-        language: str = "python",
+        language: str = "",
         theme: str = "Solarized (light)",
         plain: bool = True,
         **kwargs: Unpack[PreviewStyleMutationArgs],
