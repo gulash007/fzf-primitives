@@ -4,7 +4,6 @@ import os
 import shlex
 import subprocess
 from shutil import which
-from threading import Event
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -29,7 +28,6 @@ from .server import (
     EndStatus,
     PostProcessor,
     PromptEndingAction,
-    Server,
     ServerCall,
     ServerCallFunction,
 )
@@ -87,11 +85,8 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         automator.prepare(prompt_data)
         automator.start()
 
-    server_setup_finished = Event()
-    server_should_close = Event()
-    server = Server(prompt_data, server_setup_finished, server_should_close)
-    server.start()
-    server_setup_finished.wait()
+    (server := prompt_data.server).start()
+    server.setup_finished.wait()
     env = os.environ.copy()
     env[SOCKET_NUMBER_ENV_VAR] = str(server.socket_number)
 
@@ -112,7 +107,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         if err.returncode != 130:
             raise MoreInformativeCalledProcessError(err) from None
     finally:
-        server_should_close.set()
+        server.should_close.set()
     server.join()
     if not prompt_data.finished:
         # TODO: This may be explicitly allowed in the future (need to test when it's not)

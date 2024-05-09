@@ -6,18 +6,15 @@ if TYPE_CHECKING:
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
 from .Preview import Preview
-from ..action_menu import ActionMenu, ConflictResolution
-from ..options import Hotkey, Situation
 
 
 class Previewer[T, S](LoggedComponent):
     """Handles storing preview outputs and tracking current preview and possibly other logic associated with previews"""
 
-    def __init__(self, action_menu: ActionMenu) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self._previews: dict[str, Preview[T, S]] = {}
         self._current_preview: Preview[T, S] | None = None
-        self._action_menu = action_menu
 
     @property
     def current_preview(self) -> Preview[T, S]:
@@ -32,23 +29,12 @@ class Previewer[T, S](LoggedComponent):
     def previews(self) -> list[Preview[T, S]]:
         return list(self._previews.values())
 
-    def add(
-        self,
-        preview: Preview[T, S],
-        event: Hotkey | Situation | None = None,
-        *,
-        on_conflict: ConflictResolution = "raise error",
-        main: bool = False,
-    ):
+    def add(self, preview: Preview[T, S], *, main: bool = False):
         self.logger.debug(f"📺 Adding preview '{preview.name}'")
         if main or not self._previews:
             self._current_preview = preview
         self._previews[preview.id] = preview
-        if event:
-            self._action_menu.add(event, preview.preview_change_binding, on_conflict=on_conflict)
-        else:
-            self._action_menu.add_server_calls(preview.preview_change_binding)
 
-    def resolve_main_preview(self):
+    def resolve_main_preview(self, prompt_data: PromptData):
         if self._current_preview:
-            self._action_menu.add("start", self._current_preview.preview_change_binding, on_conflict="prepend")
+            prompt_data.add_binding("start", self._current_preview.preview_change_binding, on_conflict="prepend")

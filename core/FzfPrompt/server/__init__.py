@@ -7,6 +7,7 @@ from threading import Event, Thread
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ..action_menu import Binding
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
 from ..options import EndStatus
@@ -37,18 +38,13 @@ __all__ = [
 
 
 class Server[T, S](Thread, LoggedComponent):
-    def __init__(
-        self,
-        prompt_data: PromptData[T, S],
-        server_setup_finished: Event,
-        server_should_close: Event,
-    ) -> None:
+    def __init__(self, prompt_data: PromptData[T, S]) -> None:
         LoggedComponent.__init__(self)
         super().__init__(name="Server")
         self.prompt_data = prompt_data
-        self.server_setup_finished = server_setup_finished
-        self.server_should_close = server_should_close
-        self.server_calls: dict[str, ServerCall[T, S]] = prompt_data.action_menu.server_calls
+        self.setup_finished = Event()
+        self.should_close = Event()
+        self.server_calls: dict[str, ServerCall[T, S]] = {}
         self.socket_number: int
 
     # TODO: Use automator to end running prompt and propagate errors
@@ -61,13 +57,13 @@ class Server[T, S](Thread, LoggedComponent):
                 server_socket.listen()
                 self.logger.info(f"Server listening on {socket_specs}...")
 
-                self.server_setup_finished.set()
+                self.setup_finished.set()
                 server_socket.settimeout(0.05)
                 while True:
                     try:
                         client_socket, addr = server_socket.accept()
                     except TimeoutError:
-                        if self.server_should_close.is_set():
+                        if self.should_close.is_set():
                             self.logger.info("Server closing")
                             break
                         continue
@@ -76,7 +72,7 @@ class Server[T, S](Thread, LoggedComponent):
             self.logger.exception(e)
             raise
         finally:
-            self.server_setup_finished.set()
+            self.setup_finished.set()
 
     def _handle_request(self, client_socket: socket.socket, prompt_data: PromptData[T, S]):
         payload_bytearray = bytearray()
@@ -103,3 +99,13 @@ class Server[T, S](Thread, LoggedComponent):
                 client_socket.sendall(str(response).encode("utf-8"))
         finally:
             client_socket.close()
+
+    def add_server_calls(self, binding: Binding):
+        for action in binding.actions:
+            if isinstance(action, ServerCall):
+                self.add_server_call(action)
+
+    def add_server_call(self, server_call: ServerCall):
+        if server_call.id not in self.server_calls:
+            self.logger.debug(f"🤙 Adding server call: {server_call}")
+            self.server_calls[server_call.id] = server_call

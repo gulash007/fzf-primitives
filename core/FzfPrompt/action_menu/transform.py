@@ -22,7 +22,7 @@ class Transform[T, S](ServerCall[T, S], LoggedComponent):
     def get_transform_string(self, prompt_data: PromptData[T, S]) -> str:
         binding = Binding(None, *self.get_actions(prompt_data))
         self.logger.debug(f"{self}: Created {binding}")
-        prompt_data.action_menu.add_server_calls(binding)
+        prompt_data.server.add_server_calls(binding)
         return binding.to_action_string()
 
     def __str__(self) -> str:

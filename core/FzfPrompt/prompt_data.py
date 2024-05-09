@@ -9,7 +9,7 @@ from .action_menu import Action, ActionMenu, Binding, ConflictResolution
 from .decorators import single_use_method
 from .options import Hotkey, Options, Situation
 from .previewer import Preview, Previewer
-from .server import EndStatus, PostProcessor, PromptState, ServerCall
+from .server import EndStatus, PostProcessor, PromptState, ServerCall, Server
 
 
 class PromptData[T, S](LoggedComponent):
@@ -31,7 +31,8 @@ class PromptData[T, S](LoggedComponent):
         check_choices_and_lines_length(self.choices, self.presented_choices)
         self.obj = obj
         self.action_menu = action_menu or ActionMenu()
-        self.previewer = previewer or Previewer(self.action_menu)
+        self.server = Server(self)
+        self.previewer = previewer or Previewer()
         self.bindings_to_automate: list[Binding] = []
         self.options = options or Options()
         self.post_processors: list[PostProcessor] = []
@@ -96,6 +97,7 @@ class PromptData[T, S](LoggedComponent):
         self, event: Hotkey | Situation, binding: Binding, *, on_conflict: ConflictResolution = "raise error"
     ):
         self.action_menu.add(event, binding, on_conflict=on_conflict)
+        self.server.add_server_calls(binding)
 
     def add_preview(
         self,
@@ -105,7 +107,9 @@ class PromptData[T, S](LoggedComponent):
         on_conflict: ConflictResolution = "raise error",
         main: bool = False,
     ):
-        self.previewer.add(preview, event, on_conflict=on_conflict, main=main)
+        self.previewer.add(preview, main=main)
+        if event:
+            self.add_binding(event, preview.preview_change_binding, on_conflict=on_conflict)
 
     def add_post_processor(self, post_processor: PostProcessor):
         self.post_processors.append(post_processor)

@@ -3,7 +3,6 @@ from __future__ import annotations
 from ...monitoring import LoggedComponent
 from ..decorators import single_use_method
 from ..options import Hotkey, Options, Situation
-from ..server import ServerCall
 from .binding import Binding, BindingConflict, ConflictResolution
 from .parametrized_actions import Action
 
@@ -16,7 +15,6 @@ class ActionMenu[T, S](LoggedComponent):
     def __init__(self) -> None:
         super().__init__()
         self.bindings: dict[Hotkey | Situation, Binding] = {}
-        self.server_calls: dict[str, ServerCall] = {}
 
     @property
     def actions(self) -> list[Action]:
@@ -38,17 +36,6 @@ class ActionMenu[T, S](LoggedComponent):
                     self.bindings[event] = binding + self.bindings[event]
                 case _:
                     raise ValueError(f"Invalid conflict resolution: {on_conflict}")
-        self.add_server_calls(binding)
-
-    def add_server_calls(self, binding: Binding):
-        for action in binding.actions:
-            if isinstance(action, ServerCall):
-                self.add_server_call(action)
-
-    def add_server_call(self, server_call: ServerCall):
-        if server_call.id not in self.server_calls:
-            self.logger.debug(f"🤙 Adding server call: {server_call}")
-            self.server_calls[server_call.id] = server_call
 
     # TODO: silent binding (doesn't appear in header help)?
     @single_use_method
