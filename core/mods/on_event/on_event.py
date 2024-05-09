@@ -11,12 +11,10 @@ from ...FzfPrompt import (
     Action,
     ActionsBuilder,
     Binding,
-    ChoicesGetter,
     ConflictResolution,
     EndStatus,
     PromptData,
     PromptEndingAction,
-    ReloadChoices,
     ServerCall,
     ServerCallFunction,
     ShellCommand,
@@ -25,7 +23,7 @@ from ...FzfPrompt import (
 from ...FzfPrompt.constants import SHELL_COMMAND
 from ...FzfPrompt.options.actions import BaseAction, ShellCommandActionType
 from ...FzfPrompt.options.events import Hotkey, Situation
-from .presets import FILE_EDITORS, FileEditor, Repeater, clip_current_preview, clip_options
+from .presets import FILE_EDITORS, FileEditor, Repeater, clip_current_preview, clip_options, ChoicesGetter, ReloadChoices
 
 
 class OnEventBase[T, S](ABC):

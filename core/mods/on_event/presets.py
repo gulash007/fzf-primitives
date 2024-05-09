@@ -8,19 +8,21 @@ from typing import Callable, Literal
 
 import pyperclip
 
+from ...FzfPrompt import Action, Binding, ChoicesAndLinesMismatch, PromptData, ServerCall
 from ...monitoring import LoggedComponent
 
-from ...FzfPrompt import Action, Binding, PromptData
 
-
+# clip current preview
 def clip_current_preview(prompt_data: PromptData):
     pyperclip.copy(prompt_data.get_current_preview())
 
 
+# clip options
 def clip_options(prompt_data: PromptData):
     pyperclip.copy(str(prompt_data.options))
 
 
+# open file in editor
 type FileEditor = Literal["VS Code", "VS Code - Insiders", "Vi", "Vim", "NeoVim", "Nano"]
 FILE_EDITORS: dict[FileEditor, str] = {
     "VS Code": "code",
@@ -31,7 +33,33 @@ FILE_EDITORS: dict[FileEditor, str] = {
     "Nano": "nano",
 }
 
+# reload choices
+type ChoicesGetter[T, S] = Callable[[PromptData[T, S]], tuple[list[T], list[str] | None]]
 
+
+class ReloadChoices[T, S](ServerCall[T, S]):
+    def __init__(self, choices_getter: ChoicesGetter[T, S], *, sync: bool = False):
+        def reload_choices(prompt_data: PromptData[T, S]):
+            choices, lines = choices_getter(prompt_data)
+            if lines is None:
+                lines = [str(choice) for choice in choices]
+            else:
+                try:
+                    prompt_data.check_choices_and_lines_length(choices, lines)
+                except ChoicesAndLinesMismatch as err:
+                    input(str(err))
+                    raise
+            prompt_data.choices = choices
+            prompt_data.presented_choices = lines
+            return "\n".join(lines)
+
+        super().__init__(reload_choices, command_type="reload-sync" if sync else "reload")
+
+    def __str__(self) -> str:
+        return f"[RC]({self.function.__name__})"
+
+
+# repeat actions
 class Repeater[T, S]:
     def __init__(
         self,
@@ -94,7 +122,7 @@ class AutomatingThread[T, S](Thread, LoggedComponent):
                             "-XPOST",
                             f"localhost:{self.port}",
                             "-d",
-                            Binding("", *self.actions).to_action_string(),
+                            Binding("", *self.actions).action_string(),
                         ]
                     ),
                     shell=True,  # ❗ required for getting FZF_PORT

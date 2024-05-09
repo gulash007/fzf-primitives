@@ -6,7 +6,7 @@ from .core.FzfPrompt.previewer.actions import (
     SetAsCurrentPreview,
     ShowAndStorePreviewOutput,
 )
-from .core.FzfPrompt.prompt_data import ReloadChoices
+from .core.mods.on_event.presets import ReloadChoices
 from .core.FzfPrompt.server import PromptEndingAction, ServerCall
 
 __all__ = [

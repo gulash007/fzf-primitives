@@ -22,7 +22,7 @@ from .previewer import (
     PreviewMutator,
     PreviewStyleMutationArgs,
 )
-from .prompt_data import ChoicesGetter, PromptData, ReloadChoices, Result
+from .prompt_data import ChoicesAndLinesMismatch, PromptData, Result
 from .server import (
     SOCKET_NUMBER_ENV_VAR,
     EndStatus,
@@ -42,8 +42,6 @@ __all__ = [
     "Action",
     "ConflictResolution",
     "ShellCommand",
-    "ChoicesGetter",
-    "ReloadChoices",
     "ServerCall",
     "ServerCallFunction",
     "PromptEndingAction",
@@ -57,6 +55,7 @@ __all__ = [
     "PreviewStyleMutationArgs",
     "Transform",
     "ActionsBuilder",
+    "ChoicesAndLinesMismatch",
 ]
 
 # Black magic layer

@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from typing import Callable
 
 from ..monitoring import LoggedComponent
 from .action_menu import Action, ActionMenu, Binding, ConflictResolution
 from .decorators import single_use_method
 from .options import Hotkey, Options, Situation
 from .previewer import Preview, Previewer
-from .server import EndStatus, PostProcessor, PromptState, ServerCall, Server
+from .server import EndStatus, PostProcessor, PromptState, Server
 
 
 class PromptData[T, S](LoggedComponent):
@@ -28,7 +27,7 @@ class PromptData[T, S](LoggedComponent):
         self.logger.debug("PromptData created")
         self.choices = choices or []
         self.presented_choices = presented_choices or [str(choice) for choice in self.choices]
-        check_choices_and_lines_length(self.choices, self.presented_choices)
+        self.check_choices_and_lines_length(self.choices, self.presented_choices)
         self.obj = obj
         self.action_menu = action_menu or ActionMenu()
         self.server = Server(self)
@@ -138,6 +137,11 @@ class PromptData[T, S](LoggedComponent):
     def resolve_options(self) -> Options:
         return self.options + self.action_menu.resolve_options()
 
+    def check_choices_and_lines_length(self, choices: list, lines: list):
+        if len(choices) != len(lines):
+            message = f"Choices and lines have different lengths: {len(choices)} vs {len(lines)}"
+            raise ChoicesAndLinesMismatch(message)
+
 
 class Result[T](list[T]):
     def __init__(
@@ -180,34 +184,3 @@ class Result[T](list[T]):
 
 
 class ChoicesAndLinesMismatch(Exception): ...
-
-
-def check_choices_and_lines_length(choices: list, lines: list):
-    if len(choices) != len(lines):
-        message = f"Choices and lines have different lengths: {len(choices)} vs {len(lines)}"
-        raise ChoicesAndLinesMismatch(message)
-
-
-type ChoicesGetter[T, S] = Callable[[PromptData[T, S]], tuple[list[T], list[str] | None]]
-
-
-class ReloadChoices[T, S](ServerCall[T, S]):
-    def __init__(self, choices_getter: ChoicesGetter[T, S], *, sync: bool = False):
-        def reload_choices(prompt_data: PromptData[T, S]):
-            choices, lines = choices_getter(prompt_data)
-            if lines is None:
-                lines = [str(choice) for choice in choices]
-            else:
-                try:
-                    check_choices_and_lines_length(choices, lines)
-                except ChoicesAndLinesMismatch as err:
-                    input(str(err))
-                    raise
-            prompt_data.choices = choices
-            prompt_data.presented_choices = lines
-            return "\n".join(lines)
-
-        super().__init__(reload_choices, command_type="reload-sync" if sync else "reload")
-
-    def __str__(self) -> str:
-        return f"[RC]({self.function.__name__})"
