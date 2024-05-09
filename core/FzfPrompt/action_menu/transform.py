@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 from typing import TYPE_CHECKING, Callable, Iterable
 
 if TYPE_CHECKING:
@@ -25,7 +26,8 @@ class Transform[T, S](ServerCall[T, S], LoggedComponent):
         self.logger.debug(f"{self}: Created {binding}")
 
         for server_call_id in self._created_server_call_ids:
-            prompt_data.server.server_calls.pop(server_call_id)
+            with contextlib.suppress(KeyError):
+                prompt_data.server.server_calls.pop(server_call_id)
         self._created_server_call_ids.clear()
         for action in binding.actions:
             if isinstance(action, ServerCall):
