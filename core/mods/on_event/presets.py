@@ -8,7 +8,7 @@ from typing import Callable, Literal
 
 import pyperclip
 
-from fzf_primitives.core.monitoring import LoggedComponent
+from ...monitoring import LoggedComponent
 
 from ...FzfPrompt import Action, Binding, PromptData
 
