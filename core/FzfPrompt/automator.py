@@ -62,7 +62,7 @@ class Automator(Thread, LoggedComponent):
         if not binding.final_action:
             binding += am.Binding("move to next automated binding", self.move_to_next_binding_server_call)
         self._binding_executed.clear()
-        response = requests.post(f"http://localhost:{self.port}", data=binding.to_action_string())
+        response = requests.post(f"http://localhost:{self.port}", data=binding.action_string())
         if message := response.text:
             if not message.startswith("unknown action:"):
                 self.logger.log("WEIRDNESS", message)

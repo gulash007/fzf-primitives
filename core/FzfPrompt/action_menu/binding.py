@@ -1,52 +1,121 @@
 from __future__ import annotations
 
-from typing import Literal
+import itertools
+from typing import Iterable, Literal, overload
 
 from ...monitoring import LoggedComponent
 from ..server import PromptEndingAction
+from . import transform as t
 from .parametrized_actions import Action, ParametrizedAction
+
+ConflictResolution = Literal["raise error", "override", "append", "prepend", "cycle with"]
+
+
+class BindingConflict(Exception):
+    pass
 
 
 class Binding(LoggedComponent):
-    def __init__(self, name: str | None, /, *actions: Action):
+    """Mind that addition has operation precedence over cycling"""
+
+    @overload
+    def __init__(self, name: None, /, *, action_groups: Iterable[ActionGroup]): ...
+    @overload
+    def __init__(self, name: str | None, /, *actions: Action): ...
+    def __init__(self, name: str | None, /, *actions: Action, action_groups: Iterable[ActionGroup] | None = None):
         super().__init__()
-
-        self.description = self._create_description(*actions)
-        self.name = name or self.description  # name only has a descriptive function (appears in help and logs)
-        self.actions: list[Action] = []
-        self.final_action: PromptEndingAction | None = None
-        for action in actions:
-            if self.final_action is not None:
+        self._action_groups: dict[int, ActionGroup] = {}
+        if not action_groups:
+            self._action_groups[ag.id] = (ag := ActionGroup(name, *actions))
+        else:
+            if actions:
+                raise ValueError("Binding: Either pass action groups or actions, not both")
+            if name:
                 raise ValueError(
-                    f"Binding({self.name}): PromptEndingAction should be the last action in the binding: {self._create_description(*actions)}"
+                    "Binding: When passing action groups, name should be None (it will be constructed from action group names)"
                 )
-            self.actions.append(action)
-            if isinstance(action, PromptEndingAction):
-                self.final_action = action
+            for action_group in action_groups:
+                self._action_groups[action_group.id] = action_group
+        self.actions: list[Action]
+        if len(self._action_groups) > 1:
+            if any(ag.final_action for ag in self._action_groups.values()):
+                raise NotImplementedError("Binding with multiple action groups can't have final action")
+            action_groups_ids = itertools.cycle(self._action_groups.keys())
+            self.actions = [t.Transform(lambda pd: self._action_groups[next(action_groups_ids)].actions, name)]
+            self.final_action = None
+        else:
+            self.actions = (lone_action_group := list(self._action_groups.values())[0]).actions
+            self.final_action = lone_action_group.final_action
 
-    def to_action_string(self) -> str:
-        self.logger.debug(f"Turning binding to action string: {self.name}")
+    def action_string(self) -> str:
         actions = self.actions.copy()
         if self.final_action:
-            actions.append("abort")
+            actions.append("abort")  # could be 'accept', this is just needed to exit fzf process
         action_strings = [
             action.action_string() if isinstance(action, ParametrizedAction) else action for action in actions
         ]
         return "+".join(action_strings)
 
     def __add__(self, other: Binding) -> Binding:
-        name = " -> ".join(n for n in [self.name, other.name] if n)
-        return Binding(name, *(self.actions + other.actions))
+        # TODO: if both bindings have more than one action_group then raise error
+        if len(self._action_groups) > 1 and len(other._action_groups) > 1:
+            raise NotImplementedError("Cannot combine two bindings when both have multiple action groups")
+        if len(self._action_groups) == 1 and len(other._action_groups) == 1:
+            name = " -> ".join(n for n in (self.name, other.name) if n)
+            return Binding(name, *(self.actions + other.actions))
+        if len(self._action_groups) > 1:
+            distributed_group = next(iter(other._action_groups.values()))
+            return Binding(
+                None,
+                action_groups=[action_group + distributed_group for action_group in self._action_groups.values()],
+            )
+        else:
+            distributed_group = next(iter(self._action_groups.values()))
+            return Binding(
+                None,
+                action_groups=[distributed_group + action_group for action_group in other._action_groups.values()],
+            )
 
-    def _create_description(self, *actions: Action) -> str:
-        return "->".join([f"{str(action)}" for action in actions])
+    def __or__(self, other: Binding) -> Binding:
+        return Binding(None, action_groups=[*self._action_groups.values(), *other._action_groups.values()])
+
+    @property
+    def name(self) -> str:
+        return " | ".join(group.name for group in self._action_groups.values())
+
+    @property
+    def description(self) -> str:
+        return " | ".join(group.description for group in self._action_groups.values())
 
     def __str__(self) -> str:
         return self.description
 
 
-ConflictResolution = Literal["raise error", "override", "append", "prepend"]
-
-
-class BindingConflict(Exception):
+class PromptEndingActionNotLast(ValueError):
     pass
+
+
+# ❗ Not named ActionSequence because I'm not sure whether they actually will execute in sequence ('execute-silent' might be done in background, etc.)
+class ActionGroup:
+    def __init__(self, name: str | None = None, *actions: Action):
+        self.id = id(self)
+        self._actions: list[Action] = []
+        self.description = self._create_description(*actions)
+        self.name = name or self.description
+        self.final_action: PromptEndingAction | None = None
+        for action in actions:
+            if self.final_action is not None:
+                raise PromptEndingActionNotLast(self._create_description(*actions))
+            self._actions.append(action)
+            if isinstance(action, PromptEndingAction):
+                self.final_action = action
+
+    @property
+    def actions(self) -> list[Action]:
+        return self._actions
+
+    def _create_description(self, *actions: Action) -> str:
+        return "->".join([f"{str(action)}" for action in actions])
+
+    def __add__(self, other: ActionGroup) -> ActionGroup:
+        return ActionGroup(" -> ".join(n for n in (self.name, other.name) if n), *(self._actions + other._actions))

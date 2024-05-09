@@ -96,7 +96,6 @@ class PromptData[T, S](LoggedComponent):
         self, event: Hotkey | Situation, binding: Binding, *, on_conflict: ConflictResolution = "raise error"
     ):
         self.action_menu.add(event, binding, on_conflict=on_conflict)
-        self.server.add_server_calls(binding)
 
     def add_preview(
         self,

@@ -5,14 +5,15 @@ from time import perf_counter
 start = perf_counter()
 
 
-from datetime import datetime
 from enum import Enum, auto
 
 import pyperclip
 
 from .. import Prompt
+from ..actions import ParametrizedAction
 from ..config import Config
 from ..core.FzfPrompt import PreviewMutationArgs, PromptData
+from ..core.FzfPrompt.action_menu import Binding, ShellCommand
 from ..core.FzfPrompt.exceptions import Quitting
 from ..core.FzfPrompt.previewer.Preview import ChangePreviewLabel
 from ..core.mods.multi_dimensional_generator import MultiDimensionalGenerator
@@ -61,7 +62,7 @@ def prompt_builder():
     prompt.mod.on_hotkey().CTRL_C.clip_current_preview.accept
     prompt.mod.on_hotkey().CTRL_O.clip_options
     prompt.mod.on_hotkey().CTRL_N.run_function("wait", wait_for_input)
-    prompt.mod.on_hotkey().CTRL_ALT_N.run_transform("wait", lambda pd: [ChangePreviewLabel(str(datetime.now()))])
+    prompt.mod.on_hotkey().CTRL_ALT_N.run_function("wait", lambda pd: input("Press Enter to continue..."))
     prompt.mod.on_hotkey().CTRL_L.view_logs_in_terminal(LOG_FILE_PATH)
     # prompt.mod.on_hotkey().CTRL_X.run_function("wait", bad_server_call_function) # uncomment to reveal error
     prompt.mod.preview("ctrl-y").fzf_json
@@ -90,10 +91,13 @@ def prompt_builder():
         lambda pd: preview_mutation_generator.next("has world"),
     )
 
-    def measure_startup_time(prompt_data):
-        print(f"Startup time: {perf_counter() - start} seconds")
+    prompt.mod.on_hotkey().CTRL_B.run_shell_command("First", "echo -n First && read")
+    prompt.mod.on_hotkey(on_conflict="cycle with").CTRL_B.run_shell_command("Second", "echo -n Second && read")
+    prompt.mod.on_hotkey(on_conflict="cycle with").CTRL_B.run_shell_command("Third", "echo -n Third && read")
 
-    prompt.mod.on_situation(on_conflict="append").START.run_function("measure startup time", measure_startup_time)
+    prompt.mod.on_situation(on_conflict="append").START.run_function(
+        "measure startup time", lambda pd: print(f"Startup time: {perf_counter() - start} seconds")
+    )
     return prompt
 
 

@@ -84,7 +84,10 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         automator.prepare(prompt_data)
         automator.start()
 
-    (server := prompt_data.server).start()
+    server = prompt_data.server
+    for binding in prompt_data.action_menu.bindings.values():
+        server.add_server_calls(binding)
+    server.start()
     server.setup_finished.wait()
     env = os.environ.copy()
     env[SOCKET_NUMBER_ENV_VAR] = str(server.socket_number)

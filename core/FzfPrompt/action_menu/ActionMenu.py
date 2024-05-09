@@ -34,6 +34,8 @@ class ActionMenu[T, S](LoggedComponent):
                     self.bindings[event] += binding
                 case "prepend":
                     self.bindings[event] = binding + self.bindings[event]
+                case "cycle with":
+                    self.bindings[event] = self.bindings[event] | binding
                 case _:
                     raise ValueError(f"Invalid conflict resolution: {on_conflict}")
 
@@ -42,7 +44,7 @@ class ActionMenu[T, S](LoggedComponent):
     def resolve_options(self) -> Options:
         options = Options()
         for event, binding in self.bindings.items():
-            options.bind(event, binding.to_action_string())
+            options.bind(event, binding.action_string())
         for event, binding in self.bindings.items():
             options.add_header(f"{event}\t{binding.name}")
         return options.header_first

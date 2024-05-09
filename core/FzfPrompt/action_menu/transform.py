@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable, Iterable
 
 if TYPE_CHECKING:
-    from . import Action
     from ..prompt_data import PromptData
+    from . import Action
 from ...monitoring import LoggedComponent
 from ..server import ServerCall
-from .binding import Binding
+from . import binding as b
 
 type ActionsBuilder[T, S] = Callable[[PromptData[T, S]], Iterable[Action]]
 
@@ -21,7 +21,7 @@ class Transform[T, S](ServerCall[T, S], LoggedComponent):
         super().__init__(self.get_transform_string, description or self._get_function_name(get_actions), "transform")
 
     def get_transform_string(self, prompt_data: PromptData[T, S]) -> str:
-        binding = Binding(None, *self.get_actions(prompt_data))
+        binding = b.Binding(None, *self.get_actions(prompt_data))
         self.logger.debug(f"{self}: Created {binding}")
 
         for server_call_id in self._created_server_call_ids:
@@ -32,7 +32,7 @@ class Transform[T, S](ServerCall[T, S], LoggedComponent):
                 prompt_data.server.add_server_call(action)
                 self._created_server_call_ids.append(action.id)
 
-        return binding.to_action_string()
+        return binding.action_string()
 
     def __str__(self) -> str:
         return f"[T]({self.id})"
