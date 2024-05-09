@@ -1,18 +1,12 @@
 from __future__ import annotations
 
 import itertools
-from typing import Iterable, Literal, overload
+from typing import Iterable, overload
 
 from ...monitoring import LoggedComponent
 from ..server import PromptEndingAction
 from . import transform as t
 from .parametrized_actions import Action, ParametrizedAction
-
-ConflictResolution = Literal["raise error", "override", "append", "prepend", "cycle with"]
-
-
-class BindingConflict(Exception):
-    pass
 
 
 class Binding(LoggedComponent):

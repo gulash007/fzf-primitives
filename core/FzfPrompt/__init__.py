@@ -10,7 +10,8 @@ if TYPE_CHECKING:
     from .prompt_data import PromptData
     from .server import PromptEndingAction, ServerCall
 from ..monitoring import Logger
-from .action_menu.binding import Binding, BindingConflict, ConflictResolution
+from .action_menu.ActionMenu import BindingConflict, ConflictResolution
+from .action_menu.binding import Binding
 from .action_menu.parametrized_actions import Action, ShellCommand
 from .action_menu.transform import ActionsBuilder, Transform
 from .exceptions import Quitting

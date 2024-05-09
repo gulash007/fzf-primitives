@@ -1,7 +1,7 @@
-from .ActionMenu import ActionMenu
-from .binding import Binding, BindingConflict, ConflictResolution
-from .parametrized_actions import Action, ParametrizedAction, ShellCommand, ChangeBorderLabel
-from .transform import Transform, ActionsBuilder
+from .ActionMenu import ActionMenu, BindingConflict, ConflictResolution
+from .binding import Binding
+from .parametrized_actions import Action, ChangeBorderLabel, ParametrizedAction, ShellCommand
+from .transform import ActionsBuilder, Transform
 
 __all__ = [
     "ActionMenu",

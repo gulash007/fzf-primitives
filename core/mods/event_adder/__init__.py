@@ -1,11 +1,10 @@
 import functools
 from typing import Protocol, overload
 
-from ...FzfPrompt.action_menu.binding import ConflictResolution
+from ...FzfPrompt.action_menu import ConflictResolution
 from ...FzfPrompt.options import Hotkey, Situation
 from ..on_event import OnEventBase
 from .EventAdder import EventAdder, HotkeyAdder, SituationAdder
-
 
 __all__ = ["attach_hotkey_adder", "attach_situation_adder", "attach_event_adder"]
 

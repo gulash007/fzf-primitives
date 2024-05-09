@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from ...monitoring import LoggedComponent
 from ..decorators import single_use_method
 from ..options import Hotkey, Options, Situation
-from .binding import Binding, BindingConflict, ConflictResolution
+from .binding import Binding
 from .parametrized_actions import Action
 
 
@@ -48,3 +50,10 @@ class ActionMenu[T, S](LoggedComponent):
         for event, binding in self.bindings.items():
             options.add_header(f"{event}\t{binding.name}")
         return options.header_first
+
+
+ConflictResolution = Literal["raise error", "override", "append", "prepend", "cycle with"]
+
+
+class BindingConflict(Exception):
+    pass
