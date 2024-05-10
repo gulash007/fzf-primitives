@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 from ...monitoring import LoggedComponent
 from ..action_menu.parametrized_actions import ShellCommand
 from ..options import EndStatus, Hotkey, ShellCommandActionType, Situation
-from ..shell import SHELL_SCRIPTS
 
 # means it requires first parameter to be of type PromptData but other parameters can be anything
 type ServerCallFunctionGeneric[T, S, R] = Callable[Concatenate[PromptData[T, S], ...], R]
@@ -73,6 +72,7 @@ class CommandOutput(str): ...
 
 
 SOCKET_NUMBER_ENV_VAR = "FZF_PRIMITIVES_SOCKET_NUMBER"
+MAKE_SERVER_CALL_ENV_VAR_NAME = "FZF_PRIMITIVES_REQUEST_CREATING_SCRIPT"
 
 
 class Request:
@@ -88,7 +88,7 @@ class Request:
     def create_command(server_call_id: str, function: ServerCallFunction, command_type: ShellCommandActionType) -> str:
         parameters = Request.parse_function_parameters(function)
         command = [
-            f"{SHELL_SCRIPTS.make_server_call} {shlex.quote(server_call_id)} {command_type}",
+            f'"${MAKE_SERVER_CALL_ENV_VAR_NAME}" {shlex.quote(server_call_id)} {command_type}',
             '{q} "{n}" {} "{+n}" "$(for x in {+}; do echo "$x"; done)"',  # making use of fzf placeholders
         ]
         for parameter in parameters:

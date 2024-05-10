@@ -1,1 +1,1 @@
-/Users/developer/Documents/Projects/PythonPackages/fzf_primitives/core/FzfPrompt/shell/make_server_call.py 'ID with '"'"'quotes'"'"'' execute {q} "{n}" {} "{+n}" "$(for x in {+}; do echo "$x"; done)" |& nc localhost "$FZF_PRIMITIVES_SOCKET_NUMBER"
+"$FZF_PRIMITIVES_REQUEST_CREATING_SCRIPT" 'ID with '"'"'quotes'"'"'' execute {q} "{n}" {} "{+n}" "$(for x in {+}; do echo "$x"; done)" |& nc localhost "$FZF_PRIMITIVES_SOCKET_NUMBER"

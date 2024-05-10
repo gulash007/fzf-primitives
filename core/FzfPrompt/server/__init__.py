@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 from ...monitoring import LoggedComponent
 from ..options import EndStatus
 from .actions import (
+    MAKE_SERVER_CALL_ENV_VAR_NAME,
     SOCKET_NUMBER_ENV_VAR,
     CommandOutput,
     PostProcessor,
@@ -33,6 +34,7 @@ __all__ = [
     "PromptState",
     "CommandOutput",
     "EndStatus",
+    "MAKE_SERVER_CALL_ENV_VAR_NAME",
     "SOCKET_NUMBER_ENV_VAR",
 ]
 

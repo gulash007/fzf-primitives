@@ -25,6 +25,7 @@ from .previewer import (
 )
 from .prompt_data import ChoicesAndLinesMismatch, PromptData, Result
 from .server import (
+    MAKE_SERVER_CALL_ENV_VAR_NAME,
     SOCKET_NUMBER_ENV_VAR,
     EndStatus,
     PostProcessor,
@@ -32,7 +33,7 @@ from .server import (
     ServerCall,
     ServerCallFunction,
 )
-from .shell import MoreInformativeCalledProcessError
+from .shell import SHELL_SCRIPTS, MoreInformativeCalledProcessError
 
 __all__ = [
     "run_fzf_prompt",
@@ -92,6 +93,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
     server.setup_finished.wait()
     env = os.environ.copy()
     env[SOCKET_NUMBER_ENV_VAR] = str(server.socket_number)
+    env[MAKE_SERVER_CALL_ENV_VAR_NAME] = str(SHELL_SCRIPTS.make_server_call)
 
     # TODO: catch 130 in mods.exit_round_on_no_selection (rename it appropriately)
     try:
