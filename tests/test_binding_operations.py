@@ -1,6 +1,12 @@
+import pytest
+
 from ..actions import ShellCommand
 from ..core.FzfPrompt.action_menu.binding import Binding
-import pytest
+
+binding1 = Binding("Some binding", ShellCommand("echo -n first && read"))
+binding2 = Binding("Some other binding", ShellCommand("echo -n second && read"))
+binding3 = Binding("Some third binding", ShellCommand("echo -n third && read"))
+binding4 = Binding("Some fourth binding", ShellCommand("echo -n fourth && read"))
 
 
 @pytest.mark.parametrize(
@@ -15,19 +21,7 @@ def test_names_after_binding_addition(self: Binding, other: Binding, expected_na
     assert result.name == expected_name
 
 
-def get_binding_cycling():
-    binding1 = Binding("Some binding", ShellCommand("echo -n first && read"))
-    binding2 = Binding("Some other binding", ShellCommand("echo -n second && read"))
-    binding3 = Binding("Some third binding", ShellCommand("echo -n third && read"))
-
-    return (binding1 | binding2) | binding3
-
-
 def test_binding_addition_associative():
-    binding1 = Binding("Some binding", ShellCommand("echo -n first && read"))
-    binding2 = Binding("Some other binding", ShellCommand("echo -n second && read"))
-    binding3 = Binding("Some third binding", ShellCommand("echo -n third && read"))
-
     binding12_3 = (binding1 + binding2) + binding3
     binding1_23 = binding1 + (binding2 + binding3)
 
@@ -39,11 +33,6 @@ def test_binding_addition_associative():
 
 
 def test_binding_cycling_closed_in_cycling():
-    binding1 = Binding("Some binding", ShellCommand("echo -n first && read"))
-    binding2 = Binding("Some other binding", ShellCommand("echo -n second && read"))
-    binding3 = Binding("Some third binding", ShellCommand("echo -n third && read"))
-    binding4 = Binding("Some fourth binding", ShellCommand("echo -n fourth && read"))
-
     binding12 = binding1 | binding2
     binding34 = binding3 | binding4
     binding1234 = binding12 | binding34
@@ -60,10 +49,6 @@ def test_binding_cycling_closed_in_cycling():
 
 
 def test_binding_cycling_associative():
-    binding1 = Binding("Some binding", ShellCommand("echo -n first && read"))
-    binding2 = Binding("Some other binding", ShellCommand("echo -n second && read"))
-    binding3 = Binding("Some third binding", ShellCommand("echo -n third && read"))
-
     binding12or3 = (binding1 | binding2) | binding3
     binding1or23 = binding1 | (binding2 | binding3)
 
@@ -76,9 +61,6 @@ def test_binding_cycling_associative():
 
 def test_addition_distributive_over_cycling():
     """a + (b | c) == (a + b) | (a + c)"""
-    binding1 = Binding("Some binding", ShellCommand("echo -n first && read"))
-    binding2 = Binding("Some other binding", ShellCommand("echo -n second && read"))
-    binding3 = Binding("Some third binding", ShellCommand("echo -n third && read"))
 
     # distributive from left
     binding_1_2or3 = binding1 + (binding2 | binding3)
@@ -103,14 +85,25 @@ def test_addition_distributive_over_cycling():
 
 def test_binding_addition_closed():
     """if a . b is ok, then (a + c) . (b + c) is also ok (. can be + or |)"""
-    binding1 = Binding("Some binding", ShellCommand("echo -n first && read"))
-    binding2 = Binding("Some other binding", ShellCommand("echo -n second && read"))
-    binding3 = Binding("Some third binding", ShellCommand("echo -n third && read"))
-    binding4 = Binding("Some fourth binding", ShellCommand("echo -n fourth && read"))
 
     binding1or2 = binding1 | binding2
     binding1or2_3 = binding1or2 + binding3
     binding1or2_3 | binding4
+
+
+def test_addition_precedence_over_cycling():
+    binding1_2or3_4 = binding1 + binding2 | binding3 + binding4
+    binding12or34 = (binding1 + binding2) | (binding3 + binding4)
+
+    assert binding1_2or3_4.name == binding12or34.name
+    assert binding1_2or3_4.description == binding12or34.description
+    assert [action for ag in binding1_2or3_4._action_groups.values() for action in ag.actions] == [
+        action for ag in binding12or34._action_groups.values() for action in ag.actions
+    ]
+
+
+def get_binding_cycling():
+    return (binding1 | binding2) | binding3
 
 
 if __name__ == "__main__":
