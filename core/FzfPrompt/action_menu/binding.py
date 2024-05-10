@@ -10,8 +10,6 @@ from .parametrized_actions import Action, ParametrizedAction
 
 
 class Binding(LoggedComponent):
-    """Mind that addition has operation precedence over cycling"""
-
     @overload
     def __init__(self, name: None, /, *, action_groups: Iterable[ActionGroup]): ...
     @overload
@@ -51,6 +49,12 @@ class Binding(LoggedComponent):
         return "+".join(action_strings)
 
     def __add__(self, other: Binding) -> Binding:
+        """
+        Has precedence over cycling: A + B | C + D == (A + B) | (C + D)
+        Associative: (A + B) + C == A + (B + C)
+        Distributive over cycling from left: A + (C | B) == A + C | A + B
+        Distributive over cycling from right: (A | B) + C == A + C | B + C
+        """
         # TODO: if both bindings have more than one action_group then raise error
         if len(self._action_groups) > 1 and len(other._action_groups) > 1:
             raise NotImplementedError("Cannot combine two bindings when both have multiple action groups")
@@ -71,6 +75,10 @@ class Binding(LoggedComponent):
             )
 
     def __or__(self, other: Binding) -> Binding:
+        """
+        Has lower precedence to addition: A | B + C | D == A | (B + C) | D
+        Associative: (A | B) | C == A | (B | C)
+        """
         return Binding(None, action_groups=[*self._action_groups.values(), *other._action_groups.values()])
 
     @property
