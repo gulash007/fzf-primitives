@@ -12,17 +12,14 @@ if TYPE_CHECKING:
 from ...monitoring import LoggedComponent
 from ..options import EndStatus
 from .actions import (
-    MAKE_SERVER_CALL_ENV_VAR_NAME,
-    SOCKET_NUMBER_ENV_VAR,
-    CommandOutput,
     PostProcessor,
     PromptEndingAction,
-    PromptState,
     Request,
     ServerCall,
     ServerCallFunction,
     ServerCallFunctionGeneric,
 )
+from .request import MAKE_SERVER_CALL_ENV_VAR_NAME, SOCKET_NUMBER_ENV_VAR, CommandOutput, PromptState
 
 __all__ = [
     "Server",
@@ -52,6 +49,7 @@ class Server[T, S](Thread, LoggedComponent):
     # TODO: Use automator to end running prompt and propagate errors
     def run(self):
         try:
+            # TODO: Use socket.AF_UNIX
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
                 server_socket.bind(("localhost", 0))
                 socket_specs = server_socket.getsockname()

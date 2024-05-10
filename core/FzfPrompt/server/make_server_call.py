@@ -40,6 +40,7 @@ if __name__ == "__main__":
         for key, value in grouper(sys.argv[8:], 2, incomplete="strict"):
             data["kwargs"][key] = value
 
+        # TODO: send it through a socket to Server instead of using nc
         print(json.dumps(data))
     except Exception:
         sys.stderr.write(str(sys.argv))
