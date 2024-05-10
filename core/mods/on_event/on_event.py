@@ -23,7 +23,15 @@ from ...FzfPrompt import (
 from ...FzfPrompt.constants import SHELL_COMMAND
 from ...FzfPrompt.options.actions import BaseAction, ShellCommandActionType
 from ...FzfPrompt.options.events import Hotkey, Situation
-from .presets import FILE_EDITORS, FileEditor, Repeater, clip_current_preview, clip_options, ChoicesGetter, ReloadChoices
+from .presets import (
+    FILE_EDITORS,
+    ChoicesGetter,
+    FileEditor,
+    ReloadChoices,
+    Repeater,
+    clip_current_preview,
+    clip_options,
+)
 
 
 class OnEventBase[T, S](ABC):

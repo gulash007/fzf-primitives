@@ -8,8 +8,19 @@ from typing import Callable, Literal
 
 import pyperclip
 
-from ...FzfPrompt import Action, Binding, ChoicesAndLinesMismatch, PromptData, ServerCall
-from ...monitoring import LoggedComponent
+from ....FzfPrompt import Action, Binding, PromptData
+from ....monitoring import LoggedComponent
+from .actions import ChoicesGetter, ReloadChoices
+
+__all__ = [
+    "clip_current_preview",
+    "clip_options",
+    "FILE_EDITORS",
+    "Repeater",
+    "FileEditor",
+    "ReloadChoices",
+    "ChoicesGetter",
+]
 
 
 # clip current preview
@@ -32,31 +43,6 @@ FILE_EDITORS: dict[FileEditor, str] = {
     "NeoVim": "nvim",
     "Nano": "nano",
 }
-
-# reload choices
-type ChoicesGetter[T, S] = Callable[[PromptData[T, S]], tuple[list[T], list[str] | None]]
-
-
-class ReloadChoices[T, S](ServerCall[T, S]):
-    def __init__(self, choices_getter: ChoicesGetter[T, S], *, sync: bool = False):
-        def reload_choices(prompt_data: PromptData[T, S]):
-            choices, lines = choices_getter(prompt_data)
-            if lines is None:
-                lines = [str(choice) for choice in choices]
-            else:
-                try:
-                    prompt_data.check_choices_and_lines_length(choices, lines)
-                except ChoicesAndLinesMismatch as err:
-                    input(str(err))
-                    raise
-            prompt_data.choices = choices
-            prompt_data.presented_choices = lines
-            return "\n".join(lines)
-
-        super().__init__(reload_choices, command_type="reload-sync" if sync else "reload")
-
-    def __str__(self) -> str:
-        return f"[RC]({self.function.__name__})"
 
 
 # repeat actions
