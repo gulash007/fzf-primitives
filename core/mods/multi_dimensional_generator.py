@@ -2,9 +2,9 @@ import itertools
 from typing import Any, Callable, Iterable, Mapping
 
 
-class MultiDimensionalGenerator[T]:
+class MultiDimensionalGenerator[K, T]:
     def __init__(
-        self, mutation_dict: Mapping[Any, Callable | Iterable], get_result: Callable[..., T] = lambda *args: args
+        self, mutation_dict: Mapping[K, Callable | Iterable], get_result: Callable[..., T] = lambda *args: args
     ):
         self.mutation_dict: dict[Any, dict] = {}
         for key, value in mutation_dict.items():
@@ -15,7 +15,7 @@ class MultiDimensionalGenerator[T]:
                 self.mutation_dict[key] = {"function": next_in_cycle, "result": next_in_cycle()}
         self.result_calculator = get_result
 
-    def next(self, key) -> T:
+    def next(self, key: K) -> T:
         self.mutation_dict[key]["result"] = self.mutation_dict[key]["function"]()
         return self.current_result()
 
