@@ -92,7 +92,7 @@ class Options:
     def border(self, border: Border, label: str) -> Self:
         return self.add(shlex.join(["--border", border, "--border-label", label]))
 
-    def layout(self, layout: str) -> Self:
+    def layout(self, layout: Layout) -> Self:
         return self.add(shlex.join(["--layout", layout]))
 
     def prompt(self, prompt: str) -> Self:
