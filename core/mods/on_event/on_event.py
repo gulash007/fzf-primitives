@@ -171,9 +171,10 @@ class OnEvent[T, S](OnEventBase[T, S]):
 
     @property
     def show_bindings_help_in_preview(self):
-        return self.run_transform(
-            "Show bindings help in preview", lambda pd: (ShowInPreview(lambda pd: pd.action_menu.get_bindings_help()),)
-        )
+        self._binding += Binding(
+            "Show bindings help in preview", ShowInPreview(lambda pd: pd.action_menu.get_bindings_help())
+        ) | Binding("", "refresh-preview")
+        return self
 
     def view_logs_in_terminal(self, log_file_path: str | Path):
         command = f"less +F '{log_file_path}'"
