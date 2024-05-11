@@ -29,6 +29,7 @@ from .presets import (
     FileEditor,
     ReloadChoices,
     Repeater,
+    ShowInPreview,
     clip_current_preview,
     clip_options,
 )
@@ -167,6 +168,12 @@ class OnEvent[T, S](OnEventBase[T, S]):
     @property
     def clip_options(self):
         return self.run_function("clip options", clip_options)
+
+    @property
+    def show_bindings_help_in_preview(self):
+        return self.run_transform(
+            "Show bindings help in preview", lambda pd: (ShowInPreview(lambda pd: pd.action_menu.get_bindings_help()),)
+        )
 
     def view_logs_in_terminal(self, log_file_path: str | Path):
         command = f"less +F '{log_file_path}'"

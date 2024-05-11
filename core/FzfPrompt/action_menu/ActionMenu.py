@@ -6,6 +6,7 @@ from ...monitoring import LoggedComponent
 from ..decorators import single_use_method
 from ..options import Hotkey, Options, Situation
 from .binding import Binding
+from .bindings_help import get_bindings_help
 from .parametrized_actions import Action
 
 
@@ -41,15 +42,17 @@ class ActionMenu[T, S](LoggedComponent):
                 case _:
                     raise ValueError(f"Invalid conflict resolution: {on_conflict}")
 
+    def get_bindings_help(self) -> str:
+        return get_bindings_help(self)
+
     # TODO: silent binding (doesn't appear in header help)?
     @single_use_method
     def resolve_options(self) -> Options:
         options = Options()
         for event, binding in self.bindings.items():
             options.bind(event, binding.action_string())
-        for event, binding in self.bindings.items():
-            options.add_header(f"{event}\t{binding.name}")
-        return options.header_first
+        options.add_header(self.get_bindings_help()).header_first
+        return options
 
 
 ConflictResolution = Literal["raise error", "override", "append", "prepend", "cycle with"]

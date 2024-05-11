@@ -94,7 +94,7 @@ ParametrizedActionType = Literal[
     "execute",
     "execute-silent",
     "pos",
-    "preview",  # TODO: Add this to ShellCommandActionType after you find use for it
+    "preview",
     "put",
     "rebind",
     "reload",
@@ -114,6 +114,7 @@ ShellCommandActionType = Literal[
     "execute-silent",
     "change-preview",
     "change-prompt",
+    "preview",
     "reload",
     "reload-sync",
     "transform",

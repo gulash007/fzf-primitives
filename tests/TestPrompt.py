@@ -98,6 +98,8 @@ def prompt_builder():
     prompt.mod.on_situation(on_conflict="append").START.run_function(
         "measure startup time", lambda pd: print(f"Startup time: {perf_counter() - start} seconds")
     )
+
+    prompt.mod.on_hotkey().CTRL_ALT_H.show_bindings_help_in_preview
     return prompt
 
 

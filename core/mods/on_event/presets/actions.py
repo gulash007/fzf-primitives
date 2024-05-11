@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from ....FzfPrompt import ChoicesAndLinesMismatch, PromptData, ServerCall
+from ....FzfPrompt import ChoicesAndLinesMismatch, PreviewFunction, PromptData, ServerCall
 
 type ChoicesGetter[T, S] = Callable[[PromptData[T, S]], tuple[list[T], list[str] | None]]
 
@@ -27,3 +27,11 @@ class ReloadChoices[T, S](ServerCall[T, S]):
 
     def __str__(self) -> str:
         return f"[RC]({self.function.__name__})"
+
+
+class ShowInPreview[T, S](ServerCall[T, S]):
+    def __init__(self, show_in_preview: PreviewFunction[T, S], description: str | None = None):
+        super().__init__(show_in_preview, description, command_type="preview")
+
+    def __str__(self) -> str:
+        return f"[SIP]({self.id})"
