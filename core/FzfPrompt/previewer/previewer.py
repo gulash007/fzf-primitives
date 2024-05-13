@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
+from ..server.actions import ServerCall
 from .Preview import Preview
 
 
@@ -37,4 +38,9 @@ class Previewer[T, S](LoggedComponent):
 
     def resolve_main_preview(self, prompt_data: PromptData):
         if self._current_preview:
-            prompt_data.add_binding("start", self._current_preview.preview_change_binding, on_conflict="prepend")
+            change_preview_output = self._current_preview.change_preview_output
+            if isinstance(change_preview_output, ServerCall):
+                prompt_data.server.add_server_call(change_preview_output)
+            prompt_data.options.preview(change_preview_output.action_value)
+            prompt_data.options.add("--preview-window", self._current_preview.change_preview_window.action_value)
+            prompt_data.options.preview_label(self._current_preview.change_preview_label.action_value)

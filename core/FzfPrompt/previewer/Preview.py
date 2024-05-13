@@ -58,23 +58,51 @@ class Preview[T, S]:
         self._output: str | None = None
 
         # Using a Transform so that mutations of Preview are expressed when switching to it using just its basic binding
+        self._create_new_actions()
         self.transform_preview = Transform[T, S](
             # ❗ It's crucial that window change happens before creating output
             lambda pd: (
-                SetAsCurrentPreview(self, self.before_change_do),
-                ChangePreviewWindow(self.window_size, self.window_position, line_wrap=self.line_wrap),
-                get_preview_shell_command(self.output_generator, self)
-                if isinstance(self.output_generator, str)
-                else PreviewServerCall(self.output_generator, self),
-                ChangePreviewLabel(self.label),
+                self.set_as_current_preview,
+                self.change_preview_window,
+                self.change_preview_output,
+                self.change_preview_label,
             ),
             f"Change preview to {name}",
         )
         self.preview_change_binding = Binding(f"Change preview to {name}", self.transform_preview)
 
+    @property
+    def set_as_current_preview(self):
+        return self._set_as_current_preview
+
+    @property
+    def change_preview_window(self):
+        return self._change_preview_window
+
+    @property
+    def change_preview_output(self):
+        return self._change_preview_output
+
+    @property
+    def change_preview_label(self):
+        return self._change_preview_label
+
+    def _create_new_actions(self):
+        self._set_as_current_preview = SetAsCurrentPreview(self, self.before_change_do)
+        self._change_preview_window = ChangePreviewWindow(
+            self.window_size, self.window_position, line_wrap=self.line_wrap
+        )
+        self._change_preview_output = (
+            get_preview_shell_command(self.output_generator, self)
+            if isinstance(self.output_generator, str)
+            else PreviewServerCall(self.output_generator, self)
+        )
+        self._change_preview_label = ChangePreviewLabel(self.label)
+
     def update(self, **kwargs: Unpack[PreviewMutationArgs[T, S]]):
         for key, value in kwargs.items():
             setattr(self, key, value)
+        self._create_new_actions()
 
     @property
     def output(self) -> str:

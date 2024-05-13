@@ -4,22 +4,6 @@
     {
       "process": "MainProcess",
       "thread": "Server",
-      "function": "change_current_preview",
-      "extra": {
-        "preview": "fzf json"
-      }
-    },
-    {
-      "process": "MainProcess",
-      "thread": "Server",
-      "function": "run",
-      "extra": {
-        "preview": "fzf json"
-      }
-    },
-    {
-      "process": "MainProcess",
-      "thread": "Server",
       "function": "run",
       "extra": {
         "preview": "fzf json"

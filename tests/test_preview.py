@@ -28,8 +28,7 @@ def test_main_preview_without_event():
     prompt.mod.automate(Config.default_accept_hotkey)
     prompt.run()
 
-    # Main preview invoked twice at startup - once when for event "start" and once for event "focus"
-    assert prompt.obj == [name, name]
+    assert prompt.obj == [name]
 
 
 def test_no_explicit_main_preview_having_first_added_as_main():
@@ -38,7 +37,7 @@ def test_no_explicit_main_preview_having_first_added_as_main():
     prompt.mod.preview("ctrl-y").custom("second", record_preview_name("second"))
     prompt.mod.automate(Config.default_accept_hotkey)
     prompt.run()
-    assert prompt.obj[1:] == ["first"]
+    assert prompt.obj == ["first"]
 
 
 def test_preview_with_preview_function_that_has_command_output():
@@ -101,7 +100,7 @@ def test_cycle_previews():
     prompt.mod.automate(Config.default_accept_hotkey)
 
     prompt.run()
-    assert prompt.obj[1:] == ["third", "first", "second", "third", "second"]
+    assert prompt.obj == ["third", "first", "second", "third", "second"]
 
 
 def get_cycle_mutators_prompt():
@@ -131,7 +130,7 @@ def test_cycle_mutators():
     prompt.mod.automate(Config.default_accept_hotkey)
 
     prompt.run()
-    assert prompt.obj[1:] == ["third", "first", "second", "third", "second"]
+    assert prompt.obj == ["third", "first", "second", "third", "second"]
 
 
 LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath("test_preview.log")
