@@ -55,7 +55,7 @@ def clip_socket_number(prompt_data, FZF_PRIMITIVES_SOCKET_NUMBER):
 
 def prompt_builder():
     prompt = Prompt(TEST_CHOICES, TEST_PRESENTED_CHOICES)
-    prompt.mod.options.multiselect
+    prompt.mod.options.multiselect.listen()
     prompt.mod.on_situation().BACKWARD_EOF.run_function("clip socket number", clip_socket_number)
     prompt.mod.on_hotkey().CTRL_A.toggle_all
     prompt.mod.on_hotkey().CTRL_Q.quit
@@ -66,7 +66,6 @@ def prompt_builder():
     prompt.mod.on_hotkey().CTRL_L.view_logs_in_terminal(LOG_FILE_PATH)
     # prompt.mod.on_hotkey().CTRL_X.run_function("wait", bad_server_call_function) # uncomment to reveal error
     prompt.mod.preview("ctrl-y").fzf_json
-    # prompt.mod.preview("ctrl-6", "50%", "up", "basic 2").custom(name="'basic 2'", output_generator="echo {}", store_output=True)
     mutation_dict = {
         "is hello": [False, True],
         "has world": [True, False],

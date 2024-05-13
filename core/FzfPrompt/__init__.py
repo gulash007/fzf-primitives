@@ -61,9 +61,6 @@ __all__ = [
     "ChoicesAndLinesMismatch",
 ]
 
-# Black magic layer
-# - Among other things, ensures communication between Python script and running fzf process
-
 
 FZF_URL = "https://github.com/junegunn/fzf"
 
@@ -73,33 +70,22 @@ FZF_URL = "https://github.com/junegunn/fzf"
 # Inspired by https://github.com/nk412/pyfzf
 def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None) -> Result[T]:
     logger = Logger.get_logger()
-    if executable_path:
-        pass
-    elif which("fzf"):
-        executable_path = "fzf"
-    else:
+    executable_path = executable_path or which("fzf")
+    if not executable_path:
         raise SystemError(f"Cannot find 'fzf' installed on PATH. ({FZF_URL})")
 
-    if prompt_data.should_run_automator:
-        from ..FzfPrompt.automator import Automator
-
-        automator = Automator()
-        automator.prepare(prompt_data)
-        automator.start()
-
+    prompt_data.run_initial_setup()
     server = prompt_data.server
-    for binding in prompt_data.action_menu.bindings.values():
-        server.add_server_calls(binding)
     server.start()
     server.setup_finished.wait()
     env = os.environ.copy()
     env[SOCKET_NUMBER_ENV_VAR] = str(server.socket_number)
     env[MAKE_SERVER_CALL_ENV_VAR_NAME] = make_server_call.__file__
+    prompt_data.run_vars.update({"env": env, "executable_path": executable_path})
 
     # TODO: catch 130 in mods.exit_round_on_no_selection (rename it appropriately)
     try:
-        options = prompt_data.resolve_options()
-        options.listen()  # TODO: For getting fzf JSON (contain this somewhere)
+        options = prompt_data.options
         logger.debug(f"Running fzf with options:\n{options.pretty()}")
         subprocess.run(
             [executable_path, *shlex.split(str(options))],

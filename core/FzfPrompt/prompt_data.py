@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from .automator import Automator
 from ..monitoring import LoggedComponent
 from .action_menu import Action, ActionMenu, Binding, ConflictResolution
 from .decorators import single_use_method
@@ -32,6 +35,7 @@ class PromptData[T, S](LoggedComponent):
         self.action_menu = action_menu or ActionMenu()
         self.server = Server(self)
         self.previewer = previewer or Previewer()
+        self.automator: Automator | None = None
         self.bindings_to_automate: list[Binding] = []
         self.options = options or Options()
         self.post_processors: list[PostProcessor] = []
@@ -39,6 +43,7 @@ class PromptData[T, S](LoggedComponent):
         self._result: Result[T]
         self.id = datetime.now().isoformat()  # TODO: Use it?
         self._finished = False
+        self.run_vars: dict[str, Any] = {}
 
     @property
     def current_state(self) -> PromptState:
@@ -133,8 +138,18 @@ class PromptData[T, S](LoggedComponent):
         return bool(self.bindings_to_automate)
 
     @single_use_method
-    def resolve_options(self) -> Options:
-        return self.options + self.action_menu.resolve_options()
+    def run_initial_setup(self):
+        self.previewer.resolve_main_preview(self)
+        if self.should_run_automator:
+            from ..FzfPrompt.automator import Automator
+
+            self.automator = Automator()
+            self.automator.prepare(self)
+            self.automator.start()
+
+        for binding in self.action_menu.bindings.values():
+            self.server.add_server_calls(binding)
+        self.options += self.action_menu.resolve_options()
 
     def check_choices_and_lines_length(self, choices: list, lines: list):
         if len(choices) != len(lines):
