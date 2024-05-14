@@ -100,6 +100,7 @@ class OnEvent[T, S](OnEventBase[T, S]):
         repeat_interval: float = 0.5,
         repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
     ) -> Self:
+        """❗Requires Options.listen()"""
         repeater = Repeater(*actions, repeat_interval=repeat_interval, repeat_when=repeat_when)
         return self.run_function(f"Every {repeat_interval:.2f}s {name}", repeater)
 

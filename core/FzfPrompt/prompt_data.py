@@ -150,6 +150,7 @@ class PromptData[T, S](LoggedComponent):
         for binding in self.action_menu.bindings.values():
             self.server.add_server_calls(binding)
         self.options += self.action_menu.resolve_options()
+        self.options.listen()  # for ServerCalls with FZF_PORT parameter
 
     def check_choices_and_lines_length(self, choices: list, lines: list):
         if len(choices) != len(lines):
