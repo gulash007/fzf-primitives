@@ -31,7 +31,7 @@ class ServerCall[T, S](ShellCommand):
 
     @property
     def id(self) -> str:
-        return f"{self.name}#{id(self.function)}"
+        return f"{self.name}#{id(self)}"
 
     def run(self, prompt_data: PromptData[T, S], request: Request) -> Any:
         prompt_data.set_current_state(request.prompt_state)
