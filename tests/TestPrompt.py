@@ -90,9 +90,7 @@ def prompt_builder():
         lambda pd: preview_mutation_generator.next("has world"),
     )
 
-    prompt.mod.on_hotkey().CTRL_B.run_shell_command("First", "echo -n First && read")
-    prompt.mod.on_hotkey(on_conflict="cycle with").CTRL_B.run_shell_command("Second", "echo -n Second && read")
-    prompt.mod.on_hotkey(on_conflict="cycle with").CTRL_B.run_shell_command("Third", "echo -n Third && read")
+    prompt.mod.on_hotkey().CTRL_B.run_inspector_prompt
 
     prompt.mod.on_situation(on_conflict="append").START.run_function(
         "measure startup time", lambda pd: print(f"Startup time: {perf_counter() - start} seconds")
