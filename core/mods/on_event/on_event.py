@@ -79,12 +79,13 @@ class OnEvent[T, S](OnEventBase[T, S]):
     def reload_choices(
         self,
         choices_getter: ChoicesGetter[T, S],
+        name: str = "reload choices",
         *,
         sync: bool = False,
         repeat_interval: float | None = None,
         repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
     ):
-        name = f"reload choices{' (sync)' if sync else ''}"
+        name = f"{name}{' (sync)' if sync else ''}"
         if repeat_interval is None:
             return self.run(name, ReloadChoices(choices_getter, sync=sync))
         if repeat_interval < 0.2:
