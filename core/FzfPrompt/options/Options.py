@@ -44,10 +44,6 @@ class Options:
 
     # TODO: Make it a dict
 
-    @classmethod
-    def __get_validators__(cls):
-        return ()
-
     def __init__(self, *fzf_options: str) -> None:
         self.__options: list[str] = list(fzf_options)
         self._header_strings: list[str] = []
