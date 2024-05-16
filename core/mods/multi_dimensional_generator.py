@@ -3,24 +3,22 @@ from typing import Any, Callable, Iterable, Mapping
 
 
 class MultiDimensionalGenerator[K, T]:
-    def __init__(
-        self, mutation_dict: Mapping[K, Callable | Iterable], get_result: Callable[..., T] = lambda *args: args
-    ):
-        self.mutation_dict: dict[Any, dict] = {}
-        for key, value in mutation_dict.items():
-            if callable(value):
-                self.mutation_dict[key] = {"function": value, "result": value()}
+    def __init__(self, dimensions: Mapping[K, Callable | Iterable], get_result: Callable[..., T] = lambda *args: args):
+        self.dimensions: dict[Any, dict] = {}
+        for dimension_name, value_getter in dimensions.items():
+            if callable(value_getter):
+                self.dimensions[dimension_name] = {"function": value_getter, "result": value_getter()}
             else:
-                next_in_cycle = self.get_cycler(value)
-                self.mutation_dict[key] = {"function": next_in_cycle, "result": next_in_cycle()}
-        self.result_calculator = get_result
+                next_in_cycle = self.get_cycler(value_getter)
+                self.dimensions[dimension_name] = {"function": next_in_cycle, "result": next_in_cycle()}
+        self.get_result = get_result
 
-    def next(self, key: K) -> T:
-        self.mutation_dict[key]["result"] = self.mutation_dict[key]["function"]()
+    def next(self, dimension_name: K) -> T:
+        self.dimensions[dimension_name]["result"] = self.dimensions[dimension_name]["function"]()
         return self.current_result()
 
     def current_result(self) -> T:
-        return self.result_calculator(*(obj["result"] for obj in self.mutation_dict.values()))
+        return self.get_result(*(obj["result"] for obj in self.dimensions.values()))
 
     @staticmethod
     def get_cycler(values):
