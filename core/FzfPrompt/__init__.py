@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import shlex
 import subprocess
-from shutil import which
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -70,9 +69,6 @@ FZF_URL = "https://github.com/junegunn/fzf"
 # Inspired by https://github.com/nk412/pyfzf
 def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None) -> Result[T]:
     logger = Logger.get_logger()
-    executable_path = executable_path or which("fzf")
-    if not executable_path:
-        raise SystemError(f"Cannot find 'fzf' installed on PATH. ({FZF_URL})")
 
     prompt_data.run_initial_setup()
     server = prompt_data.server
@@ -88,12 +84,18 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         options = prompt_data.options
         logger.debug(f"Running fzf with options:\n{options.pretty()}")
         subprocess.run(
-            [executable_path, *shlex.split(str(options))],
+            [executable_path or "fzf", *shlex.split(str(options))],
             shell=False,
             input=prompt_data.choices_string.encode(),
             check=True,
             env=env,
         )
+    except FileNotFoundError as err:
+        if executable_path:
+            raise FzfExecutionError(f"Error running 'fzf' with executable_path: {executable_path}") from err
+        raise FzfExecutionError(
+            f"Error running 'fzf' command. Are you sure it's installed and on PATH? ({FZF_URL})"
+        ) from err
     except subprocess.CalledProcessError as err:
         # 130 means aborted or unassigned hotkey was pressed
         if err.returncode != 130:
@@ -108,3 +110,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         raise Quitting(f"Exiting app with\n{prompt_data.result}", prompt_data.result)
     prompt_data.apply_post_processors()
     return prompt_data.result
+
+
+class FzfExecutionError(Exception):
+    pass
