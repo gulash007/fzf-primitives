@@ -57,22 +57,24 @@ class Options:
         return self
 
     def initial_query(self, query: str) -> Self:
-        return self.add(shlex.join(["--query", query]))
+        return self.add(f"--query={query}")
 
     def multiselect_with_limit(self, limit: int) -> Self:
         return self.add(f"--multi={limit}")
 
     def preview(self, command: str) -> Self:
-        return self.add(shlex.join(["--preview", f"{command}"]))
+        return self.add(f"--preview={command}")
 
-    def preview_window(self, position: WindowPosition, size: int | RelativeWindowSize, *, line_wrap: bool = True) -> Self:
-        return self.add(shlex.join(["--preview-window", f"{position},{size}:{'wrap' if line_wrap else 'nowrap'}"]))
+    def preview_window(
+        self, position: WindowPosition, size: int | RelativeWindowSize, *, line_wrap: bool = True
+    ) -> Self:
+        return self.add(f"--preview-window={position},{size}:{'wrap' if line_wrap else 'nowrap'}")
 
     def preview_label(self, label: str) -> Self:
-        return self.add(shlex.join(["--preview-label", label]))
+        return self.add(f"--preview-label={label}")
 
     def bind(self, event: Hotkey | Situation, action: str) -> Self:
-        return self.add(shlex.join(["--bind", f"{event}:{action}"]))
+        return self.add(f"--bind={event}:{action}")
 
     def bind_base_action(self, event: Hotkey | Situation, action: BaseAction) -> Self:
         return self.bind(event, action)
@@ -83,31 +85,31 @@ class Options:
         return self.bind(event, f"{command_type}({command})")
 
     def expect(self, *hotkeys: Hotkey) -> Self:
-        return self.add(shlex.join(["--expect", f"{','.join(hotkeys)}"]))
+        return self.add(f"--expect={','.join(hotkeys)}")
 
     def border(self, border: Border, label: str) -> Self:
-        return self.add(shlex.join(["--border", border, "--border-label", label]))
+        return self.add(f"--border={border}", f"--border-label={label}")
 
     def layout(self, layout: Layout) -> Self:
-        return self.add(shlex.join(["--layout", layout]))
+        return self.add(f"--layout={layout}")
 
     def prompt(self, prompt: str) -> Self:
-        return self.add(shlex.join(["--prompt", prompt]))
+        return self.add(f"--prompt={prompt}")
 
     def pointer(self, pointer: str) -> Self:
         if len(pointer) > 2:
             raise ValueError(f"Pointer too long (should be max 2 chars): {pointer}")
-        return self.add(shlex.join(["--pointer", pointer]))
+        return self.add(f"--pointer={pointer}")
 
     def with_nth_column(self, field_index_expression: str, delimiter: str | None = None) -> Self:
         """Transform the presentation of each line using field index expressions
 
         Delimiter is AWK style by default
         """
-        args = ["--with-nth", f"{field_index_expression}"]
+        args = [f"--with-nth={field_index_expression}"]
         if delimiter:
             args.append(f"--delimiter={delimiter}")
-        return self.add(shlex.join(args))
+        return self.add(*args)
 
     def add_header(self, header: str) -> Self:
         self._header_strings.append(header)
@@ -115,22 +117,22 @@ class Options:
 
     @property
     def header_option(self) -> str:
-        return shlex.join(["--header", "\n".join(self._header_strings)])
+        return f"--header={'\n'.join(self._header_strings)}"
 
     def listen(self, port_number: int = 0):
         return self.add(f"--listen={port_number}")
 
     def __str__(self) -> str:
+        return shlex.join(self)
+
+    def __iter__(self):
         options = self.options.copy()
         if self._header_strings:
             options.append(self.header_option)
-        return " ".join(options)
+        return iter(options)
 
     def pretty(self) -> str:
-        options = self.options.copy()
-        if self._header_strings:
-            options.append(self.header_option)
-        return "\n".join(options)
+        return "\n".join([shlex.quote(option) for option in self])
 
     def __add__(self, __other: Options) -> Self:
         options = self.add(*__other.options)

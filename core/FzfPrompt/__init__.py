@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import shlex
 import subprocess
 from typing import TYPE_CHECKING
 
@@ -84,7 +83,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         options = prompt_data.options
         logger.debug(f"Running fzf with options:\n{options.pretty()}")
         subprocess.run(
-            [executable_path or "fzf", *shlex.split(str(options))],
+            [executable_path or "fzf", *options],
             shell=False,
             input=prompt_data.choices_string.encode(),
             check=True,
