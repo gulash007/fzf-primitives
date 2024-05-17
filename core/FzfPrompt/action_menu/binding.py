@@ -42,7 +42,9 @@ class Binding(LoggedComponent):
     def action_string(self) -> str:
         actions = self.actions.copy()
         if self.final_action:
-            actions.append("abort")  # could be 'accept', this is just needed to exit fzf process
+            # could be 'abort', this is just needed to exit fzf process, though either needs to have non-zero exit
+            # status handled (130 for abort, and 1 for accept with no selection)
+            actions.append("accept")
         action_strings = [
             action.action_string() if isinstance(action, ParametrizedAction) else action for action in actions
         ]

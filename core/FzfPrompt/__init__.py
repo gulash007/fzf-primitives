@@ -96,8 +96,8 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
             f"Error running 'fzf' command. Are you sure it's installed and on PATH? ({FZF_URL})"
         ) from err
     except subprocess.CalledProcessError as err:
-        # 130 means aborted or unassigned hotkey was pressed
-        if err.returncode != 130:
+        # 130 means aborted, 1 means accepted with no selection
+        if err.returncode not in (130, 1):
             raise MoreInformativeCalledProcessError(err) from None
     finally:
         server.should_close.set()
