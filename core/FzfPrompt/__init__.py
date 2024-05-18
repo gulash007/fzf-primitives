@@ -88,6 +88,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
             input=prompt_data.choices_string.encode(),
             check=True,
             env=env,
+            stdout=subprocess.DEVNULL,
         )
     except FileNotFoundError as err:
         if executable_path:
