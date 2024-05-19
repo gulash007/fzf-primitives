@@ -4,6 +4,7 @@
 import json
 import sys
 from itertools import zip_longest
+from multiprocessing.connection import Client
 
 
 def grouper(iterable, n, *, incomplete="fill", fillvalue=None):
@@ -23,25 +24,30 @@ def grouper(iterable, n, *, incomplete="fill", fillvalue=None):
 
 
 if __name__ == "__main__":
-    try:
-        server_call_id, command_type, query, single_index, single_line, indices, selections = sys.argv[1:8]
-        data = {
-            "server_call_id": server_call_id,
-            "command_type": command_type,
-            "prompt_state": {
-                "query": query,
-                "single_index": int(single_index) if single_index else None,
-                "single_line": single_line or None,
-                "indices": list(map(int, indices.split())),
-                "lines": selections.splitlines(),
-            },
-            "kwargs": {},
-        }
-        for key, value in grouper(sys.argv[8:], 2, incomplete="strict"):
-            data["kwargs"][key] = value
+    port = sys.argv[1]
+    address = ("localhost", int(port))
+    with Client(address, authkey=b"secret password") as client:
+        try:
+            server_call_id, command_type, query, single_index, single_line, indices, selections = sys.argv[2:9]
+            data = {
+                "server_call_id": server_call_id,
+                "command_type": command_type,
+                "prompt_state": {
+                    "query": query,
+                    "single_index": int(single_index) if single_index else None,
+                    "single_line": single_line or None,
+                    "indices": list(map(int, indices.split())),
+                    "lines": selections.splitlines(),
+                },
+                "kwargs": {},
+            }
+            for key, value in grouper(sys.argv[9:], 2, incomplete="strict"):
+                data["kwargs"][key] = value
 
-        # TODO: send it through a socket to Server instead of using nc
-        print(json.dumps(data))
-    except Exception:
-        sys.stderr.write(str(sys.argv))
-        raise
+            payload = json.dumps(data)
+        except Exception as e:
+            payload = f"{sys.argv[1:]}\n{e}"
+        client.send(payload)
+        if response := client.recv():
+            print(response)
+        client.close()

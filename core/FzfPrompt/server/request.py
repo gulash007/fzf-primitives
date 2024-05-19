@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from .actions import ServerCallFunction
 from ..options import ShellCommandActionType
 
-SOCKET_NUMBER_ENV_VAR = "FZF_PRIMITIVES_SOCKET_NUMBER"
+SOCKET_NUMBER_ENV_VAR_NAME = "FZF_PRIMITIVES_SOCKET_NUMBER"
 MAKE_SERVER_CALL_ENV_VAR_NAME = "FZF_PRIMITIVES_REQUEST_CREATING_SCRIPT"
 
 
@@ -30,7 +30,7 @@ class Request:
     def create_command(server_call_id: str, function: ServerCallFunction, command_type: ShellCommandActionType) -> str:
         parameters = Request.parse_function_parameters(function)
         command = [
-            f'"${MAKE_SERVER_CALL_ENV_VAR_NAME}" {shlex.quote(server_call_id)} {command_type}',
+            f'"${MAKE_SERVER_CALL_ENV_VAR_NAME}" "${SOCKET_NUMBER_ENV_VAR_NAME}" {shlex.quote(server_call_id)} {command_type}',
             '{q} "{n}" {} "{+n}" "$(for x in {+}; do echo "$x"; done)"',  # making use of fzf placeholders
         ]
         for parameter in parameters:
@@ -41,8 +41,7 @@ class Request:
             else:
                 # otherwise it's going to be injected with a shell variable of the same name (mainly env vars)
                 command.extend([parameter.name, f'"${parameter.name}"'])
-        socket_request_command = ["nc", "localhost", f'"${SOCKET_NUMBER_ENV_VAR}"']
-        return f'{" ".join(command)} |& {" ".join(socket_request_command)}'
+        return " ".join(command)
 
     @staticmethod
     def parse_function_parameters(function: ServerCallFunction) -> list[inspect.Parameter]:
@@ -61,12 +60,7 @@ class Request:
 
 class PromptState:
     def __init__(
-        self,
-        query: str,
-        single_index: int | None,
-        indices: list[int],
-        single_line: str | None,
-        lines: list[str],
+        self, query: str, single_index: int | None, indices: list[int], single_line: str | None, lines: list[str]
     ):
         self.query = query
         self.single_index = single_index

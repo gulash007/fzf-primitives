@@ -24,7 +24,7 @@ from .previewer import (
 from .prompt_data import ChoicesAndLinesMismatch, PromptData, Result
 from .server import (
     MAKE_SERVER_CALL_ENV_VAR_NAME,
-    SOCKET_NUMBER_ENV_VAR,
+    SOCKET_NUMBER_ENV_VAR_NAME,
     EndStatus,
     PostProcessor,
     PromptEndingAction,
@@ -74,7 +74,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
     server.start()
     server.setup_finished.wait()
     env = os.environ.copy()
-    env[SOCKET_NUMBER_ENV_VAR] = str(server.socket_number)
+    env[SOCKET_NUMBER_ENV_VAR_NAME] = server.socket_number
     env[MAKE_SERVER_CALL_ENV_VAR_NAME] = make_server_call.__file__
     prompt_data.run_vars.update({"env": env, "executable_path": executable_path})
 
@@ -101,7 +101,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         if err.returncode not in (130, 1):
             raise MoreInformativeCalledProcessError(err) from None
     finally:
-        server.should_close.set()
+        server.listener.close()
     server.join()
     if not prompt_data.finished:
         # TODO: This may be explicitly allowed in the future (need to test when it's not)

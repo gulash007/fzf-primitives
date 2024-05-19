@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-import socket
 import traceback
+from multiprocessing.connection import Connection, Listener
 from threading import Event, Thread
 from typing import TYPE_CHECKING
 
@@ -19,7 +19,7 @@ from .actions import (
     ServerCallFunction,
     ServerCallFunctionGeneric,
 )
-from .request import MAKE_SERVER_CALL_ENV_VAR_NAME, SOCKET_NUMBER_ENV_VAR, CommandOutput, PromptState
+from .request import MAKE_SERVER_CALL_ENV_VAR_NAME, SOCKET_NUMBER_ENV_VAR_NAME, CommandOutput, PromptState
 
 __all__ = [
     "Server",
@@ -32,7 +32,7 @@ __all__ = [
     "CommandOutput",
     "EndStatus",
     "MAKE_SERVER_CALL_ENV_VAR_NAME",
-    "SOCKET_NUMBER_ENV_VAR",
+    "SOCKET_NUMBER_ENV_VAR_NAME",
 ]
 
 
@@ -42,44 +42,38 @@ class Server[T, S](Thread, LoggedComponent):
         super().__init__(name="Server")
         self.prompt_data = prompt_data
         self.setup_finished = Event()
-        self.should_close = Event()
         self.server_calls: dict[str, ServerCall[T, S]] = {}
-        self.socket_number: int
+        self.socket_number: str
+        self.listener: Listener
 
     # TODO: Use automator to end running prompt and propagate errors
     def run(self):
         try:
             # TODO: Use socket.AF_UNIX
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-                server_socket.bind(("localhost", 0))
-                socket_specs = server_socket.getsockname()
-                self.socket_number = socket_specs[1]
-                server_socket.listen()
+            address = ("localhost", 0)  # family is deduced to be 'AF_INET'
+            with Listener(address, authkey=b"secret password") as listener:
+                self.listener = listener
+                socket_specs = listener.address
+                self.socket_number = str(socket_specs[1])
                 self.logger.info(f"Server listening on {socket_specs}...")
 
                 self.setup_finished.set()
-                server_socket.settimeout(0.05)
                 while True:
                     try:
-                        client_socket, addr = server_socket.accept()
-                    except TimeoutError:
-                        if self.should_close.is_set():
-                            self.logger.info("Server closing")
-                            break
-                        continue
-                    self._handle_request(client_socket, self.prompt_data)
+                        connection = listener.accept()
+                    except ConnectionAbortedError:
+                        self.logger.info("Server closing")
+                        break
+                    self._handle_request(connection, self.prompt_data)
         except Exception as e:
             self.logger.exception(e)
             raise
         finally:
             self.setup_finished.set()
 
-    def _handle_request(self, client_socket: socket.socket, prompt_data: PromptData[T, S]):
-        payload_bytearray = bytearray()
-        while r := client_socket.recv(1024):
-            payload_bytearray.extend(r)
-        payload = payload_bytearray.decode("utf-8").strip()
+    def _handle_request(self, connection: Connection, prompt_data: PromptData[T, S]):
         try:
+            payload = connection.recv()
             request = Request.from_json(json.loads(payload))
             self.logger.debug(
                 f"Resolving '{request.server_call_id}' ({len(self.server_calls)} server calls registered)"
@@ -93,12 +87,9 @@ class Server[T, S](Thread, LoggedComponent):
             if isinstance(err, KeyError):
                 response = f"{trb}\n{list(self.server_calls.keys())}"
                 self.logger.error(f"Available server calls:\n{list(self.server_calls.keys())}")
-            client_socket.sendall(str(response).encode("utf-8"))
-        else:
-            if response:
-                client_socket.sendall(str(response).encode("utf-8"))
         finally:
-            client_socket.close()
+            connection.send(str(response))
+            connection.close()
 
     def add_server_calls(self, binding: Binding):
         for action in binding.actions:
