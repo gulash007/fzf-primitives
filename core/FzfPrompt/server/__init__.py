@@ -75,10 +75,10 @@ class Server[T, S](Thread, LoggedComponent):
             self.setup_finished.set()
 
     def _handle_request(self, client_socket: socket.socket, prompt_data: PromptData[T, S]):
-        payload_bytearray = bytearray()
-        while r := client_socket.recv(1024):
-            payload_bytearray.extend(r)
-        payload = payload_bytearray.decode("utf-8").strip()
+        payload_length = int.from_bytes(client_socket.recv(4))
+        payload = client_socket.recv(payload_length, socket.MSG_WAITALL).decode("utf-8")
+        self.logger.debug(f"Received payload: {payload}")
+        response = ""
         try:
             request = Request.from_json(json.loads(payload))
             self.logger.debug(
@@ -93,11 +93,10 @@ class Server[T, S](Thread, LoggedComponent):
             if isinstance(err, KeyError):
                 response = f"{trb}\n{list(self.server_calls.keys())}"
                 self.logger.error(f"Available server calls:\n{list(self.server_calls.keys())}")
-            client_socket.sendall(str(response).encode("utf-8"))
-        else:
-            if response:
-                client_socket.sendall(str(response).encode("utf-8"))
         finally:
+            response_bytes = str(response).encode("utf-8")
+            client_socket.send(len(response_bytes).to_bytes(4))
+            client_socket.sendall(response_bytes)
             client_socket.close()
 
     def add_server_calls(self, binding: Binding):
