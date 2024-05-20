@@ -87,9 +87,7 @@ def get_inspector_prompt(*, inspected_prompt_data: PromptData | None = None, por
         prompt.mod.preview().custom(
             "Inspections",
             lambda pd: pygments.highlight(
-                make_server_call(
-                    port, "INSPECT", "preview", None, inspection_view_specs={line: 1 for line in pd.current_choices}
-                ),
+                make_server_call(port, "INSPECT", None, inspection_view_specs={line: 1 for line in pd.current_choices}),
                 lexer=JsonLexer(),
                 formatter=Terminal256Formatter(),
             ),

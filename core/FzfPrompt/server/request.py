@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
     from .actions import ServerCallFunction
-from ..options import ShellCommandActionType
 
 SOCKET_NUMBER_ENV_VAR = "FZF_PRIMITIVES_SOCKET_NUMBER"
 MAKE_SERVER_CALL_ENV_VAR_NAME = "FZF_PRIMITIVES_REQUEST_CREATING_SCRIPT"
@@ -18,19 +17,16 @@ class CommandOutput(str): ...
 
 
 class Request:
-    def __init__(
-        self, server_call_id: str, command_type: ShellCommandActionType, prompt_state: PromptState | None, kwargs: dict
-    ):
+    def __init__(self, server_call_id: str, prompt_state: PromptState | None, kwargs: dict):
         self.server_call_id = server_call_id
-        self.command_type: ShellCommandActionType = command_type  # TODO: use it?
         self.prompt_state = prompt_state
         self.kwargs = kwargs
 
     @staticmethod
-    def create_command(server_call_id: str, function: ServerCallFunction, command_type: ShellCommandActionType) -> str:
+    def create_command(server_call_id: str, function: ServerCallFunction) -> str:
         parameters = Request.parse_function_parameters(function)
         command = [
-            f'"${MAKE_SERVER_CALL_ENV_VAR_NAME}" "${SOCKET_NUMBER_ENV_VAR}" {shlex.quote(server_call_id)} {command_type}',
+            f'"${MAKE_SERVER_CALL_ENV_VAR_NAME}" "${SOCKET_NUMBER_ENV_VAR}" {shlex.quote(server_call_id)}',
             '{q} "{n}" {} "{+n}" "$(for x in {+}; do echo "$x"; done)"',  # making use of fzf placeholders
         ]
         for parameter in parameters:
@@ -55,7 +51,7 @@ class Request:
     @classmethod
     def from_json(cls, data: dict) -> Self:
         prompt_state = PromptState.from_json(data["prompt_state"]) if data["prompt_state"] else None
-        return cls(data["server_call_id"], data["command_type"], prompt_state, data["kwargs"])
+        return cls(data["server_call_id"], prompt_state, data["kwargs"])
 
 
 class PromptState:

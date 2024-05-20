@@ -26,7 +26,7 @@ class ServerCall[T, S](ShellCommand):
         self.function = function
         self.name = description or f"f:{self._get_function_name(function)}"
 
-        command = Request.create_command(self.id, function, command_type)
+        command = Request.create_command(self.id, function)
         super().__init__(command, command_type)
 
     @property

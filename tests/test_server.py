@@ -10,7 +10,7 @@ import re
 
 CORRECT_COMMAND_PATH = Path(__file__).parent.joinpath("test_request/correct_command.txt")
 CREATED_COMMAND_PATH = Path(__file__).parent.joinpath("test_request/created_command.txt")
-COMMAND_CREATION_TEST_ARGS = ("ID with 'quotes'", lambda pd: None, "execute")
+COMMAND_CREATION_TEST_ARGS = ("ID with 'quotes'", lambda pd: None)
 
 
 def test_create_command():
