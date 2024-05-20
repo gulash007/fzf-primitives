@@ -3,3 +3,4 @@ pyperclip
 pytest
 requests
 typer[all]
+pygments
