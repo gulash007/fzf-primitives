@@ -90,7 +90,7 @@ def prompt_builder():
         lambda pd: preview_mutation_generator.next("has world"),
     )
 
-    prompt.mod.on_hotkey().CTRL_B.run_inspector_prompt
+    prompt.mod.expose_inspector("ctrl-b")
 
     prompt.mod.on_situation(on_conflict="append").START.run_function(
         "measure startup time", lambda pd: print(f"Startup time: {perf_counter() - start} seconds")

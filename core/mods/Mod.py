@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from typing import Callable, Self
 
-from ..FzfPrompt import Action, ConflictResolution, PromptData
+from ..FzfPrompt import Action, ConflictResolution, PromptData, ServerCall
 from ..FzfPrompt.options import Hotkey, Options, Situation
 from ..monitoring import LoggedComponent
 from .event_adder import attach_hotkey_adder, attach_situation_adder
 from .on_event import OnEvent
+from .on_event.presets.inspector import show_inspectables
 from .post_processing import PostProcessing
 from .preview_mod import PreviewMod
 
@@ -78,4 +79,14 @@ class Mod[T, S](LoggedComponent):
         self.on_hotkey().CTRL_C.clip
         self.on_hotkey().CTRL_X.clip_current_preview
         self.on_hotkey().CTRL_Y.clip_options
+        return self
+
+    def expose_inspector(self, event_to_run_inspector_prompt: Hotkey | Situation | None = None) -> Self:
+        def add_inspect_endpoint(prompt_data: PromptData):
+            # HACK: Adding a "public endpoint" in the form of ServerCall with constant ID
+            prompt_data.server.server_calls["INSPECT"] = ServerCall(show_inspectables)
+
+        self._mods.append(add_inspect_endpoint)
+        if event_to_run_inspector_prompt:
+            self.on_event(event_to_run_inspector_prompt).run_inspector_prompt
         return self
