@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from .. import Prompt, PromptData
-from ..core.FzfPrompt.server import CommandOutput, Request, ServerEndpoint
+from ..core.FzfPrompt.server.actions import CommandOutput, ServerCall, ServerEndpoint
 
 CORRECT_COMMAND_PATH = Path(__file__).parent.joinpath("test_request/correct_command.txt")
 CREATED_COMMAND_PATH = Path(__file__).parent.joinpath("test_request/created_command.txt")
@@ -17,7 +17,7 @@ def test_create_command():
     with open(CORRECT_COMMAND_PATH, "r", encoding="utf-8") as f:
         expected_command = f.read()
 
-    created_command = Request.create_command(COMMAND_CREATION_TEST_ENDPOINT)
+    created_command = ServerCall._create_command(COMMAND_CREATION_TEST_ENDPOINT)
     Path(os.path.dirname(CREATED_COMMAND_PATH)).mkdir(parents=True, exist_ok=True)
     with open(CREATED_COMMAND_PATH, "w", encoding="utf-8") as f:
         f.write(created_command)
@@ -28,7 +28,7 @@ def test_create_command():
 def test_handling_partial_functions():
     def func(prompt_data, p1, p2): ...
 
-    params = Request.parse_function_parameters(functools.partial(func, p2="arg2"))
+    params = ServerCall._parse_function_parameters(functools.partial(func, p2="arg2"))
     assert [p.name for p in params] == ["p1"]
 
 

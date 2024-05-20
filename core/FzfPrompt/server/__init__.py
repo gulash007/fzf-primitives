@@ -12,14 +12,16 @@ if TYPE_CHECKING:
 from ...monitoring import LoggedComponent
 from ..options import EndStatus
 from .actions import (
+    MAKE_SERVER_CALL_ENV_VAR_NAME,
+    SOCKET_NUMBER_ENV_VAR,
+    CommandOutput,
     PostProcessor,
     PromptEndingAction,
-    Request,
     ServerCall,
     ServerCallFunction,
     ServerCallFunctionGeneric,
 )
-from .request import MAKE_SERVER_CALL_ENV_VAR_NAME, SOCKET_NUMBER_ENV_VAR, CommandOutput, PromptState, ServerEndpoint
+from .request import PromptState, Request, ServerEndpoint
 
 __all__ = [
     "Server",
