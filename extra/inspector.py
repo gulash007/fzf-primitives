@@ -3,7 +3,7 @@ import sys
 
 
 def run_remote_inspector(port: int):
-    prompt = get_inspector_prompt(port=port)
+    prompt = get_inspector_prompt(port)
     prompt.run()
 
 

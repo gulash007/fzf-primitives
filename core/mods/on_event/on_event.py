@@ -194,6 +194,4 @@ class OnEvent[T, S](OnEventBase[T, S]):
 
     @property
     def run_inspector_prompt(self):
-        return self.run_function(
-            "Run inspector prompt", lambda pd: get_inspector_prompt(inspected_prompt_data=pd).run()
-        )
+        return self.run_function("Run inspector prompt", lambda pd: get_inspector_prompt(pd).run())

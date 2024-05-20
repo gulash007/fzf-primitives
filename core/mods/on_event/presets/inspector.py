@@ -1,5 +1,5 @@
 import json
-from typing import Any, Callable, Literal, get_args, overload
+from typing import Any, Callable, Literal, get_args
 
 import pygments
 from pygments.formatters import Terminal256Formatter
@@ -62,13 +62,9 @@ def show_inspectables(prompt_data: PromptData, inspection_view_specs: dict[Inspe
     )
 
 
-@overload
-def get_inspector_prompt(*, inspected_prompt_data: PromptData): ...
-@overload
-def get_inspector_prompt(*, port: int): ...
-def get_inspector_prompt(*, inspected_prompt_data: PromptData | None = None, port: int | None = None):
-    if inspected_prompt_data:
-        prompt = pr.Prompt[Inspectable, PromptData](list(get_args(Inspectable)), obj=inspected_prompt_data)
+def get_inspector_prompt(inspected: PromptData | int):
+    if isinstance(inspected, PromptData):
+        prompt = pr.Prompt[Inspectable, PromptData](list(get_args(Inspectable)), obj=inspected, use_basic_hotkeys=False)
         prompt.mod.preview().custom(
             "Inspections",
             lambda pd: pygments.highlight(
@@ -82,19 +78,46 @@ def get_inspector_prompt(*, inspected_prompt_data: PromptData | None = None, por
             window_size="85%",
         )
 
-    elif port:
-        prompt = pr.Prompt[Inspectable, None](list(get_args(Inspectable)))
+    else:
+        port = inspected
+        prompt = pr.Prompt[Inspectable, int](list(get_args(Inspectable)), obj=port, use_basic_hotkeys=False)
         prompt.mod.preview().custom(
             "Inspections",
             lambda pd: pygments.highlight(
-                make_server_call(port, "INSPECT", None, inspection_view_specs={line: 1 for line in pd.current_choices}),
+                make_server_call(
+                    pd.obj, "INSPECT", None, inspection_view_specs={line: 1 for line in pd.current_choices}
+                ),
                 lexer=JsonLexer(),
                 formatter=Terminal256Formatter(),
             ),
             window_size="85%",
         )
 
+        def change_port(prompt_data: PromptData, port: str):
+            if not port:
+                port = input("Enter port: ")
+            prompt_data.obj = int(port)
+
+        prompt.mod.on_hotkey().CTRL_B.run_function("Change port", change_port, "refresh-preview")
+
     prompt.mod.options.multiselect
 
-    prompt.mod.on_hotkey().CTRL_Y.auto_repeat_run("refresh", "refresh-preview", repeat_interval=0.25)
+    prompt.mod.on_hotkey().CTRL_Y.auto_repeat_run("refresh", "refresh-preview", repeat_interval=0.1)
+    prompt.mod.on_hotkey().ESC.refresh_preview
+    prompt.mod.on_hotkey().CTRL_Q.quit
+    prompt.mod.on_hotkey().CTRL_ALT_H.show_bindings_help_in_preview
+    prompt.mod.on_hotkey().CTRL_ALT_C.run_function(
+        "Copy command to run inspector externally",
+        lambda pd: copy_command_to_run_inspector_externally(
+            inspected if isinstance(inspected, int) else inspected.server.socket_number
+        ),
+        silent=True,
+    ).accept
+
     return prompt
+
+
+def copy_command_to_run_inspector_externally(port: int):
+    import pyperclip
+
+    pyperclip.copy(f"python -m fzf_primitives.extra.inspector {port}")
