@@ -23,6 +23,7 @@ from ...FzfPrompt import (
 from ...FzfPrompt.constants import SHELL_COMMAND
 from ...FzfPrompt.options.actions import BaseAction, ShellCommandActionType
 from ...FzfPrompt.options.events import Hotkey, Situation
+from ...FzfPrompt.server.make_server_call import make_server_call
 from .presets import (
     FILE_EDITORS,
     ChoicesGetter,
@@ -195,3 +196,9 @@ class OnEvent[T, S](OnEventBase[T, S]):
     @property
     def run_inspector_prompt(self):
         return self.run_function("Run inspector prompt", lambda pd: get_inspector_prompt(pd).run())
+
+    def attach_to_remote_inspector(self, port: int):
+        return self.run_function(
+            "Attach to inspector prompt",
+            lambda pd: make_server_call(port, "CHANGE_INSPECTED_PORT", None, _port=str(pd.server.socket_number)),
+        )

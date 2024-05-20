@@ -16,7 +16,6 @@ from ..core.FzfPrompt import PreviewMutationArgs, PromptData
 from ..core.FzfPrompt.action_menu import Binding, ShellCommand
 from ..core.FzfPrompt.exceptions import Quitting
 from ..core.FzfPrompt.previewer.Preview import ChangePreviewLabel
-from ..core.FzfPrompt.server.make_server_call import make_server_call
 from ..core.mods.multi_dimensional_generator import MultiDimensionalGenerator
 from ..core.monitoring import Logger
 from ..core.monitoring.constants import INTERNAL_LOG_DIR
@@ -92,10 +91,8 @@ def prompt_builder():
     )
 
     prompt.mod.expose_inspector("ctrl-b")
-    prompt.mod.on_situation(on_conflict="append").START.run_function(
-        "Attach to inspector prompt",
-        lambda pd: make_server_call(58895, "CHANGE_INSPECTED_PORT", None, _port=str(pd.server.socket_number)),
-    )
+    REMOTE_INSPECTOR_PORT = 59497
+    prompt.mod.on_situation(on_conflict="append").START.attach_to_remote_inspector(REMOTE_INSPECTOR_PORT)
 
     prompt.mod.on_situation(on_conflict="append").START.run_function(
         "measure startup time", lambda pd: print(f"Startup time: {perf_counter() - start} seconds")
