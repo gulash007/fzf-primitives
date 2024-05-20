@@ -42,7 +42,7 @@ INSPECTORS: dict[Inspectable, Callable[[PromptData, int], Any]] = {
     "options": lambda pd, depth: {
         "options": pd.options.options,
     },
-    "config": lambda pd, depth: Config,
+    "config": lambda pd, depth: {k: v for k, v in Config.__dict__.items() if not k.startswith("__")},
     "obj": lambda pd, depth: pd.obj,
     "choices": lambda pd, depth: pd.choices,
     "current_state": lambda pd, depth: {
