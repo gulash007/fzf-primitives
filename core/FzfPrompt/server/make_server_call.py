@@ -20,6 +20,7 @@ def make_server_call(
     server_call_id: str,
     command_type: str,
     prompt_state: PromptState | None,
+    /,
     **kwargs,
 ):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
