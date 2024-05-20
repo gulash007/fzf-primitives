@@ -122,6 +122,8 @@ def get_inspector_prompt(inspected: PromptData | int):
         silent=True,
     ).accept
 
+    prompt.mod.expose_inspector("ctrl-alt-i")
+
     return prompt
 
 
