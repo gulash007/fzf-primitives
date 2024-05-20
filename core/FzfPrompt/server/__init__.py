@@ -84,7 +84,7 @@ class Server[T, S](Thread, LoggedComponent):
             self.logger.debug(
                 f"Resolving '{request.server_call_id}' ({len(self.server_calls)} server calls registered)"
             )
-            response = self.server_calls[request.server_call_id].run(prompt_data, request)
+            response = self.server_calls[request.server_call_id].run(prompt_data, request) or response
         except Exception as err:
             self.logger.error(trb := traceback.format_exc())
             payload_info = f"Payload contents:\n{payload}"
