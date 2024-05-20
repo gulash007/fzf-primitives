@@ -77,7 +77,6 @@ class Server[T, S](Thread, LoggedComponent):
     def _handle_request(self, client_socket: socket.socket, prompt_data: PromptData[T, S]):
         payload_length = int.from_bytes(client_socket.recv(4))
         payload = client_socket.recv(payload_length, socket.MSG_WAITALL).decode("utf-8")
-        self.logger.debug(f"Received payload: {payload}")
         response = ""
         try:
             request = Request.from_json(json.loads(payload))
