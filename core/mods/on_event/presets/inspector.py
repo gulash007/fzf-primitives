@@ -107,7 +107,8 @@ def get_inspector_prompt(inspected: PromptData | int):
 
     prompt.mod.on_hotkey().CTRL_Y.auto_repeat_run("refresh", "refresh-preview", repeat_interval=0.1)
     prompt.mod.on_hotkey().ESC.refresh_preview
-    prompt.mod.on_hotkey().CTRL_Q.quit
+    prompt.mod.on_hotkey().ENTER.abort  # TODO: do something
+    prompt.mod.on_hotkey().CTRL_Q.abort
     prompt.mod.on_hotkey().CTRL_ALT_H.show_bindings_help_in_preview
     prompt.mod.on_hotkey().CTRL_ALT_C.run_function(
         "Copy command to run inspector externally",
