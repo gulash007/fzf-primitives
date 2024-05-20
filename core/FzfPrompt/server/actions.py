@@ -34,7 +34,8 @@ class ServerCall[T, S](ShellCommand):
         return f"{self.name}#{id(self)}"
 
     def run(self, prompt_data: PromptData[T, S], request: Request) -> Any:
-        prompt_data.set_current_state(request.prompt_state)
+        if request.prompt_state:
+            prompt_data.set_current_state(request.prompt_state)
         return self.function(prompt_data, **request.kwargs)
 
     def _get_function_name(self, function: ServerCallFunction[T, S]) -> str:

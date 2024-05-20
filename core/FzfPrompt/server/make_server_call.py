@@ -4,45 +4,33 @@
 import json
 import socket
 import sys
-from itertools import zip_longest
+from typing import TypedDict
 
 
-def grouper(iterable, n, *, incomplete="fill", fillvalue=None):
-    "Collect data into non-overlapping fixed-length chunks or blocks"
-    # grouper('ABCDEFG', 3, fillvalue='x') --> ABC DEF Gxx
-    # grouper('ABCDEFG', 3, incomplete='strict') --> ABC DEF ValueError
-    # grouper('ABCDEFG', 3, incomplete='ignore') --> ABC DEF
-    args = [iter(iterable)] * n
-    if incomplete == "fill":
-        return zip_longest(*args, fillvalue=fillvalue)
-    if incomplete == "strict":
-        return zip(*args, strict=True)
-    if incomplete == "ignore":
-        return zip(*args)
-    else:
-        raise ValueError("Expected fill, strict, or ignore")
+class PromptState(TypedDict):
+    query: str
+    single_index: int | None
+    single_line: str | None
+    indices: list[int]
+    lines: list[str]
 
 
-if __name__ == "__main__":
-    port = int(sys.argv[1])
+def make_server_call(
+    port: int,
+    server_call_id: str,
+    command_type: str,
+    prompt_state: PromptState | None,
+    **kwargs,
+):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
         client.connect(("localhost", port))
         try:
-            server_call_id, command_type, query, single_index, single_line, indices, selections = sys.argv[2:9]
             data = {
                 "server_call_id": server_call_id,
                 "command_type": command_type,
-                "prompt_state": {
-                    "query": query,
-                    "single_index": int(single_index) if single_index else None,
-                    "single_line": single_line or None,
-                    "indices": list(map(int, indices.split())),
-                    "lines": selections.splitlines(),
-                },
-                "kwargs": {},
+                "prompt_state": prompt_state,
+                "kwargs": kwargs,
             }
-            for key, value in grouper(sys.argv[9:], 2, incomplete="strict"):
-                data["kwargs"][key] = value
 
             # TODO: send it through a socket to Server instead of using nc
             payload = json.dumps(data).encode("utf-8")
@@ -53,5 +41,25 @@ if __name__ == "__main__":
         client.sendall(payload)
 
         response_length = int.from_bytes(client.recv(4))
-        if response := client.recv(response_length, socket.MSG_WAITALL).decode("utf-8"):
-            print(response)
+        return client.recv(response_length, socket.MSG_WAITALL).decode("utf-8")
+
+
+def parse_args():
+    port = int(sys.argv[1])
+    server_call_id = sys.argv[2]
+    command_type = sys.argv[3]
+    prompt_state: PromptState = {
+        "query": sys.argv[4],
+        "single_index": int(x) if (x := sys.argv[5]) else None,
+        "single_line": sys.argv[6] or None,
+        "indices": list(map(int, sys.argv[7].split())),
+        "lines": sys.argv[8].splitlines(),
+    }
+    kwargs = dict(zip(sys.argv[9::2], sys.argv[10::2]))
+    return port, server_call_id, command_type, prompt_state, kwargs
+
+
+if __name__ == "__main__":
+    port, server_call_id, command_type, prompt_state, kwargs = parse_args()
+    if response := make_server_call(port, server_call_id, command_type, prompt_state, **kwargs):
+        print(response)

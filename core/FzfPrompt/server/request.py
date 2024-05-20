@@ -19,10 +19,10 @@ class CommandOutput(str): ...
 
 class Request:
     def __init__(
-        self, server_call_id: str, command_type: ShellCommandActionType, prompt_state: PromptState, kwargs: dict
+        self, server_call_id: str, command_type: ShellCommandActionType, prompt_state: PromptState | None, kwargs: dict
     ):
         self.server_call_id = server_call_id
-        self.command_type: ShellCommandActionType = command_type
+        self.command_type: ShellCommandActionType = command_type  # TODO: use it?
         self.prompt_state = prompt_state
         self.kwargs = kwargs
 
@@ -54,7 +54,7 @@ class Request:
 
     @classmethod
     def from_json(cls, data: dict) -> Self:
-        prompt_state = PromptState.from_json(data["prompt_state"])
+        prompt_state = PromptState.from_json(data["prompt_state"]) if data["prompt_state"] else None
         return cls(data["server_call_id"], data["command_type"], prompt_state, data["kwargs"])
 
 
