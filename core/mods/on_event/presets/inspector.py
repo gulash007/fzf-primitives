@@ -29,7 +29,7 @@ INSPECTORS: dict[Inspectable, Callable[[PromptData, int], Any]] = {
         "bindings": pd.action_menu.bindings,
     },
     "server": lambda pd, depth: {
-        "server_endpoints": {k: str(v) for k, v in pd.server.server_endpoints.items()},
+        "endpoints": {k: str(v) for k, v in pd.server.endpoints.items()},
         "socket_number": pd.server.socket_number,
         "setup_finished": pd.server.setup_finished,
         "should_close": pd.server.should_close,
@@ -71,7 +71,7 @@ def get_inspector_prompt(inspected: PromptData | int):
         prompt.mod.preview().custom(
             "Inspections",
             lambda pd: pygments.highlight(
-                pd.obj.server.server_endpoints["INSPECT"].function(
+                pd.obj.server.endpoints["INSPECT"].function(
                     pd.obj,
                     inspection_view_specs={line: 1 for line in pd.current_choices},
                 ),

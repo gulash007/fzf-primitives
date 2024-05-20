@@ -148,7 +148,7 @@ class PromptData[T, S](LoggedComponent):
             self.automator.start()
 
         for binding in self.action_menu.bindings.values():
-            self.server.add_server_endpoints(binding)
+            self.server.add_endpoints(binding)
         self.options += self.action_menu.resolve_options()
         self.options.listen()  # for ServerCalls with FZF_PORT parameter
 

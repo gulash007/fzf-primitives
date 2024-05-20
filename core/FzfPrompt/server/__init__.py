@@ -46,7 +46,7 @@ class Server[T, S](Thread, LoggedComponent):
         self.prompt_data = prompt_data
         self.setup_finished = Event()
         self.should_close = Event()
-        self.server_endpoints: dict[str, ServerEndpoint] = {}
+        self.endpoints: dict[str, ServerEndpoint] = {}
         self.socket_number: int
 
     # TODO: Use automator to end running prompt and propagate errors
@@ -83,28 +83,28 @@ class Server[T, S](Thread, LoggedComponent):
         response = ""
         try:
             request = Request.from_json(json.loads(payload))
-            self.logger.debug(f"Resolving '{request.endpoint_id}' ({len(self.server_endpoints)} endpoints registered)")
-            response = self.server_endpoints[request.endpoint_id].run(prompt_data, request) or response
+            self.logger.debug(f"Resolving '{request.endpoint_id}' ({len(self.endpoints)} endpoints registered)")
+            response = self.endpoints[request.endpoint_id].run(prompt_data, request) or response
         except Exception as err:
             self.logger.error(trb := traceback.format_exc())
             payload_info = f"Payload contents:\n{payload}"
             self.logger.error(payload_info)
             response = f"{trb}\n{payload_info}"
             if isinstance(err, KeyError):
-                response = f"{trb}\n{list(self.server_endpoints.keys())}"
-                self.logger.error(f"Available server calls:\n{list(self.server_endpoints.keys())}")
+                response = f"{trb}\n{list(self.endpoints.keys())}"
+                self.logger.error(f"Available server calls:\n{list(self.endpoints.keys())}")
         finally:
             response_bytes = str(response).encode("utf-8")
             client_socket.send(len(response_bytes).to_bytes(4))
             client_socket.sendall(response_bytes)
             client_socket.close()
 
-    def add_server_endpoints(self, binding: Binding):
+    def add_endpoints(self, binding: Binding):
         for action in binding.actions:
             if isinstance(action, ServerCall):
-                self.add_server_endpoint(action.endpoint)
+                self.add_endpoint(action.endpoint)
 
-    def add_server_endpoint(self, server_endpoint: ServerEndpoint):
-        if server_endpoint.id not in self.server_endpoints:
-            self.logger.debug(f"🤙 Adding server endpoint: {server_endpoint}")
-            self.server_endpoints[server_endpoint.id] = server_endpoint
+    def add_endpoint(self, endpoint: ServerEndpoint):
+        if endpoint.id not in self.endpoints:
+            self.logger.debug(f"🤙 Adding server endpoint: {endpoint}")
+            self.endpoints[endpoint.id] = endpoint

@@ -82,7 +82,7 @@ class Mod[T, S](LoggedComponent):
         return self
 
     def expose_inspector(self, event_to_run_inspector_prompt: Hotkey | Situation | None = None) -> Self:
-        self._mods.append(lambda pd: pd.server.add_server_endpoint(ServerEndpoint(show_inspectables, "INSPECT")))
+        self._mods.append(lambda pd: pd.server.add_endpoint(ServerEndpoint(show_inspectables, "INSPECT")))
         if event_to_run_inspector_prompt:
             self.on_event(event_to_run_inspector_prompt).run_inspector_prompt
         return self
