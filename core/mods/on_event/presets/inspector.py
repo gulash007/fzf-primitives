@@ -6,9 +6,10 @@ from pygments.formatters import Terminal256Formatter
 from pygments.lexers import JsonLexer
 
 from .....config import Config
-from .....core import prompt as pr
-from .....core.FzfPrompt.server.make_server_call import make_server_call
+from .... import prompt as pr
 from ....FzfPrompt import PromptData
+from ....FzfPrompt.server import ServerEndpoint
+from ....FzfPrompt.server.make_server_call import make_server_call
 
 Inspectable = Literal[
     "action_menu",
@@ -96,12 +97,15 @@ def get_inspector_prompt(inspected: PromptData | int):
             window_size="85%",
         )
 
-        def change_port(prompt_data: PromptData, port: str):
-            if not port:
-                port = input("Enter port: ")
-            prompt_data.obj = int(port)
+        def change_port(prompt_data: PromptData, _port: str):
+            if not _port:
+                _port = input("Enter port: ")
+            if _port.isdigit():
+                prompt_data.obj = int(_port)
 
         prompt.mod.on_hotkey().CTRL_B.run_function("Change port", change_port, "refresh-preview")
+
+        prompt.mod._mods.append(lambda pd: pd.server.add_endpoint(ServerEndpoint(change_port, "CHANGE_INSPECTED_PORT")))
 
     prompt.mod.options.multiselect
 
