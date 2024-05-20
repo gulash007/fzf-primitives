@@ -40,18 +40,20 @@ class PreviewServerCall[T, S](ServerCall[T, S], LoggedComponent):
         self.preview_function = preview_function
         super().__init__(preview_function, f"PreviewServerCall of {preview.name}", command_type="change-preview")
 
+        def preview_call(prompt_data: PromptData[T, S], **kwargs):
+            output = preview_function(prompt_data, **kwargs)
+            if self.preview.store_output:
+                self.preview.output = output
+            self.logger.trace(f"Showing preview '{self.preview.name}'", preview=self.preview.name)
+            return output
+
+        # HACK
+        self.endpoint.function = preview_call
+
     @property
     @override
     def id(self) -> str:
         return f"{super().id} (preview_id={self.preview.id})"
-
-    @override
-    def run(self, prompt_data: PromptData[T, S], request: Request):
-        output = super().run(prompt_data, request)
-        if self.preview.store_output:
-            self.preview.output = output
-        self.logger.trace(f"Showing preview '{self.preview.name}'", preview=self.preview.name)
-        return output
 
     def __str__(self) -> str:
         return f"[PSC]({self.id})"

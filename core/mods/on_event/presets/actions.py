@@ -26,7 +26,7 @@ class ReloadChoices[T, S](ServerCall[T, S]):
         super().__init__(reload_choices, command_type="reload-sync" if sync else "reload")
 
     def __str__(self) -> str:
-        return f"[RC]({self.function.__name__})"
+        return f"[RC]({self._get_function_name(self.endpoint.function)})"
 
 
 class ShowInPreview[T, S](ServerCall[T, S]):

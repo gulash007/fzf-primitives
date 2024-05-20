@@ -27,11 +27,11 @@ class Transform[T, S](ServerCall[T, S], LoggedComponent):
 
         for server_call_id in self._created_server_call_ids:
             with contextlib.suppress(KeyError):
-                prompt_data.server.server_calls.pop(server_call_id)
+                prompt_data.server.server_endpoints.pop(server_call_id)
         self._created_server_call_ids.clear()
         for action in binding.actions:
             if isinstance(action, ServerCall):
-                prompt_data.server.add_server_call(action)
+                prompt_data.server.add_server_endpoint(action.endpoint)
                 self._created_server_call_ids.append(action.id)
 
         return binding.action_string()

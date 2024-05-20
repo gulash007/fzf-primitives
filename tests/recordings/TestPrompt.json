@@ -4,7 +4,7 @@
     {
       "process": "MainProcess",
       "thread": "Server",
-      "function": "run",
+      "function": "preview_call",
       "extra": {
         "preview": "fzf json"
       }
@@ -12,7 +12,7 @@
     {
       "process": "MainProcess",
       "thread": "Server",
-      "function": "run",
+      "function": "preview_call",
       "extra": {
         "preview": "fzf json"
       }
@@ -20,7 +20,7 @@
     {
       "process": "MainProcess",
       "thread": "Server",
-      "function": "run",
+      "function": "preview_call",
       "extra": {
         "preview": "fzf json"
       }

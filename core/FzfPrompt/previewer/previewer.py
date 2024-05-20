@@ -40,7 +40,7 @@ class Previewer[T, S](LoggedComponent):
         if self._current_preview:
             change_preview_output = self._current_preview.change_preview_output
             if isinstance(change_preview_output, ServerCall):
-                prompt_data.server.add_server_call(change_preview_output)
+                prompt_data.server.add_server_endpoint(change_preview_output.endpoint)
             prompt_data.options.preview(change_preview_output.action_value)
             prompt_data.options.add("--preview-window", self._current_preview.change_preview_window.action_value)
             prompt_data.options.preview_label(self._current_preview.change_preview_label.action_value)

@@ -30,6 +30,7 @@ from .server import (
     PromptEndingAction,
     ServerCall,
     ServerCallFunction,
+    ServerEndpoint,
     make_server_call,
 )
 from .shell import MoreInformativeCalledProcessError
@@ -43,6 +44,7 @@ __all__ = [
     "Action",
     "ConflictResolution",
     "ShellCommand",
+    "ServerEndpoint",
     "ServerCall",
     "ServerCallFunction",
     "PromptEndingAction",

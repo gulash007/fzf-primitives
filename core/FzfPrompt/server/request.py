@@ -4,29 +4,38 @@ import functools
 import inspect
 import json
 import shlex
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Self
 
 if TYPE_CHECKING:
+    from ..prompt_data import PromptData
     from .actions import ServerCallFunction
 
 SOCKET_NUMBER_ENV_VAR = "FZF_PRIMITIVES_SOCKET_NUMBER"
 MAKE_SERVER_CALL_ENV_VAR_NAME = "FZF_PRIMITIVES_REQUEST_CREATING_SCRIPT"
 
 
-class CommandOutput(str): ...
+class ServerEndpoint:
+    def __init__(self, function: ServerCallFunction, id: str):
+        self.function = function
+        self.id = id
+
+    def run(self, prompt_data: PromptData, request: Request) -> Any:
+        if request.prompt_state:
+            prompt_data.set_current_state(request.prompt_state)
+        return self.function(prompt_data, **request.kwargs)
 
 
 class Request:
-    def __init__(self, server_call_id: str, prompt_state: PromptState | None, kwargs: dict):
-        self.server_call_id = server_call_id
+    def __init__(self, endpoint_id: str, prompt_state: PromptState | None, kwargs: dict):
+        self.endpoint_id = endpoint_id
         self.prompt_state = prompt_state
         self.kwargs = kwargs
 
     @staticmethod
-    def create_command(server_call_id: str, function: ServerCallFunction) -> str:
-        parameters = Request.parse_function_parameters(function)
+    def create_command(server_endpoint: ServerEndpoint) -> str:
+        parameters = Request.parse_function_parameters(server_endpoint.function)
         command = [
-            f'"${MAKE_SERVER_CALL_ENV_VAR_NAME}" "${SOCKET_NUMBER_ENV_VAR}" {shlex.quote(server_call_id)}',
+            f'"${MAKE_SERVER_CALL_ENV_VAR_NAME}" "${SOCKET_NUMBER_ENV_VAR}" {shlex.quote(server_endpoint.id)}',
             '{q} "{n}" {} "{+n}" "$(for x in {+}; do echo "$x"; done)"',  # making use of fzf placeholders
         ]
         for parameter in parameters:
@@ -51,7 +60,10 @@ class Request:
     @classmethod
     def from_json(cls, data: dict) -> Self:
         prompt_state = PromptState.from_json(data["prompt_state"]) if data["prompt_state"] else None
-        return cls(data["server_call_id"], prompt_state, data["kwargs"])
+        return cls(data["endpoint_id"], prompt_state, data["kwargs"])
+
+
+class CommandOutput(str): ...
 
 
 class PromptState:
