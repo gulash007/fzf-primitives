@@ -30,6 +30,9 @@ INSPECTORS: dict[Inspectable, Callable[[PromptData, int], Any]] = {
     },
     "server": lambda pd, depth: {
         "server_calls": {k: str(v) for k, v in pd.server.server_calls.items()},
+        "socket_number": pd.server.socket_number,
+        "setup_finished": pd.server.setup_finished,
+        "should_close": pd.server.should_close,
     },
     "previewer": lambda pd, depth: {
         "current_preview": pd.previewer.current_preview.id,
