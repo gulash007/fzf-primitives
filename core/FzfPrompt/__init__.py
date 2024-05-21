@@ -11,6 +11,7 @@ from .action_menu.ActionMenu import BindingConflict, ConflictResolution
 from .action_menu.binding import Binding
 from .action_menu.parametrized_actions import Action, ShellCommand
 from .action_menu.transform import ActionsBuilder, Transform
+from .controller import Controller
 from .exceptions import Quitting
 from .previewer import (
     Preview,
@@ -55,6 +56,7 @@ __all__ = [
     "Transform",
     "ActionsBuilder",
     "ChoicesAndLinesMismatch",
+    "Controller"
 ]
 
 
