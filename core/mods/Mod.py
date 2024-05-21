@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from typing import Callable, Self
 
-from ..FzfPrompt import Action, Binding, ConflictResolution, PromptData, ServerEndpoint
+from ..FzfPrompt import Action, Binding, ConflictResolution, PromptData
 from ..FzfPrompt.options import Hotkey, Options, Situation
 from ..monitoring import LoggedComponent
 from .event_adder import attach_hotkey_adder, attach_situation_adder
 from .on_event import OnEvent
-from .on_event.presets.inspector import show_inspectables
+from .on_event.presets.inspector import INSPECTION_ENDPOINT
 from .post_processing import PostProcessing
 from .preview_mod import PreviewMod
 
@@ -82,7 +82,7 @@ class Mod[T, S](LoggedComponent):
         return self
 
     def expose_inspector(self, event_to_run_inspector_prompt: Hotkey | Situation | None = None) -> Self:
-        self._mods.append(lambda pd: pd.server.add_endpoint(ServerEndpoint(show_inspectables, "INSPECT")))
+        self._mods.append(lambda pd: pd.server.add_endpoint(INSPECTION_ENDPOINT))
         if event_to_run_inspector_prompt:
             self.on_event(event_to_run_inspector_prompt).run_inspector_prompt
         return self
