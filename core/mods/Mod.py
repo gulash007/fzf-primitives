@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Callable, Self
 
-from ..FzfPrompt import Action, ConflictResolution, PromptData, ServerEndpoint
+from ..FzfPrompt import Action, Binding, ConflictResolution, PromptData, ServerEndpoint
 from ..FzfPrompt.options import Hotkey, Options, Situation
 from ..monitoring import LoggedComponent
 from .event_adder import attach_hotkey_adder, attach_situation_adder
@@ -85,4 +85,20 @@ class Mod[T, S](LoggedComponent):
         self._mods.append(lambda pd: pd.server.add_endpoint(ServerEndpoint(show_inspectables, "INSPECT")))
         if event_to_run_inspector_prompt:
             self.on_event(event_to_run_inspector_prompt).run_inspector_prompt
+        return self
+
+    def attach_to_remote_inspector_prompt(self, backend_port: int, control_port: int) -> Self:
+        self.expose_inspector()
+        self.on_situation(on_conflict="append").START.run_function(
+            "Attach to inspector prompt",
+            lambda pd: pd.logger.debug(
+                pd.make_server_call(backend_port, "CHANGE_INSPECTED_PORT", None, _port=str(pd.server.port))
+            ),
+            silent=True,
+        )
+        self.on_situation(on_conflict="append").FOCUS.run_function(
+            "Refresh remote inspector",
+            lambda pd: pd.controller.execute(control_port, Binding(None, "refresh-preview")),
+            silent=True,
+        )
         return self

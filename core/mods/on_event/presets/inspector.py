@@ -112,7 +112,9 @@ def get_inspector_prompt(inspected: PromptData | int):
 
     prompt.mod.options.multiselect
 
-    prompt.mod.on_hotkey().CTRL_C.run_function("Clip backend port", lambda pd: copy_backend_port(pd.server.port))
+    prompt.mod.on_hotkey().CTRL_C.run_function(
+        "Clip backend and control port", lambda pd: copy_backend_and_control_port(pd.server.port, pd.control_port)
+    )
     prompt.mod.on_hotkey().CTRL_Y.auto_repeat_run("refresh", "refresh-preview", repeat_interval=0.1)
     prompt.mod.on_hotkey().ESC.refresh_preview
     prompt.mod.on_hotkey().ENTER.abort  # TODO: do something
@@ -131,10 +133,10 @@ def get_inspector_prompt(inspected: PromptData | int):
     return prompt
 
 
-def copy_backend_port(port: int):
+def copy_backend_and_control_port(backend_port: int, control_port: int):
     import pyperclip
 
-    pyperclip.copy(str(port))
+    pyperclip.copy(f"{backend_port}, {control_port}")
 
 
 def copy_command_to_run_inspector_externally(port: int):

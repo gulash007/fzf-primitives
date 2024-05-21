@@ -90,9 +90,9 @@ def prompt_builder():
         lambda pd: preview_mutation_generator.next("has world"),
     )
 
-    prompt.mod.expose_inspector("ctrl-b")
-    REMOTE_INSPECTOR_PORT = 59497
-    prompt.mod.on_situation(on_conflict="append").START.attach_to_remote_inspector(REMOTE_INSPECTOR_PORT)
+    REMOTE_INSPECTOR_BACKEND_PORT, REMOTE_INSPECTOR_CONTROL_PORT = 63007, 63008
+    prompt.mod.expose_inspector("ctrl-alt-i")
+    prompt.mod.attach_to_remote_inspector_prompt(REMOTE_INSPECTOR_BACKEND_PORT, REMOTE_INSPECTOR_CONTROL_PORT)
 
     prompt.mod.on_situation(on_conflict="append").START.run_function(
         "measure startup time", lambda pd: print(f"Startup time: {perf_counter() - start} seconds")

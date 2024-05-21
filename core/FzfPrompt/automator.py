@@ -65,13 +65,16 @@ class Automator(Thread, LoggedComponent):
         sleep_period = 0.01
         total_sleep_time = 0
         log_every_n_seconds = 5
-        while not self._prompt_data.control_port:
-            if total_sleep_time >= log_every_n_seconds:
-                self.logger.warning("Waiting for port to be resolved…")
-                total_sleep_time = 0
-            time.sleep(sleep_period)
-            total_sleep_time += sleep_period
-        self.__port = self._prompt_data.control_port
+        while True:
+            try:
+                self.__port = self._prompt_data.control_port
+                break
+            except RuntimeError:
+                if total_sleep_time >= log_every_n_seconds:
+                    self.logger.warning("Waiting for port to be resolved…")
+                    total_sleep_time = 0
+                time.sleep(sleep_period)
+                total_sleep_time += sleep_period
 
     # TODO: Also allow automating default fzf hotkeys (can be solved by creating appropriate bindings in the action menu)
     def automate(self, *to_automate: Hotkey):

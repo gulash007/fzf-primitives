@@ -48,6 +48,7 @@ class PromptData[T, S](LoggedComponent):
         self.id = datetime.now().isoformat()  # TODO: Use it?
         self.run_vars: dict[str, Any] = {"env": os.environ.copy()}
         self._stage: PromptStage = "created"
+        self._control_port: int | None = None
         self.make_server_call = make_server_call
 
     @property
@@ -130,6 +131,12 @@ class PromptData[T, S](LoggedComponent):
             self._controller = Controller()
         return self._controller
 
+    @property
+    def control_port(self) -> int:
+        if not self._control_port:
+            raise RuntimeError("Control port not set (Are you sure you used Options.listen()?)")
+        return self._control_port
+
     @single_use_method
     def run_initial_setup(self):
         self.previewer.resolve_main_preview(self)
@@ -140,7 +147,7 @@ class PromptData[T, S](LoggedComponent):
         def on_startup_success(prompt_data: PromptData, FZF_PORT: str):
             self.set_stage("running")
             if FZF_PORT.isdigit():
-                self.control_port = int(FZF_PORT)
+                self._control_port = int(FZF_PORT)
 
         self.action_menu.add(
             "start",
