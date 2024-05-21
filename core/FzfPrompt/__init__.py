@@ -99,7 +99,7 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
     finally:
         server.should_close.set()
     server.join()
-    if not prompt_data.finished:
+    if prompt_data.stage != "finished":
         # TODO: This may be explicitly allowed in the future (need to test when it's not)
         raise RuntimeError("Prompt not finished (you aborted prompt without finishing PromptData)")
     if prompt_data.result.end_status == "quit":

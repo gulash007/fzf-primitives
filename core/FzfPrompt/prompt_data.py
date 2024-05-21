@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from .automator import Automator
@@ -12,7 +12,7 @@ from .action_menu import Action, ActionMenu, Binding, ConflictResolution
 from .decorators import single_use_method
 from .options import Hotkey, Options, Situation
 from .previewer import Preview, Previewer
-from .server import EndStatus, PostProcessor, PromptState, Server
+from .server import EndStatus, PostProcessor, PromptState, Server, ServerCall
 
 
 class PromptData[T, S](LoggedComponent):
@@ -44,6 +44,8 @@ class PromptData[T, S](LoggedComponent):
         self._result: Result[T]
         self.id = datetime.now().isoformat()  # TODO: Use it?
         self.run_vars: dict[str, Any] = {"env": os.environ.copy()}
+        self._stage: PromptStage = "created"
+        self.control_port: int | None = None
 
     @property
     def current_state(self) -> PromptState:
@@ -74,8 +76,11 @@ class PromptData[T, S](LoggedComponent):
             raise RuntimeError("Result not set") from err
 
     @property
-    def finished(self) -> bool:
-        return self._finished
+    def stage(self) -> PromptStage:
+        return self._stage
+
+    def set_stage(self, stage: PromptStage):
+        self._stage = stage
 
     def finish(self, event: Hotkey | Situation, end_status: EndStatus):
         self._result = Result(
@@ -88,7 +93,7 @@ class PromptData[T, S](LoggedComponent):
             single_line=self.current_state.single_line,
             lines=self.current_state.lines,
         )
-        self._finished = True
+        self._stage = "finished"
 
     @property
     def choices_string(self) -> str:
@@ -143,14 +148,25 @@ class PromptData[T, S](LoggedComponent):
         if self.should_run_automator:
             from ..FzfPrompt.automator import Automator
 
-            self.automator = Automator()
-            self.automator.prepare(self)
+            self.automator = Automator(self)
+            self.automator.prepare()
             self.automator.start()
 
+        def on_startup_success(prompt_data: PromptData, FZF_PORT: str):
+            self.set_stage("running")
+            if FZF_PORT.isdigit():
+                self.control_port = int(FZF_PORT)
+
+        self.add_binding(
+            "start",
+            Binding("On startup success", ServerCall(on_startup_success, command_type="execute-silent")),
+            on_conflict="prepend",
+        )
         for binding in self.action_menu.bindings.values():
             self.server.add_endpoints(binding)
         self.options += self.action_menu.resolve_options()
         self.options.listen()  # for ServerCalls with FZF_PORT parameter
+        self._stage = "ready to run"
 
     def check_choices_and_lines_length(self, choices: list, lines: list):
         if len(choices) != len(lines):
@@ -196,6 +212,9 @@ class Result[T](list[T]):
             indent=4,
             default=repr,
         )
+
+
+PromptStage = Literal["created", "ready to run", "running", "finished"]
 
 
 class ChoicesAndLinesMismatch(ValueError): ...

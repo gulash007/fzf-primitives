@@ -4,41 +4,35 @@ import time
 from threading import Event, Thread
 from typing import TYPE_CHECKING
 
-import requests
-
 if TYPE_CHECKING:
     from .prompt_data import PromptData
 from ..monitoring import LoggedComponent
 from . import action_menu as am
+from .controller import Controller
 from .decorators import single_use_method
 from .server import ServerCall
 
 
 class Automator(Thread, LoggedComponent):
-    def __init__(self) -> None:
+    def __init__(self, prompt_data: PromptData) -> None:
         LoggedComponent.__init__(self)
-        self.__port: str | None = None
+        self._prompt_data = prompt_data
+        self._controller = Controller()
+        self.__port: int | None = None
         self._bindings: list[am.Binding] = []
-        self._port_resolved = Event()
         self._binding_executed = Event()
         self.move_to_next_binding_server_call = ServerCall(self._move_to_next_binding)
         super().__init__()
 
     @property
-    def port(self) -> str:
+    def port(self) -> int:
         if self.__port is None:
             raise RuntimeError("port not set")
         return self.__port
 
-    @port.setter
-    def port(self, value: str):
-        self.__port = value
-
     def run(self):
         try:
-            while not self._port_resolved.is_set():
-                if not self._port_resolved.wait(timeout=5):
-                    self.logger.warning("Waiting for port to be resolved…")
+            self._resolve_port()
             for binding_to_automate in self._bindings:
                 self.execute_binding(binding_to_automate)
         except Exception as e:
@@ -46,27 +40,18 @@ class Automator(Thread, LoggedComponent):
             raise
 
     @single_use_method
-    def prepare(self, prompt_data: PromptData):
-        self._bindings.extend(prompt_data.bindings_to_automate)
-        prompt_data.add_binding(
-            "start",
-            am.Binding("get prompt port number for automator", ServerCall(self._get_port_number)),
-            on_conflict="prepend",
-        )
-        prompt_data.server.add_endpoint(self.move_to_next_binding_server_call.endpoint)
-        prompt_data.options.listen()
+    def prepare(self):
+        self._bindings.extend(self._prompt_data.bindings_to_automate)
+        self._prompt_data.server.add_endpoint(self.move_to_next_binding_server_call.endpoint)
+        self._prompt_data.options.listen()
 
     def execute_binding(self, binding: am.Binding):
-        time.sleep(0.25)
+        time.sleep(0.25)  # TODO: add to config
         self.logger.debug(f">>>>> Automating {binding}")
         if not binding.final_action:
             binding += am.Binding("move to next automated binding", self.move_to_next_binding_server_call)
         self._binding_executed.clear()
-        response = requests.post(f"http://localhost:{self.port}", data=binding.action_string())
-        if message := response.text:
-            if not message.startswith("unknown action:"):
-                self.logger.log("WEIRDNESS", message)
-            raise RuntimeError(message)
+        self._controller.execute(self.port, binding)
         if binding.final_action:
             return
         self._binding_executed.wait()
@@ -74,9 +59,14 @@ class Automator(Thread, LoggedComponent):
     def _move_to_next_binding(self, prompt_data: PromptData):
         self._binding_executed.set()
 
-    def _get_port_number(self, prompt_data: PromptData, FZF_PORT: str):
-        """Utilizes the $FZF_PORT variable containing the port assigned to --listen option
-        (or the one generated automatically when --listen=0)"""
-        self.port = FZF_PORT
-        self.logger.debug(f"Automated prompt listens on {self.port}")
-        self._port_resolved.set()
+    def _resolve_port(self):
+        sleep_period = 0.01
+        total_sleep_time = 0
+        log_every_n_seconds = 5
+        while not self._prompt_data.control_port:
+            if total_sleep_time >= log_every_n_seconds:
+                self.logger.warning("Waiting for port to be resolved…")
+                total_sleep_time = 0
+            time.sleep(sleep_period)
+            total_sleep_time += sleep_period
+        self.__port = self._prompt_data.control_port
