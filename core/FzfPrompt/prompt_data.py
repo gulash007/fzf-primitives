@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from .automator import Automator
 from ..monitoring import LoggedComponent
 from .action_menu import Action, ActionMenu, Binding, ConflictResolution
+from .controller import Controller
 from .decorators import single_use_method
 from .options import Hotkey, Options, Situation
 from .previewer import Preview, Previewer
@@ -36,7 +37,8 @@ class PromptData[T, S](LoggedComponent):
         self.action_menu = action_menu or ActionMenu()
         self.server = Server(self)
         self.previewer = previewer or Previewer()
-        self.automator: Automator | None = None
+        self._automator: Automator | None = None
+        self._controller: Controller | None = None
         self.bindings_to_automate: list[Binding] = []
         self.options = options or Options()
         self.post_processors: list[PostProcessor] = []
@@ -142,13 +144,26 @@ class PromptData[T, S](LoggedComponent):
     def should_run_automator(self) -> bool:
         return bool(self.bindings_to_automate)
 
+    @property
+    def automator(self) -> Automator:
+        if not self._automator:
+            from ..FzfPrompt.automator import Automator
+
+            self._automator = Automator(self)
+        return self._automator
+
+    @property
+    def controller(self) -> Controller:
+        if not self._controller:
+            from ..FzfPrompt.controller import Controller
+
+            self._controller = Controller()
+        return self._controller
+
     @single_use_method
     def run_initial_setup(self):
         self.previewer.resolve_main_preview(self)
         if self.should_run_automator:
-            from ..FzfPrompt.automator import Automator
-
-            self.automator = Automator(self)
             self.automator.prepare()
             self.automator.start()
 
