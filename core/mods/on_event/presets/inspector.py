@@ -22,6 +22,7 @@ Inspectable = Literal[
     "choices",
     "current_state",
     "run_vars",
+    "control_port",
 ]
 
 # TODO: Use depth and add hotkeys to change it
@@ -50,8 +51,10 @@ INSPECTORS: dict[Inspectable, Callable[[PromptData, int], Any]] = {
         **pd.current_state.__dict__,
         "current single choice": pd.current_single_choice,
         "current choices": pd.current_choices,
+        "stage": pd.stage,
     },
     "run_vars": lambda pd, depth: pd.run_vars,
+    "control_port": lambda pd, depth: pd.control_port,
 }
 
 
