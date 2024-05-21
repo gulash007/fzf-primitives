@@ -106,15 +106,6 @@ class PromptData[T, S](LoggedComponent):
     def get_current_preview(self) -> str:
         return self.previewer.current_preview.output
 
-    def apply_post_processors(self):
-        event = self.result.event
-        if not (final_action := self.action_menu.bindings[event].final_action):
-            raise RuntimeError("Prompt ended on event that doesn't have final action. How did we get here?")
-        if final_action.post_processor:
-            final_action.post_processor(self)
-        for post_processor in self.post_processors:
-            post_processor(self)
-
     @property
     def automator(self) -> Automator:
         if not self._automator:
