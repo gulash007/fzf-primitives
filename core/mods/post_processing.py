@@ -16,7 +16,7 @@ class PostProcessing[T, S]:
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         for post_processor in self._post_processors:
-            prompt_data.add_post_processor(post_processor)
+            prompt_data.post_processors.append(post_processor)
 
     # presets
     # TODO: clip presented selections or the selections passed as choices?

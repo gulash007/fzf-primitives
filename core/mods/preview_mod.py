@@ -91,11 +91,9 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
         except AttributeError:
             self.logger.warning("PreviewMod has no effect as its Preview has not been set")
             return
-        if not self._events:
-            prompt_data.add_preview(preview, on_conflict=self._on_conflict, main=self._main)
-        else:
-            for event in self._events:
-                prompt_data.add_preview(preview, event, on_conflict=self._on_conflict, main=self._main)
+        prompt_data.previewer.add(preview, main=self._main)
+        for event in self._events:
+            prompt_data.action_menu.add(event, preview.preview_change_binding, on_conflict=self._on_conflict)
         if self._specific_preview_mod:
             self._specific_preview_mod(prompt_data)
 
@@ -213,7 +211,7 @@ class SpecificPreviewOnEvent[T, S](OnEventBase[T, S]):
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         for event in self._events:
-            prompt_data.add_binding(event, self._binding, on_conflict=self._on_conflict)
+            prompt_data.action_menu.add(event, self._binding, on_conflict=self._on_conflict)
         self._initial_mutation(prompt_data)
 
     def mutate(

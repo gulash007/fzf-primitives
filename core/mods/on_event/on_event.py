@@ -56,7 +56,7 @@ class OnEvent[T, S](OnEventBase[T, S]):
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         for event in self._events:
-            prompt_data.add_binding(event, self._binding, on_conflict=self._on_conflict)
+            prompt_data.action_menu.add(event, self._binding, on_conflict=self._on_conflict)
 
     def run(self, name: str, *actions: Action) -> Self:
         self._binding += Binding(name, *actions)

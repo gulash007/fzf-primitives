@@ -5,9 +5,11 @@ from threading import Event, Thread
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from .options import Hotkey
     from .prompt_data import PromptData
 from ..monitoring import LoggedComponent
 from . import action_menu as am
+from .action_menu import Action, Binding
 from .controller import Controller
 from .decorators import single_use_method
 from .server import ServerCall
@@ -70,3 +72,10 @@ class Automator(Thread, LoggedComponent):
             time.sleep(sleep_period)
             total_sleep_time += sleep_period
         self.__port = self._prompt_data.control_port
+
+    # TODO: Also allow automating default fzf hotkeys (can be solved by creating appropriate bindings in the action menu)
+    def automate(self, *to_automate: Hotkey):
+        self._bindings.extend(self._prompt_data.action_menu.bindings[hotkey] for hotkey in to_automate)
+
+    def automate_actions(self, *actions: Action, name: str | None = None):
+        self._bindings.append(Binding(name or "anonymous actions", *actions))

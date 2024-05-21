@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING, Any, Literal
 if TYPE_CHECKING:
     from .automator import Automator
 from ..monitoring import LoggedComponent
-from .action_menu import Action, ActionMenu, Binding, ConflictResolution
+from .action_menu import ActionMenu, Binding
 from .controller import Controller
 from .decorators import single_use_method
 from .options import Hotkey, Options, Situation
-from .previewer import Preview, Previewer
+from .previewer import Previewer
 from .server import EndStatus, PostProcessor, PromptState, Server, ServerCall
 
 
@@ -104,26 +104,6 @@ class PromptData[T, S](LoggedComponent):
     def get_current_preview(self) -> str:
         return self.previewer.current_preview.output
 
-    def add_binding(
-        self, event: Hotkey | Situation, binding: Binding, *, on_conflict: ConflictResolution = "raise error"
-    ):
-        self.action_menu.add(event, binding, on_conflict=on_conflict)
-
-    def add_preview(
-        self,
-        preview: Preview[T, S],
-        event: Hotkey | Situation | None = None,
-        *,
-        on_conflict: ConflictResolution = "raise error",
-        main: bool = False,
-    ):
-        self.previewer.add(preview, main=main)
-        if event:
-            self.add_binding(event, preview.preview_change_binding, on_conflict=on_conflict)
-
-    def add_post_processor(self, post_processor: PostProcessor):
-        self.post_processors.append(post_processor)
-
     def apply_post_processors(self):
         event = self.result.event
         if not (final_action := self.action_menu.bindings[event].final_action):
@@ -132,17 +112,6 @@ class PromptData[T, S](LoggedComponent):
             final_action.post_processor(self)
         for post_processor in self.post_processors:
             post_processor(self)
-
-    # TODO: Also allow automating default fzf hotkeys (can be solved by creating appropriate bindings in the action menu)
-    def automate(self, *to_automate: Hotkey):
-        self.bindings_to_automate.extend(self.action_menu.bindings[hotkey] for hotkey in to_automate)
-
-    def automate_actions(self, *actions: Action, name: str | None = None):
-        self.bindings_to_automate.append(Binding(name or "anonymous actions", *actions))
-
-    @property
-    def should_run_automator(self) -> bool:
-        return bool(self.bindings_to_automate)
 
     @property
     def automator(self) -> Automator:
@@ -163,16 +132,16 @@ class PromptData[T, S](LoggedComponent):
     @single_use_method
     def run_initial_setup(self):
         self.previewer.resolve_main_preview(self)
-        if self.should_run_automator:
-            self.automator.prepare()
-            self.automator.start()
+        if self._automator:
+            self._automator.prepare()
+            self._automator.start()
 
         def on_startup_success(prompt_data: PromptData, FZF_PORT: str):
             self.set_stage("running")
             if FZF_PORT.isdigit():
                 self.control_port = int(FZF_PORT)
 
-        self.add_binding(
+        self.action_menu.add(
             "start",
             Binding("On startup success", ServerCall(on_startup_success, command_type="execute-silent")),
             on_conflict="prepend",
