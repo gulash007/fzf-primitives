@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import subprocess
 from typing import TYPE_CHECKING
 
@@ -23,15 +22,12 @@ from .previewer import (
 )
 from .prompt_data import ChoicesAndLinesMismatch, PromptData, Result
 from .server import (
-    MAKE_SERVER_CALL_ENV_VAR_NAME,
-    SOCKET_NUMBER_ENV_VAR,
     EndStatus,
     PostProcessor,
     PromptEndingAction,
     ServerCall,
     ServerCallFunction,
     ServerEndpoint,
-    make_server_call,
 )
 from .shell import MoreInformativeCalledProcessError
 
@@ -75,21 +71,19 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
     server = prompt_data.server
     server.start()
     server.setup_finished.wait()
-    env = os.environ.copy()
-    env[SOCKET_NUMBER_ENV_VAR] = str(server.socket_number)
-    env[MAKE_SERVER_CALL_ENV_VAR_NAME] = make_server_call.__file__
-    prompt_data.run_vars.update({"env": env, "executable_path": executable_path})
+    executable_path = executable_path or "fzf"
+    prompt_data.run_vars["executable_path"] = executable_path
 
     # TODO: catch 130 in mods.exit_round_on_no_selection (rename it appropriately)
     try:
         options = prompt_data.options
         logger.debug(f"Running fzf with options:\n{options.pretty()}")
         subprocess.run(
-            [executable_path or "fzf", *options],
+            [executable_path, *options],
             shell=False,
             input=prompt_data.choices_string.encode(),
             check=True,
-            env=env,
+            env=prompt_data.run_vars["env"],
             stdout=subprocess.DEVNULL,
         )
     except FileNotFoundError as err:

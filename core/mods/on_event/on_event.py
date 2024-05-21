@@ -200,5 +200,5 @@ class OnEvent[T, S](OnEventBase[T, S]):
     def attach_to_remote_inspector(self, port: int):
         return self.run_function(
             "Attach to inspector prompt",
-            lambda pd: make_server_call(port, "CHANGE_INSPECTED_PORT", None, _port=str(pd.server.socket_number)),
+            lambda pd: make_server_call(port, "CHANGE_INSPECTED_PORT", None, _port=str(pd.server.port)),
         )

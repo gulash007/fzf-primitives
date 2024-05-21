@@ -31,7 +31,7 @@ INSPECTORS: dict[Inspectable, Callable[[PromptData, int], Any]] = {
     },
     "server": lambda pd, depth: {
         "endpoints": {k: str(v) for k, v in pd.server.endpoints.items()},
-        "socket_number": pd.server.socket_number,
+        "port": pd.server.port,
         "setup_finished": pd.server.setup_finished,
         "should_close": pd.server.should_close,
     },
@@ -109,9 +109,7 @@ def get_inspector_prompt(inspected: PromptData | int):
 
     prompt.mod.options.multiselect
 
-    prompt.mod.on_hotkey().CTRL_C.run_function(
-        "Clip backend port", lambda pd: copy_backend_port(pd.server.socket_number)
-    )
+    prompt.mod.on_hotkey().CTRL_C.run_function("Clip backend port", lambda pd: copy_backend_port(pd.server.port))
     prompt.mod.on_hotkey().CTRL_Y.auto_repeat_run("refresh", "refresh-preview", repeat_interval=0.1)
     prompt.mod.on_hotkey().ESC.refresh_preview
     prompt.mod.on_hotkey().ENTER.abort  # TODO: do something
@@ -120,7 +118,7 @@ def get_inspector_prompt(inspected: PromptData | int):
     prompt.mod.on_hotkey().CTRL_ALT_C.run_function(
         "Copy command to run inspector externally",
         lambda pd: copy_command_to_run_inspector_externally(
-            inspected if isinstance(inspected, int) else inspected.server.socket_number
+            inspected if isinstance(inspected, int) else inspected.server.port
         ),
         silent=True,
     ).accept

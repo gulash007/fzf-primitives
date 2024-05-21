@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -42,8 +43,7 @@ class PromptData[T, S](LoggedComponent):
         self._current_state: PromptState | None = None
         self._result: Result[T]
         self.id = datetime.now().isoformat()  # TODO: Use it?
-        self._finished = False
-        self.run_vars: dict[str, Any] = {}
+        self.run_vars: dict[str, Any] = {"env": os.environ.copy()}
 
     @property
     def current_state(self) -> PromptState:

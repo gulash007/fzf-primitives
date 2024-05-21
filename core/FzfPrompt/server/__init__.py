@@ -21,6 +21,7 @@ from .actions import (
     ServerCallFunction,
     ServerCallFunctionGeneric,
 )
+from . import make_server_call
 from .request import PromptState, Request, ServerEndpoint
 
 __all__ = [
@@ -47,7 +48,7 @@ class Server[T, S](Thread, LoggedComponent):
         self.setup_finished = Event()
         self.should_close = Event()
         self.endpoints: dict[str, ServerEndpoint] = {}
-        self.socket_number: int
+        self.port: int
 
     # TODO: Use automator to end running prompt and propagate errors
     def run(self):
@@ -56,7 +57,10 @@ class Server[T, S](Thread, LoggedComponent):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
                 server_socket.bind(("localhost", 0))
                 socket_specs = server_socket.getsockname()
-                self.socket_number = socket_specs[1]
+                self.port = socket_specs[1]
+                self.prompt_data.run_vars["env"][SOCKET_NUMBER_ENV_VAR] = str(self.port)
+                self.prompt_data.run_vars["env"][MAKE_SERVER_CALL_ENV_VAR_NAME] = make_server_call.__file__
+
                 server_socket.listen()
                 self.logger.info(f"Server listening on {socket_specs}...")
 
