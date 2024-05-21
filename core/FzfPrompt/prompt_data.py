@@ -14,6 +14,7 @@ from .decorators import single_use_method
 from .options import Hotkey, Options, Situation
 from .previewer import Previewer
 from .server import EndStatus, PostProcessor, PromptState, Server, ServerCall
+from .server.make_server_call import make_server_call
 
 
 class PromptData[T, S](LoggedComponent):
@@ -47,7 +48,7 @@ class PromptData[T, S](LoggedComponent):
         self.id = datetime.now().isoformat()  # TODO: Use it?
         self.run_vars: dict[str, Any] = {"env": os.environ.copy()}
         self._stage: PromptStage = "created"
-        self.control_port: int | None = None
+        self.make_server_call = make_server_call
 
     @property
     def current_state(self) -> PromptState:
