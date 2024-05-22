@@ -12,13 +12,14 @@ from .inspection import Inspectable
 
 
 def get_inspector_prompt(inspected: PromptData | int):
+    """inspected can be a PromptData object or a backend port of remote prompt"""
+    prompt = pr.Prompt[Inspectable, None](list(get_args(Inspectable)), use_basic_hotkeys=False)
     if isinstance(inspected, PromptData):
-        prompt = pr.Prompt[Inspectable, PromptData](list(get_args(Inspectable)), obj=inspected, use_basic_hotkeys=False)
         prompt.mod.preview().custom(
             "Inspections",
             lambda pd: pygments.highlight(
-                pd.obj.server.endpoints["INSPECT"].function(
-                    pd.obj,
+                inspected.server.endpoints["INSPECT"].function(
+                    inspected,
                     inspection_view_specs={line: 1 for line in pd.current_choices},
                 ),
                 lexer=JsonLexer(),
@@ -28,13 +29,11 @@ def get_inspector_prompt(inspected: PromptData | int):
         )
 
     else:
-        port = inspected
-        prompt = pr.Prompt[Inspectable, int](list(get_args(Inspectable)), obj=port, use_basic_hotkeys=False)
         prompt.mod.preview().custom(
             "Inspections",
             lambda pd: pygments.highlight(
                 make_server_call(
-                    pd.obj, "INSPECT", None, inspection_view_specs={line: 1 for line in pd.current_choices}
+                    inspected, "INSPECT", None, inspection_view_specs={line: 1 for line in pd.current_choices}
                 ),
                 lexer=JsonLexer(),
                 formatter=Terminal256Formatter(),

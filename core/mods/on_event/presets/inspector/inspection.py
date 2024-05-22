@@ -59,7 +59,9 @@ def show_inspectables(prompt_data: PromptData, inspection_view_specs: dict[Inspe
         outputs,
         indent=2,
         sort_keys=False,
-        default=lambda obj: getattr(obj, "__name__", None) or getattr(obj, "__dict__", None) or str(obj),
+        default=lambda obj: f"PromptData#{id(obj)}"
+        if isinstance(obj, PromptData)
+        else (getattr(obj, "__name__", None) or getattr(obj, "__dict__", None) or str(obj)),
     )
 
 
