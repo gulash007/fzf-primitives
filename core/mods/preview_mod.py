@@ -206,12 +206,10 @@ class SpecificPreviewOnEvent[T, S](OnEventBase[T, S]):
     ):
         super().__init__(*events, on_conflict=on_conflict)
         self._preview = preview
-        self._binding = Binding("")
         self._initial_mutation = lambda pd: None
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
-        for event in self._events:
-            prompt_data.action_menu.add(event, self._binding, on_conflict=self._on_conflict)
+        super().__call__(prompt_data)
         self._initial_mutation(prompt_data)
 
     def mutate(
