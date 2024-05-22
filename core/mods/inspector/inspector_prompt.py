@@ -27,25 +27,32 @@ def get_inspector_prompt(inspected: PromptData | int):
             ),
             window_size="85%",
         )
+        copy_command_to_run_inspector_externally = lambda pd: copy_to_clipboard(
+            f"python -m fzf_primitives.extra.inspector {inspected.server.port}"
+        )
 
     else:
+        port = inspected
         prompt.mod.preview().custom(
             "Inspections",
             lambda pd: pygments.highlight(
-                make_server_call(
-                    inspected, "INSPECT", None, inspection_view_specs={line: 1 for line in pd.current_choices}
-                ),
+                make_server_call(port, "INSPECT", None, inspection_view_specs={line: 1 for line in pd.current_choices}),
                 lexer=JsonLexer(),
                 formatter=Terminal256Formatter(),
             ),
             window_size="85%",
         )
 
+        copy_command_to_run_inspector_externally = lambda pd: copy_to_clipboard(
+            f"python -m fzf_primitives.extra.inspector {port}"
+        )
+
         def change_port(prompt_data: PromptData, _port: str):
+            nonlocal port
             if not _port:
                 _port = input("Enter port: ")
             if _port.isdigit():
-                prompt_data.obj = int(_port)
+                port = int(_port)
 
         prompt.mod.on_hotkey().CTRL_B.run_function("Change port", change_port, "refresh-preview")
 
@@ -62,11 +69,7 @@ def get_inspector_prompt(inspected: PromptData | int):
     prompt.mod.on_hotkey().CTRL_Q.abort
     prompt.mod.on_hotkey().CTRL_ALT_H.show_bindings_help_in_preview
     prompt.mod.on_hotkey().CTRL_ALT_C.run_function(
-        "Copy command to run inspector externally",
-        lambda pd: copy_command_to_run_inspector_externally(
-            inspected if isinstance(inspected, int) else inspected.server.port
-        ),
-        silent=True,
+        "Copy command to run inspector externally", copy_command_to_run_inspector_externally, silent=True
     ).accept
 
     prompt.mod.inspector.on_hotkey().CTRL_ALT_I.run_inspector_prompt
@@ -75,12 +78,10 @@ def get_inspector_prompt(inspected: PromptData | int):
 
 
 def copy_backend_and_control_port(backend_port: int, control_port: int):
+    copy_to_clipboard(f"{backend_port}, {control_port}")
+
+
+def copy_to_clipboard(text: str):
     import pyperclip
 
-    pyperclip.copy(f"{backend_port}, {control_port}")
-
-
-def copy_command_to_run_inspector_externally(port: int):
-    import pyperclip
-
-    pyperclip.copy(f"python -m fzf_primitives.extra.inspector {port}")
+    pyperclip.copy(text)
