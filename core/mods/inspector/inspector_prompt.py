@@ -4,10 +4,10 @@ import pygments
 from pygments.formatters import Terminal256Formatter
 from pygments.lexers import JsonLexer
 
-from ..... import prompt as pr
-from .....FzfPrompt import PromptData
-from .....FzfPrompt.server import ServerEndpoint
-from .....FzfPrompt.server.make_server_call import make_server_call
+from ... import prompt as pr
+from ...FzfPrompt import PromptData
+from ...FzfPrompt.server import ServerEndpoint
+from ...FzfPrompt.server.make_server_call import make_server_call
 from .inspection import Inspectable
 
 
@@ -69,7 +69,7 @@ def get_inspector_prompt(inspected: PromptData | int):
         silent=True,
     ).accept
 
-    prompt.mod.expose_inspector("ctrl-alt-i")
+    prompt.mod.inspector.on_hotkey().CTRL_ALT_I.run_inspector_prompt
 
     return prompt
 

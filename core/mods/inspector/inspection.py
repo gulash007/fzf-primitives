@@ -1,9 +1,9 @@
 import json
 from typing import Any, Callable, Literal
 
-from ......config import Config
-from .....FzfPrompt import PromptData
-from .....FzfPrompt.server import ServerEndpoint
+from ....config import Config
+from ...FzfPrompt import PromptData
+from ...FzfPrompt.server import ServerEndpoint
 
 Inspectable = Literal[
     "action_menu",

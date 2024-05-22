@@ -91,8 +91,9 @@ def prompt_builder():
     )
 
     REMOTE_INSPECTOR_BACKEND_PORT, REMOTE_INSPECTOR_CONTROL_PORT = 63007, 63008
-    prompt.mod.expose_inspector("ctrl-alt-i")
-    prompt.mod.attach_to_remote_inspector_prompt(REMOTE_INSPECTOR_BACKEND_PORT, REMOTE_INSPECTOR_CONTROL_PORT)
+    inspector_mod = prompt.mod.inspector
+    inspector_mod.attach_to_remote_inspector_prompt(REMOTE_INSPECTOR_BACKEND_PORT, REMOTE_INSPECTOR_CONTROL_PORT)
+    inspector_mod.on_hotkey().CTRL_ALT_I.run_inspector_prompt
 
     prompt.mod.on_situation(on_conflict="append").START.run_function(
         "measure startup time", lambda pd: print(f"Startup time: {perf_counter() - start} seconds")

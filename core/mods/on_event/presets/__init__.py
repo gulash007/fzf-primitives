@@ -11,7 +11,6 @@ import pyperclip
 from ....FzfPrompt import Action, Binding, PromptData
 from ....monitoring import LoggedComponent
 from .actions import ChoicesGetter, ReloadChoices, ShowInPreview
-from .inspector import get_inspector_prompt
 
 __all__ = [
     "clip_current_preview",
@@ -22,7 +21,6 @@ __all__ = [
     "ReloadChoices",
     "ChoicesGetter",
     "ShowInPreview",
-    "get_inspector_prompt",
 ]
 
 

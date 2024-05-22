@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import subprocess
-from abc import ABC, abstractmethod
+from abc import ABC
 from pathlib import Path
 from typing import Callable, Self
 
@@ -32,7 +32,6 @@ from .presets import (
     ShowInPreview,
     clip_current_preview,
     clip_options,
-    get_inspector_prompt,
 )
 
 
@@ -184,7 +183,3 @@ class OnEvent[T, S](OnEventBase[T, S]):
         file_getter = file_getter or (lambda pd: pd.current_state.lines)
         command = FILE_EDITORS[app]
         return self.run_function(f"open files in {app}", lambda pd: subprocess.run([command, "--", *file_getter(pd)]))
-
-    @property
-    def run_inspector_prompt(self):
-        return self.run_function("Run inspector prompt", lambda pd: get_inspector_prompt(pd).run())

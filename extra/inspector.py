@@ -1,4 +1,4 @@
-from ..core.mods.on_event.presets.inspector import get_inspector_prompt
+from ..core.mods.inspector import get_inspector_prompt
 import sys
 
 
