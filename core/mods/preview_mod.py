@@ -224,7 +224,7 @@ class SpecificPreviewOnEvent[T, S](OnEventBase[T, S]):
         """This method can be called multiple times on the same PreviewMod object to add multiple mutators"""
 
         self._binding = Binding(
-            name,
+            f"[{self._preview.name}] {name}",
             Transform(
                 lambda pd: (
                     ServerCall[T, S](
