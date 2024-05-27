@@ -18,21 +18,21 @@ class Transform[T, S](ServerCall[T, S], LoggedComponent):
         LoggedComponent.__init__(self)
 
         self.get_actions = get_actions
-        self._created_server_call_ids: list[str] = []
+        self._created_endpoints: list[str] = []
         super().__init__(self.get_transform_string, description or self._get_function_name(get_actions), "transform")
 
     def get_transform_string(self, prompt_data: PromptData[T, S]) -> str:
         binding = b.Binding(None, *self.get_actions(prompt_data))
         self.logger.debug(f"{self}: Created {binding}")
 
-        for server_call_id in self._created_server_call_ids:
+        for server_call_id in self._created_endpoints:
             with contextlib.suppress(KeyError):
                 prompt_data.server.endpoints.pop(server_call_id)
-        self._created_server_call_ids.clear()
+        self._created_endpoints.clear()
         for action in binding.actions:
             if isinstance(action, ServerCall):
                 prompt_data.server.add_endpoint(action.endpoint)
-                self._created_server_call_ids.append(action.id)
+                self._created_endpoints.append(action.endpoint.id)
 
         return binding.action_string()
 
