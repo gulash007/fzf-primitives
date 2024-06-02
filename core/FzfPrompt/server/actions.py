@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 import inspect
 import shlex
-from typing import TYPE_CHECKING, Any, Callable, Concatenate
+from typing import TYPE_CHECKING, Any, Callable, Concatenate, override
 
 if TYPE_CHECKING:
     from ..prompt_data import PromptData
@@ -93,3 +93,7 @@ class PromptEndingAction[T, S](ServerCall, LoggedComponent):
 
     def __str__(self) -> str:
         return f"[PEA]({self.event},{self.end_status},{self._get_function_name(self.post_processor) if self.post_processor else None})"
+
+    @override
+    def action_string(self) -> str:
+        return f"{super().action_string()}+accept"
