@@ -79,15 +79,23 @@ type PostProcessor[T, S] = Callable[[PromptData[T, S]], Any]
 
 class PromptEndingAction[T, S](ServerCall, LoggedComponent):
     def __init__(
-        self, end_status: EndStatus, event: Hotkey | Situation, post_processor: PostProcessor[T, S] | None = None
+        self,
+        end_status: EndStatus,
+        event: Hotkey | Situation,
+        post_processor: PostProcessor[T, S] | None = None,
+        *,
+        allow_empty: bool = True,
     ) -> None:
         LoggedComponent.__init__(self)
         self.end_status: EndStatus = end_status
         self.post_processor = post_processor
         self.event: Hotkey | Situation = event
+        self.allow_empty = allow_empty
         super().__init__(self._pipe_results, command_type="execute-silent")
 
     def _pipe_results(self, prompt_data: PromptData[T, S]):
+        if not self.allow_empty and not prompt_data.current_choices:
+            return
         prompt_data.finish(self.event, self.end_status)
         self.logger.debug(f"Piping results:\n{prompt_data.result}")
 
@@ -96,4 +104,4 @@ class PromptEndingAction[T, S](ServerCall, LoggedComponent):
 
     @override
     def action_string(self) -> str:
-        return f"{super().action_string()}+accept"
+        return f"{super().action_string()}+{'accept' if self.allow_empty else 'accept-non-empty'}"

@@ -98,17 +98,29 @@ class OnEvent[T, S](OnEventBase[T, S]):
         return self.run_function(f"Every {repeat_interval:.2f}s {name}", repeater)
 
     def end_prompt(
-        self, name: str, end_status: EndStatus, post_processor: Callable[[PromptData[T, S]], None] | None = None
+        self,
+        name: str,
+        end_status: EndStatus,
+        post_processor: Callable[[PromptData[T, S]], None] | None = None,
+        *,
+        allow_empty: bool = True,
     ):
         """Post-processor is called after the prompt has ended and before common post-processors are applied (defined in Mod.lastly)"""
         for event in self._events:
-            self._binding += Binding(name, PromptEndingAction(end_status, event, post_processor))
+            self._binding += Binding(
+                name, PromptEndingAction(end_status, event, post_processor, allow_empty=allow_empty)
+            )
 
     # presets
     @property
     def accept(self):
         """Ends prompt with status 'accept'"""
         return self.end_prompt("accept", "accept")
+
+    @property
+    def accept_non_empty(self):
+        """Ends prompt with status 'accept' if there are any selections"""
+        return self.end_prompt("accept non-empty", "accept", allow_empty=False)
 
     @property
     def abort(self):
