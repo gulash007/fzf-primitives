@@ -24,7 +24,12 @@ class ActionMenu[T, S](LoggedComponent):
         return [action for binding in self.bindings.values() for action in binding.actions]
 
     def add(self, event: Hotkey | Situation, binding: Binding, *, on_conflict: ConflictResolution = "raise error"):
-        self.logger.debug(f"🔗 Adding binding for '{event}': {binding} ({on_conflict} on conflict)")
+        self.logger.debug(
+            f"🔗 Adding binding for '{event}': {binding} ({on_conflict} on conflict)",
+            trace_point="adding_binding_to_action_menu",
+            event=event,
+            binding=binding.description,
+        )
         if event not in self.bindings:
             self.bindings[event] = binding
         else:

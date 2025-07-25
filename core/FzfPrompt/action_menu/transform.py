@@ -23,7 +23,11 @@ class Transform[T, S](ServerCall[T, S], LoggedComponent):
 
     def get_transform_string(self, prompt_data: PromptData[T, S]) -> str:
         binding = b.Binding(None, *self.get_actions(prompt_data))
-        self.logger.debug(f"{self}: Created {binding}")
+        self.logger.debug(
+            f"{self}: Created {binding}",
+            trace_point="transform_created",
+            binding=binding.name,
+        )
 
         for server_call_id in self._created_endpoints:
             with contextlib.suppress(KeyError):

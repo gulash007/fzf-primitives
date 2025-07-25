@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import argparse
+import contextlib
+import sys
+from datetime import datetime
 from time import perf_counter
 
 start = perf_counter()
@@ -14,7 +18,7 @@ from ..actions import ParametrizedAction
 from ..config import Config
 from ..core.FzfPrompt import PreviewMutationArgs, PromptData
 from ..core.FzfPrompt.action_menu import Binding, ShellCommand
-from ..core.FzfPrompt.exceptions import Quitting
+from ..core.FzfPrompt.exceptions import PromptEnd, Quitting
 from ..core.FzfPrompt.previewer.Preview import ChangePreviewLabel
 from ..core.mods.multi_dimensional_generator import MultiDimensionalGenerator
 from ..core.monitoring import Logger
@@ -90,11 +94,6 @@ def prompt_builder():
         lambda pd: preview_mutation_generator.next("has world"),
     )
 
-    REMOTE_INSPECTOR_BACKEND_PORT, REMOTE_INSPECTOR_CONTROL_PORT = 63007, 63008
-    inspector_mod = prompt.mod.inspector
-    inspector_mod.attach_to_remote_inspector_prompt(REMOTE_INSPECTOR_BACKEND_PORT, REMOTE_INSPECTOR_CONTROL_PORT)
-    inspector_mod.on_hotkey().CTRL_ALT_I.run_inspector_prompt
-
     prompt.mod.on_situation(on_conflict="append").START.run_function(
         "measure startup time", lambda pd: print(f"Startup time: {perf_counter() - start} seconds")
     )
@@ -103,21 +102,18 @@ def prompt_builder():
     return prompt
 
 
-LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath("TestPrompt.log")
+LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath(f"TestPrompt/{datetime.now().isoformat(timespec='milliseconds')}.log")
 
 if __name__ == "__main__":
+    args = sys.argv[1:]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--record", action="store_true", help="Enable recording")
+    parsed_args = parser.parse_args(args)
+
     Config.logging_enabled = True
     Logger.remove_preset_handlers()
-    Logger.add_file_handler(LOG_FILE_PATH, "TRACE", format="default")
-    Logger.add_file_handler(INTERNAL_LOG_DIR.joinpath("TestPrompt.stackline.log"), "DEBUG", format="stackline")
-    recording = Recording(name="TestPrompt")
-    recording.enable_logging()
-    save_recording = False
-    try:
+    Logger.add_file_handler(LOG_FILE_PATH, "DEBUG", serialize=True)
+    if parsed_args.record:
+        Recording.setup("TestPrompt")
+    with contextlib.suppress(PromptEnd):
         result = prompt_builder().run()
-    except Quitting:
-        pass
-    else:
-        recording.save_result(result)
-        save_recording = True
-        recording.save()

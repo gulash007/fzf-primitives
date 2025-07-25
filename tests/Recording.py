@@ -1,84 +1,72 @@
 from __future__ import annotations
 
-import os
+import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Self
+from typing import Any, Self
 
-if TYPE_CHECKING:
-    import loguru
-import pydantic
-
-from ..core.FzfPrompt import EndStatus, Result
-from ..core.FzfPrompt.options import Hotkey, Situation
 from ..core.monitoring import Logger
+from .SerializedLoguruEntry import SerializedLoguruEntry
 
 RECORDINGS_DIR = Path(__file__).parent.joinpath("recordings/")
 
 
-class Event(pydantic.BaseModel):
-    process: str
-    thread: str
-    function: str
-    extra: dict
+class Recording:
+    def __init__(self, name: str, log_file_path: Path) -> None:
+        self.name = name
+        self.log_file_path = log_file_path
+        self.log_info_selected_for_comparison = self.parse_log_file(log_file_path)
 
+    def compare(self, other: Self) -> bool:
+        return self.log_info_selected_for_comparison == other.log_info_selected_for_comparison
 
-class Recording(pydantic.BaseModel):
-    name: str
-    events: list[Event] = []
-    end_status: EndStatus = None  # type: ignore
-    event: Hotkey | Situation = None  # type: ignore
-    query: str = None  # type: ignore
-    choices: list[str] = None  # type: ignore
-    lines: list[str] = None  # type: ignore
+    @staticmethod
+    def parse_log_file(log_file_path: Path) -> list[Any]:
+        with open(log_file_path, "r", encoding="utf8") as f:
+            contents = f.read()
+        log_entries = [json.loads(line) for line in contents.splitlines() if line.strip()]
 
-    def __call__(self, message: loguru.Message):
-        self.events.append(
-            Event(
-                process=message.record["process"].name,
-                thread=message.record["thread"].name,
-                function=message.record["function"],
-                extra=message.record["extra"],
-            )
-        )
+        return Recording.select_info(log_entries)
 
-    def save_result(self, result: Result):
-        self.end_status = result.end_status
-        self.event = result.event
-        self.query = result.query
-        self.choices = list(map(str, result))
-        self.lines = result.lines
+    @staticmethod
+    def select_info(log_entries: list[SerializedLoguruEntry]) -> list[Any]:
+        selected_info = []
+        for log_entry in log_entries:
+            record = log_entry["record"]
+            if Recording.should_include_record(record):
+                selected_info.append(
+                    dict(
+                        process=record["process"]["name"],
+                        thread=record["thread"]["name"],
+                        function=record["function"],
+                        extra=record["extra"],
+                    )
+                )
+        return selected_info
 
-    def compare_result(self, result: Result) -> bool:
-        return (
-            self.end_status == result.end_status
-            and self.event == result.event
-            and self.query == result.query
-            and self.choices == list(map(str, result))
-            and self.lines == result.lines
-        )
-
-    def compare_events(self, other: Self) -> bool:
-        return self.events == other.events
-
-    def enable_logging(self):
-        logger = Logger.get_logger()
-        logger.add(self, level="TRACE", filter=lambda record: record["level"].no == 5, serialize=True, enqueue=True)
-
-    def save(self):
-        path = self.get_path(self.name)
-        Path(os.path.dirname(path)).mkdir(parents=True, exist_ok=True)
-        with open(path, "w", encoding="utf8") as f:
-            f.write(self.model_dump_json(indent=2))
+    @staticmethod
+    def should_include_record(record) -> bool:
+        return record["level"]["name"] == "TRACE"
 
     @classmethod
     def load(cls, name: str):
-        with open(cls.get_path(name), "r", encoding="utf8") as f:
-            return cls.model_validate_json(f.read())
+        return cls(name, cls.get_path(name))
 
     @staticmethod
     def get_path(name: str) -> Path:
-        return RECORDINGS_DIR.joinpath(f"{name}.json")
+        return RECORDINGS_DIR.joinpath(f"{name}.log")
+
+    @staticmethod
+    def setup(name: str) -> None:
+        Logger.add_file_handler(
+            Path(__file__).parent.joinpath("recordings", f"{name}.log"),
+            "TRACE",
+            format="default",
+            serialize=True,
+            mode="w",
+        )
 
 
 if __name__ == "__main__":
-    print(Recording.load("TestPrompt"))
+    from pprint import pprint
+
+    pprint(Recording.load("TestPrompt").log_info_selected_for_comparison, sort_dicts=False)

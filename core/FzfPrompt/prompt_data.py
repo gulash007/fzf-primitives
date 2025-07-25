@@ -30,7 +30,7 @@ class PromptData[T, S](LoggedComponent):
         options: Options | None = None,
     ):
         super().__init__()
-        self.logger.debug("PromptData created")
+        self.logger.debug("PromptData created", trace_point="prompt_data_created")
         self.choices = choices or []
         self.presented_choices = presented_choices or [str(choice) for choice in self.choices]
         self.check_choices_and_lines_length(self.choices, self.presented_choices)
@@ -179,22 +179,19 @@ class Result[T](list[T]):
         self.lines = lines  # marked selections or pointer if none are selected
         super().__init__([choices[i] for i in indices])
 
+    def obj(self) -> dict:
+        return {
+            "status": self.end_status,
+            "event": self.event,
+            "query": self.query,
+            "single_index": self.single_index,
+            "indices": self.indices,
+            "single_line": self.single_line,
+            "lines": self.lines,
+        }
+
     def __str__(self) -> str:
-        return json.dumps(
-            {
-                "status": self.end_status,
-                "event": self.event,
-                "query": self.query,
-                "single_index": self.single_index,
-                "indices": self.indices,
-                "selections": list(self),
-                "single": self.single,
-                "single_line": self.single_line,
-                "lines": self.lines,
-            },
-            indent=4,
-            default=repr,
-        )
+        return json.dumps(self.obj(), indent=4, default=repr)
 
 
 PromptStage = Literal["created", "ready to run", "running", "finished"]

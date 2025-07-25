@@ -97,7 +97,7 @@ class PromptEndingAction[T, S](ServerCall, LoggedComponent):
         if not self.allow_empty and not prompt_data.current_choices:
             return
         prompt_data.finish(self.event, self.end_status)
-        self.logger.debug(f"Piping results:\n{prompt_data.result}")
+        self.logger.trace("Piping results", trace_point="piping_results", result=prompt_data.result.obj())
 
     def __str__(self) -> str:
         return f"[PEA]({self.event},{self.end_status},{self._get_function_name(self.post_processor) if self.post_processor else None})"

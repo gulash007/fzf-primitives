@@ -62,7 +62,7 @@ class Server[T, S](Thread, LoggedComponent):
                 self.prompt_data.run_vars["env"][MAKE_SERVER_CALL_ENV_VAR_NAME] = make_server_call.__file__
 
                 server_socket.listen()
-                self.logger.info(f"Server listening on {socket_specs}...")
+                self.logger.info(f"Server listening on {socket_specs}...", trace_point="server_listening")
 
                 self.setup_finished.set()
                 server_socket.settimeout(0.05)
@@ -71,7 +71,7 @@ class Server[T, S](Thread, LoggedComponent):
                         client_socket, addr = server_socket.accept()
                     except TimeoutError:
                         if self.should_close.is_set():
-                            self.logger.info("Server closing")
+                            self.logger.info("Server closing", trace_point="server_closing")
                             break
                         continue
                     self._handle_request(client_socket, self.prompt_data)
@@ -84,10 +84,14 @@ class Server[T, S](Thread, LoggedComponent):
     def _handle_request(self, client_socket: socket.socket, prompt_data: PromptData[T, S]):
         payload_length = int.from_bytes(client_socket.recv(4))
         payload = client_socket.recv(payload_length, socket.MSG_WAITALL).decode("utf-8")
+
         response = ""
         try:
             request = Request.from_json(json.loads(payload))
-            self.logger.debug(f"Resolving '{request.endpoint_id}' ({len(self.endpoints)} endpoints registered)")
+            self.logger.debug(
+                f"Resolving '{request.endpoint_id}' ({len(self.endpoints)} endpoints registered)",
+                trace_point="resolving_server_call",
+            )
             response = self.endpoints[request.endpoint_id].run(prompt_data, request) or response
         except Exception as err:
             self.logger.error(trb := traceback.format_exc())
@@ -110,5 +114,5 @@ class Server[T, S](Thread, LoggedComponent):
 
     def add_endpoint(self, endpoint: ServerEndpoint):
         if endpoint.id not in self.endpoints:
-            self.logger.debug(f"🤙 Adding server endpoint: {endpoint}")
+            self.logger.debug(f"🤙 Adding server endpoint: {endpoint}", trace_point="adding_server_endpoint")
             self.endpoints[endpoint.id] = endpoint

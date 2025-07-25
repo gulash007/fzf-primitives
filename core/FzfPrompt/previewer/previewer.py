@@ -31,7 +31,7 @@ class Previewer[T, S](LoggedComponent):
         return list(self._previews.values())
 
     def add(self, preview: Preview[T, S], *, main: bool = False):
-        self.logger.debug(f"📺 Adding preview '{preview.name}'")
+        self.logger.debug(f"📺 Adding preview '{preview.name}'", trace_point="adding_preview")
         if main or not self._previews:
             self._current_preview = preview
         self._previews[preview.id] = preview

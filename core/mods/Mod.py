@@ -8,7 +8,6 @@ from ..FzfPrompt.options import Hotkey, Options, Situation
 from ..monitoring import LoggedComponent
 from .event_adder import attach_hotkey_adder, attach_situation_adder
 from .on_event import OnEvent
-from .inspector import InspectorMod
 from .post_processing import PostProcessing
 from .preview_mod import PreviewMod
 
@@ -20,7 +19,7 @@ class Mod[T, S](LoggedComponent):
         self._options = Options()
 
     def apply(self, prompt_data: PromptData[T, S]):
-        self.logger.info("---------- Applying mods ----------")
+        self.logger.info("---------- Applying mods ----------", trace_point="applying_mods")
         try:
             for mod in self._mods:
                 mod(prompt_data)
@@ -80,9 +79,3 @@ class Mod[T, S](LoggedComponent):
         self.on_hotkey().CTRL_X.clip_current_preview
         self.on_hotkey().CTRL_Y.clip_options
         return self
-
-    @property
-    def inspector(self) -> InspectorMod[T, S]:
-        inspector_mod = InspectorMod[T, S]()
-        self._mods.append(inspector_mod)
-        return inspector_mod

@@ -61,6 +61,7 @@ __all__ = [
 
 
 FZF_URL = "https://github.com/junegunn/fzf"
+EXPECTED_FZF_ERR_CODES = (130, 1)  # 130 means aborted, 1 means accepted with no selection
 
 
 # TODO: Allow propagation of exceptions through nested prompts (relevant for quit_app)
@@ -80,14 +81,20 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         # TODO: catch 130 in mods.exit_round_on_no_selection (rename it appropriately)
         try:
             options = prompt_data.options
-            logger.debug(f"Running fzf with options:\n{options.pretty()}")
+            logger.debug(
+                "Running fzf with options",
+                **{
+                    "trace_point": "running_fzf_with_final_options",
+                    "options": str(options),
+                },
+            )
             subprocess.run(
                 [executable_path, *options],
                 shell=False,
                 input=prompt_data.choices_string.encode(),
                 check=True,
                 env=prompt_data.run_vars["env"],
-                stdout=subprocess.DEVNULL,
+                capture_output=True,
             )
         except FileNotFoundError as err:
             if executable_path:
@@ -96,20 +103,35 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
                 f"Error running 'fzf' command. Are you sure it's installed and on PATH? ({FZF_URL})"
             ) from err
         except subprocess.CalledProcessError as err:
-            # 130 means aborted, 1 means accepted with no selection
-            if err.returncode not in (130, 1):
-                raise MoreInformativeCalledProcessError(err) from None
+            if err.returncode not in EXPECTED_FZF_ERR_CODES:
+                logger.exception(
+                    stderr := err.stderr.decode().strip(),
+                    **{
+                        "trace_point": "unexpected_fzf_called_process_error",
+                        "err_code": err.returncode,
+                        "stdout": err.stdout.decode().strip(),
+                        "stderr": stderr,
+                    },
+                )
+                raise
         finally:
             server.should_close.set()
         server.join()
         if prompt_data.stage != "finished":
             # TODO: This may be explicitly allowed in the future (need to test when it's not)
-            raise RuntimeError("Prompt not finished (you aborted prompt without finishing PromptData)")
+            err_message = "Prompt not finished (you aborted prompt without finishing PromptData)"
+            logger.error(err_message, **{"trace_point": "prompt_not_finished_properly"})
+            raise RuntimeError(err_message)
         if prompt_data.result.end_status == "quit":
             raise Quitting(f"Exiting app with\n{prompt_data.result}", prompt_data.result)
         event = prompt_data.result.event
         if not (final_action := prompt_data.action_menu.bindings[event].final_action):
-            raise RuntimeError("Prompt ended on event that doesn't have final action. How did we get here?")
+            err_message = "Prompt ended on event that doesn't have final action. How did we get here?"
+            logger.error(
+                err_message,
+                **{"trace_point": "prompt_ended_on_event_without_final_action"},
+            )
+            raise RuntimeError(err_message)
         if final_action.post_processor:
             final_action.post_processor(prompt_data)
     finally:

@@ -23,7 +23,9 @@ class SetAsCurrentPreview[T, S](ServerCall[T, S], LoggedComponent):
             if before_change_do:
                 before_change_do(prompt_data, preview)
             prompt_data.previewer.set_current_preview(preview)
-            self.logger.trace(f"Changing preview to '{preview.name}'", preview=preview.name)
+            self.logger.trace(
+                f"Changing preview to '{preview.name}'", trace_point="changing_preview", preview=preview.name
+            )
 
         super().__init__(
             change_current_preview, f"SetAsCurrentPreview of {preview.name}", command_type="execute-silent"
@@ -44,7 +46,9 @@ class PreviewServerCall[T, S](ServerCall[T, S], LoggedComponent):
             output = preview_function(prompt_data, **kwargs)
             if self.preview.store_output:
                 self.preview.output = output
-            self.logger.trace(f"Showing preview '{self.preview.name}'", preview=self.preview.name)
+            self.logger.trace(
+                f"Showing preview '{self.preview.name}'", trace_point="showing_preview", preview=self.preview.name
+            )
             return output
 
         # HACK
@@ -67,7 +71,11 @@ class ShowAndStorePreviewOutput(ServerCall, LoggedComponent):
 
         def store_preview_output(prompt_data: PromptData, preview_output: str = CommandOutput("echo $preview_output")):
             preview.output = preview_output
-            self.logger.trace(f"Storing preview output of '{preview.name}'", preview=preview.name)
+            self.logger.trace(
+                f"Storing preview output of '{preview.name}'",
+                trace_point="storing_preview_output",
+                preview=preview.name,
+            )
 
         super().__init__(store_preview_output, name, "change-preview")
         # HACK ❗

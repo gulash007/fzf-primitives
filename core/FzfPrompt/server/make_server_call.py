@@ -38,9 +38,9 @@ def parse_args():
     endpoint_id = sys.argv[2]
     prompt_state: PromptState = {
         "query": sys.argv[3],
-        "single_index": int(x) if (x := sys.argv[4]) else None,
+        "single_index": int(x) if (x := sys.argv[4]).isdigit() else None,
         "single_line": sys.argv[5] or None,
-        "indices": list(map(int, sys.argv[6].split())),
+        "indices": [int(x) for x in sys.argv[6].split() if x.isdigit()],
         "lines": sys.argv[7].splitlines(),
     }
     kwargs = dict(zip(sys.argv[8::2], sys.argv[9::2]))

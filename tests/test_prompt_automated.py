@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime
 
 import pytest
 
@@ -16,9 +17,13 @@ from .Recording import Recording
 def test_general():
     Config.logging_enabled = True
     Logger.remove_preset_handlers()
-    Logger.add_file_handler(INTERNAL_LOG_DIR.joinpath("AutomatedTestPrompt.log"), "TRACE")
-    recording = Recording(name="AutomatedTestPrompt")
-    recording.enable_logging()  # HACK: ❗Utilizes trace logging so using logger.trace() in the code might break this
+    LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath(
+        f"TestPromptAutomated/{datetime.now().isoformat(timespec='milliseconds')}.log"
+    )
+    Logger.add_file_handler(LOG_FILE_PATH, serialize=True)
+
+    Recording.setup("TestPromptAutomated")
+
     prompt = TestPrompt.prompt_builder()
     prompt.mod.automate_actions("up")
     prompt.mod.automate_actions("down")
@@ -26,16 +31,11 @@ def test_general():
     prompt.mod.automate("ctrl-6")
     prompt.mod.automate("ctrl-a")
     prompt.mod.automate(Config.default_accept_hotkey)
-    result = prompt.run()
-    recording.save_result(result)
-    recording.save()
+    prompt.run()
+
+    recording = Recording.load("TestPromptAutomated")
     expected = Recording.load("TestPrompt")
-    assert expected.end_status == result.end_status
-    assert expected.event == result.event
-    assert expected.query == result.query
-    assert expected.lines == result.lines
-    assert len(recording.events) == len(expected.events)
-    assert recording.compare_events(expected)
+    assert expected.compare(recording)
 
 
 def test_quit():
