@@ -116,6 +116,18 @@ class Preview[T, S]:
     def output(self, value: str):
         self._output = value
 
+    @property
+    def mutation_args(self) -> PreviewMutationArgs[T, S]:
+        return PreviewMutationArgs(
+            output_generator=self.output_generator,
+            window_size=self.window_size,
+            window_position=self.window_position,
+            label=self.label,
+            line_wrap=self.line_wrap,
+            before_change_do=self.before_change_do,
+            store_output=self.store_output,
+        )
+
     def __str__(self) -> str:
         return f"[Preview]({self.id})"
 

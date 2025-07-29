@@ -80,13 +80,13 @@ def test_file_preview():
 
 def get_cycle_previews_prompt():
     prompt = Prompt(obj=[])
-    prompt.mod.preview("ctrl-x").custom("third", record_preview_name("third"))
     prompt.mod.preview("ctrl-y").cycle_previews(
         [
             Preview("first", output_generator=record_preview_name("first")),
             Preview("second", output_generator=record_preview_name("second"), window_size="10%", window_position="up"),
         ]
     )
+    prompt.mod.preview("ctrl-x").custom("third", record_preview_name("third"))
     return prompt
 
 
@@ -97,10 +97,11 @@ def test_cycle_previews():
     prompt.mod.automate("ctrl-y")
     prompt.mod.automate("ctrl-x")
     prompt.mod.automate("ctrl-y")
+    prompt.mod.automate("ctrl-y")
     prompt.mod.automate(Config.default_accept_hotkey)
 
     prompt.run()
-    assert prompt.obj == ["third", "first", "second", "third", "second"]
+    assert prompt.obj == ["first", "second", "first", "third", "first", "second"]
 
 
 def get_cycle_mutators_prompt():

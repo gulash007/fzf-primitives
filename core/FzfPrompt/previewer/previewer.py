@@ -44,3 +44,8 @@ class Previewer[T, S](LoggedComponent):
             prompt_data.options.preview(change_preview_output.action_value)
             prompt_data.options.add("--preview-window", self._current_preview.change_preview_window.action_value)
             prompt_data.options.preview_label(self._current_preview.change_preview_label.action_value)
+            self.logger.debug(
+                f"📺 Resolved main preview '{self._current_preview.name}'",
+                trace_point="resolved_main_preview",
+                preview=self._current_preview.name,
+            )

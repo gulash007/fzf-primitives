@@ -155,15 +155,22 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
 class CyclicalPreview[T, S](Preview[T, S], LoggedComponent):
     def __init__(self, name: str, previews: list[Preview[T, S]], event: Hotkey | Situation | None = None):
         LoggedComponent.__init__(self)
-        super().__init__(name)
         self._previews = itertools.cycle(previews)
+        initial_preview = next(self._previews)
+        super().__init__(name, **initial_preview.mutation_args)
         self.preview_change_binding = Binding(name, Transform(self.next))
-        self._current_preview = next(self._previews)
+        self._current_preview = initial_preview
 
     def next(self, prompt_data: PromptData[T, S]):
-        if self._current_preview.id == prompt_data.previewer.current_preview.id:
-            self.logger.debug(f"Changing preview to next in cycle: {self._current_preview.name}")
-            self._current_preview = next(self._previews)
+        if prompt_data.previewer.current_preview.id in (self._current_preview.id, self.id):
+            next_preview = next(self._previews)
+            self.logger.debug(
+                f"Changing preview to next in cycle: {next_preview}",
+                trace_point="cycle_preview_next",
+                current_preview=self._current_preview.name,
+                next_preview=next_preview.name,
+            )
+            self._current_preview = next_preview
         return self._current_preview.preview_change_binding.actions
 
 
