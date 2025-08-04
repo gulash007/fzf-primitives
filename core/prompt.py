@@ -54,7 +54,7 @@ class Prompt[T, S]:
 
     @single_use_method
     def run_with_stream(
-        self, readable: Iterable[T], convertor: Callable[[T], str], executable_path: str | Path | None = None
+        self, readable: Iterable[T], converter: Callable[[T], str], executable_path: str | Path | None = None
     ) -> Result[T]:
         # Ensure that the preview is refreshed with new lines
         self.mod.on_situation(on_conflict="append").RESULT.refresh_preview
@@ -62,6 +62,6 @@ class Prompt[T, S]:
         return run_fzf_prompt(
             self._prompt_data,
             readable=readable,
-            convertor=convertor,
+            converter=converter,
             executable_path=executable_path,
         )

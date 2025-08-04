@@ -73,7 +73,7 @@ def run_fzf_prompt[T, S](
     *,
     executable_path=None,
     readable: Iterable[T] | None = None,
-    convertor: Callable[[T], str] = str,
+    converter: Callable[[T], str] = str,
 ) -> Result[T]:
     try:
         logger = Logger.get_logger()
@@ -127,7 +127,7 @@ def run_fzf_prompt[T, S](
                 def keep_piping():
                     for choice in readable:
                         # TODO: better name than line
-                        line = convertor(choice)
+                        line = converter(choice)
                         prompt_data.choices.append(choice)
                         prompt_data.presented_choices.append(line)
                         fzf_stdin.write(f"{line}{delimiter}")
