@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Callable, Iterable
 
 from ..config import Config
 from .FzfPrompt import PromptData, Result, run_fzf_prompt
@@ -45,7 +46,22 @@ class Prompt[T, S]:
     def current_preview(self):
         return self._prompt_data.get_current_preview()
 
+    # FIXME: Merge run and run_with_stream into one method so that only one can be used
     @single_use_method
     def run(self, executable_path: str | Path | None = None) -> Result[T]:
         self.mod.apply(self._prompt_data)
         return run_fzf_prompt(self._prompt_data, executable_path=executable_path)
+
+    @single_use_method
+    def run_with_stream(
+        self, readable: Iterable[T], convertor: Callable[[T], str], executable_path: str | Path | None = None
+    ) -> Result[T]:
+        # Ensure that the preview is refreshed with new lines
+        self.mod.on_situation(on_conflict="append").RESULT.refresh_preview
+        self.mod.apply(self._prompt_data)
+        return run_fzf_prompt(
+            self._prompt_data,
+            readable=readable,
+            convertor=convertor,
+            executable_path=executable_path,
+        )
