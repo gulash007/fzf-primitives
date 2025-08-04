@@ -72,7 +72,7 @@ def run_fzf_prompt[T, S](
     prompt_data: PromptData[T, S],
     *,
     executable_path=None,
-    readable: Iterable[T] | None = None,
+    choices_stream: Iterable[T] | None = None,
     converter: Callable[[T], str] = str,
 ) -> Result[T]:
     try:
@@ -97,7 +97,7 @@ def run_fzf_prompt[T, S](
             )
             # TODO: what happens if the output is too large?
             delimiter = "\n" if "--read0" not in options else "\0"
-            if readable is None:
+            if choices_stream is None:
                 subprocess.run(
                     [executable_path, *options],  # TODO: don't make options iterable; use method
                     shell=False,
@@ -125,7 +125,7 @@ def run_fzf_prompt[T, S](
                 fzf_stdin.flush()
 
                 def keep_piping():
-                    for choice in readable:
+                    for choice in choices_stream:
                         # TODO: better name than line
                         line = converter(choice)
                         prompt_data.choices.append(choice)

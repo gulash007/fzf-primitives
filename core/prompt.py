@@ -16,8 +16,12 @@ class Prompt[T, S]:
         presented_choices: list[str] | None = None,
         obj: S = None,
         *,
+        choices_stream: Iterable[T] | None = None,
+        converter: Callable[[T], str] = str,
         use_basic_hotkeys: bool | None = None,
     ):
+        self._choices_stream = choices_stream
+        self._converter = converter
         self._prompt_data = PromptData(choices=choices, presented_choices=presented_choices, obj=obj)
         self._mod = Mod()
         if use_basic_hotkeys is None:
@@ -46,22 +50,15 @@ class Prompt[T, S]:
     def current_preview(self):
         return self._prompt_data.get_current_preview()
 
-    # FIXME: Merge run and run_with_stream into one method so that only one can be used
     @single_use_method
     def run(self, executable_path: str | Path | None = None) -> Result[T]:
-        self.mod.apply(self._prompt_data)
-        return run_fzf_prompt(self._prompt_data, executable_path=executable_path)
-
-    @single_use_method
-    def run_with_stream(
-        self, readable: Iterable[T], converter: Callable[[T], str], executable_path: str | Path | None = None
-    ) -> Result[T]:
-        # Ensure that the preview is refreshed with new lines
-        self.mod.on_situation(on_conflict="append").RESULT.refresh_preview
+        if self._choices_stream is not None:
+            # Ensure that the preview is refreshed with new lines
+            self.mod.on_situation(on_conflict="append").RESULT.refresh_preview
         self.mod.apply(self._prompt_data)
         return run_fzf_prompt(
             self._prompt_data,
-            readable=readable,
-            converter=converter,
             executable_path=executable_path,
+            choices_stream=self._choices_stream,
+            converter=self._converter,
         )
