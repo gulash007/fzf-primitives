@@ -119,27 +119,28 @@ def run_fzf_prompt[T, S](
                     text=True,
                     encoding="utf-8",
                 )
-                try:
-                    if (fzf_stdin := fzf_process.stdin) is None:
-                        raise FzfExecutionError("STDIN of fzf process is None")
-                    fzf_stdin.write(prompt_data.choices_string(delimiter))
-                    fzf_stdin.flush()
+                if (fzf_stdin := fzf_process.stdin) is None:
+                    raise FzfExecutionError("STDIN of fzf process is None")
+                fzf_stdin.write(prompt_data.choices_string(delimiter))
+                fzf_stdin.flush()
 
-                    def keep_piping():
-                        for choice in readable:
-                            line = convertor(choice)
-                            prompt_data.choices.append(choice)
-                            prompt_data.presented_choices.append(line)
-                            fzf_stdin.write(f"{line}{delimiter}")
-                            fzf_stdin.flush()
+                def keep_piping():
+                    for choice in readable:
+                        # TODO: better name than line
+                        line = convertor(choice)
+                        prompt_data.choices.append(choice)
+                        prompt_data.presented_choices.append(line)
+                        fzf_stdin.write(f"{line}{delimiter}")
+                        fzf_stdin.flush()
 
-                    piping_thread = threading.Thread(target=keep_piping, daemon=True)
-                    piping_thread.start()
-                    fzf_process.wait()
-
-                except Exception as e:
-                    logger.exception(str(e), trace_point="fzf_with_stream_error")
-                    pass
+                piping_thread = threading.Thread(target=keep_piping, daemon=True)
+                piping_thread.start()
+                fzf_process.wait()  # .communicate closes pipes leading to piping errors so wait for fzf to exit
+                stdout, stderr = fzf_process.communicate()
+                if fzf_process.returncode != 0:
+                    raise subprocess.CalledProcessError(
+                        returncode=fzf_process.returncode, cmd=fzf_process.args, output=stdout, stderr=stderr
+                    )
 
         except FileNotFoundError as err:
             if executable_path:
