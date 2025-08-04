@@ -130,8 +130,14 @@ def run_fzf_prompt[T, S](
                         line = converter(choice)
                         prompt_data.choices.append(choice)
                         prompt_data.presented_choices.append(line)
-                        fzf_stdin.write(f"{line}{delimiter}")
-                        fzf_stdin.flush()
+                        try:
+                            fzf_stdin.write(f"{line}{delimiter}")
+                            fzf_stdin.flush()
+                        except Exception as e:
+                            logger.exception(str(e), trace_point="error_writing_line_to_fzf_process")
+                            prompt_data.choices.pop()
+                            prompt_data.presented_choices.pop()
+                            pass
 
                 piping_thread = threading.Thread(target=keep_piping, daemon=True)
                 piping_thread.start()
