@@ -31,6 +31,7 @@ class OptionsAdder:
 
 
 # TODO: tips formatter
+# TODO: add options lookup
 class Options:
     defaults = OptionsAdder(*DEFAULT_OPTS)
     ansi = OptionsAdder("--ansi")
@@ -106,6 +107,16 @@ class Options:
         """Read input delimited by ASCII NUL characters instead of newline characters.
         💡 Useful for multiline choices"""
         return self.add("--read0")
+
+    @property
+    def print0(self) -> Self:
+        """Print output delimited by ASCII NUL characters instead of newline characters"""
+        return self.add("--print0")
+
+    @property
+    def tac(self) -> Self:
+        """Reverse the order of the input"""
+        return self.add("--tac")
 
     def with_nth_column(self, field_index_expression: str, delimiter: str | None = None) -> Self:
         """Transform the presentation of each line using field index expressions
