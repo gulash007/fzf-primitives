@@ -4,13 +4,13 @@ import tempfile
 from pathlib import Path
 
 
-class MoreInformativeCalledProcessError(subprocess.CalledProcessError):
+class VerboseCalledProcessError(subprocess.CalledProcessError):
     def __init__(self, err: subprocess.CalledProcessError) -> None:
         super().__init__(err.returncode, err.cmd, err.output, err.stderr)
 
     def __str__(self) -> str:
-        stderr = self.stderr.decode().strip() if isinstance(self.stderr, bytes) else str(self.stderr)
-        return f"{super().__str__()}\n{stderr}"
+        stderr = self.stderr.decode() if isinstance(self.stderr, bytes) else str(self.stderr)
+        return f"{super().__str__()}\n{stderr.strip()}"
 
 
 def shell_command(
@@ -60,4 +60,4 @@ def shell_command(
                 with open(temp_file.name, "r") as f:
                     return f.read()
     except subprocess.CalledProcessError as e:
-        raise MoreInformativeCalledProcessError(e) from None
+        raise VerboseCalledProcessError(e) from None

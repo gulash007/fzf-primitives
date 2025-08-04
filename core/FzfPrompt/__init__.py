@@ -31,7 +31,7 @@ from .server import (
     ServerCallFunction,
     ServerEndpoint,
 )
-from .shell import MoreInformativeCalledProcessError
+from .shell import VerboseCalledProcessError
 
 __all__ = [
     "run_fzf_prompt",
@@ -165,7 +165,7 @@ def run_fzf_prompt[T, S](
                         "stderr": stderr,
                     },
                 )
-                raise
+                raise VerboseCalledProcessError(err)
         finally:
             server.should_close.set()
         server.join()

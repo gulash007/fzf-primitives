@@ -1,3 +1,3 @@
-from .scripting import MoreInformativeCalledProcessError, shell_command
+from .scripting import VerboseCalledProcessError, shell_command
 
-__all__ = ["shell_command", "MoreInformativeCalledProcessError"]
+__all__ = ["shell_command", "VerboseCalledProcessError"]
