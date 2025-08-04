@@ -101,6 +101,12 @@ class Options:
             raise ValueError(f"Pointer too long (should be max 2 chars): {pointer}")
         return self.add(f"--pointer={pointer}")
 
+    @property
+    def read0(self) -> Self:
+        """Read input delimited by ASCII NUL characters instead of newline characters.
+        💡 Useful for multiline choices"""
+        return self.add("--read0")
+
     def with_nth_column(self, field_index_expression: str, delimiter: str | None = None) -> Self:
         """Transform the presentation of each line using field index expressions
 

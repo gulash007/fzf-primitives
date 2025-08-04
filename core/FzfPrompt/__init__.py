@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import subprocess
-from typing import TYPE_CHECKING
+import threading
+from typing import TYPE_CHECKING, Callable, Iterable
 
 if TYPE_CHECKING:
     from .prompt_data import PromptData
@@ -67,7 +68,13 @@ EXPECTED_FZF_ERR_CODES = (130, 1)  # 130 means aborted, 1 means accepted with no
 # TODO: Allow propagation of exceptions through nested prompts (relevant for quit_app)
 # ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable
 # Inspired by https://github.com/nk412/pyfzf
-def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None) -> Result[T]:
+def run_fzf_prompt[T, S](
+    prompt_data: PromptData[T, S],
+    *,
+    executable_path=None,
+    readable: Iterable[T] | None = None,
+    convertor: Callable[[T], str] = str,
+) -> Result[T]:
     try:
         logger = Logger.get_logger()
 
@@ -88,14 +95,52 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
                     "options": str(options),
                 },
             )
-            subprocess.run(
-                [executable_path, *options],
-                shell=False,
-                input=prompt_data.choices_string.encode(),
-                check=True,
-                env=prompt_data.run_vars["env"],
-                capture_output=True,
-            )
+            # TODO: what happens if the output is too large?
+            delimiter = "\n" if "--read0" not in options else "\0"
+            if readable is None:
+                subprocess.run(
+                    [executable_path, *options],  # TODO: don't make options iterable; use method
+                    shell=False,
+                    input=prompt_data.choices_string(delimiter),
+                    check=True,
+                    env=prompt_data.run_vars["env"],
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                )
+            else:
+                fzf_process = subprocess.Popen(
+                    [executable_path, *options],
+                    shell=False,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=prompt_data.run_vars["env"],
+                    text=True,
+                    encoding="utf-8",
+                )
+                try:
+                    if (fzf_stdin := fzf_process.stdin) is None:
+                        raise FzfExecutionError("STDIN of fzf process is None")
+                    fzf_stdin.write(prompt_data.choices_string(delimiter))
+                    fzf_stdin.flush()
+
+                    def keep_piping():
+                        for choice in readable:
+                            line = convertor(choice)
+                            prompt_data.choices.append(choice)
+                            prompt_data.presented_choices.append(line)
+                            fzf_stdin.write(f"{line}{delimiter}")
+                            fzf_stdin.flush()
+
+                    piping_thread = threading.Thread(target=keep_piping, daemon=True)
+                    piping_thread.start()
+                    fzf_process.wait()
+
+                except Exception as e:
+                    logger.exception(str(e), trace_point="fzf_with_stream_error")
+                    pass
+
         except FileNotFoundError as err:
             if executable_path:
                 raise FzfExecutionError(f"Error running 'fzf' with executable_path: {executable_path}") from err
@@ -105,11 +150,11 @@ def run_fzf_prompt[T, S](prompt_data: PromptData[T, S], *, executable_path=None)
         except subprocess.CalledProcessError as err:
             if err.returncode not in EXPECTED_FZF_ERR_CODES:
                 logger.exception(
-                    stderr := err.stderr.decode().strip(),
+                    stderr := err.stderr.strip(),
                     **{
                         "trace_point": "unexpected_fzf_called_process_error",
                         "err_code": err.returncode,
-                        "stdout": err.stdout.decode().strip(),
+                        "stdout": err.stdout.strip(),
                         "stderr": stderr,
                     },
                 )

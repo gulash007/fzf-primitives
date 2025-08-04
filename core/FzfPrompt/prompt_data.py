@@ -99,9 +99,8 @@ class PromptData[T, S](LoggedComponent):
         )
         self._stage = "finished"
 
-    @property
-    def choices_string(self) -> str:
-        return "\n".join(self.presented_choices)
+    def choices_string(self, delimiter: str = "\n") -> str:
+        return "".join(f"{line}{delimiter}" for line in self.presented_choices)
 
     def get_current_preview(self) -> str:
         return self.previewer.current_preview.output
