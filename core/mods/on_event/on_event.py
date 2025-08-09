@@ -172,6 +172,9 @@ class OnEvent[T, S](OnEventBase[T, S]):
     def clip_current_preview(self):
         return self.run_function("clip current preview", clip_current_preview)
 
+    def clip_current_preview_with_converter(self, converter: Callable[[str], str]):
+        return self.run_function("clip current preview", lambda pd: clip_current_preview(pd, converter))
+
     @property
     def clip_options(self):
         return self.run_function("clip options", clip_options)
