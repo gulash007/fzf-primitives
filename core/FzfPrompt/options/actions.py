@@ -12,6 +12,7 @@ BaseAction = Literal[
     "backward-kill-word",
     "backward-word",
     "beginning-of-line",
+    "bell",
     "cancel",
     "clear-screen",
     "clear-selection",

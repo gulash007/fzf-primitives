@@ -198,3 +198,8 @@ class OnEvent[T, S](OnEventBase[T, S]):
         file_getter = file_getter or (lambda pd: pd.current_state.lines)
         command = FILE_EDITORS[app]
         return self.run_function(f"open files in {app}", lambda pd: subprocess.run([command, "--", *file_getter(pd)]))
+
+    @property
+    def ring_bell(self):
+        """Rings the terminal bell"""
+        return self.run("ring bell", "bell")
