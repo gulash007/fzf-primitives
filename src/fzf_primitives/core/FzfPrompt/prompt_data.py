@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Callable, Literal
 
 if TYPE_CHECKING:
     from .automator import Automator
@@ -22,8 +22,8 @@ class PromptData[T, S](LoggedComponent):
 
     def __init__(
         self,
-        choices: list[T] | None = None,
-        presented_choices: list[str] | None = None,
+        entries: list[T] | None = None,
+        converter: Callable[[T], str] = str,
         obj: S = None,
         previewer: Previewer[T, S] | None = None,
         action_menu: ActionMenu[T, S] | None = None,
@@ -31,9 +31,8 @@ class PromptData[T, S](LoggedComponent):
     ):
         super().__init__()
         self.logger.debug("PromptData created", trace_point="prompt_data_created")
-        self.choices = choices or []
-        self.presented_choices = presented_choices or [str(choice) for choice in self.choices]
-        self.check_choices_and_lines_length(self.choices, self.presented_choices)
+        self.entries = entries or []
+        self.converter = converter
         self.obj = obj
         self.action_menu = action_menu or ActionMenu()
         self.server = Server(self)
@@ -63,14 +62,19 @@ class PromptData[T, S](LoggedComponent):
         self._current_state = prompt_state
 
     @property
-    def current_single_choice(self) -> T | None:
-        if self.current_state.single_index is None:
+    def current(self) -> T | None:
+        if self.current_state.current_index is None:
             return None
-        return self.choices[self.current_state.single_index]
+        return self.entries[self.current_state.current_index]
 
     @property
-    def current_choices(self) -> list[T]:
-        return [self.choices[i] for i in self.current_state.indices]
+    def selections(self) -> list[T]:
+        return [self.entries[i] for i in self.current_state.selected_indices]
+
+    @property
+    def targets(self) -> list[T]:
+        """Like with '+' fzf placeholders these are selections or current if no selections"""
+        return [self.entries[i] for i in self.current_state.target_indices]
 
     @property
     def result(self) -> Result[T]:
@@ -90,17 +94,17 @@ class PromptData[T, S](LoggedComponent):
         self._result = Result(
             end_status=end_status,
             event=event,
-            choices=self.choices,
+            entries=self.entries,
             query=self.current_state.query,
-            single_index=self.current_state.single_index,
-            indices=self.current_state.indices,
-            single_line=self.current_state.single_line,
-            lines=self.current_state.lines,
+            current_index=self.current_state.current_index,
+            selected_indices=self.current_state.selected_indices,
+            selections=self.selections,
+            target_indices=self.current_state.target_indices,
         )
         self._stage = "finished"
 
-    def choices_string(self, delimiter: str = "\n") -> str:
-        return "".join(f"{line}{delimiter}" for line in self.presented_choices)
+    def fzf_input(self, delimiter: str = "\n") -> str:
+        return "".join(f"{self.converter(entry)}{delimiter}" for entry in self.entries)
 
     def get_current_preview(self) -> str:
         return self.previewer.current_preview.output
@@ -150,47 +154,44 @@ class PromptData[T, S](LoggedComponent):
         self.options.listen()  # for ServerCalls with FZF_PORT parameter
         self._stage = "ready to run"
 
-    def check_choices_and_lines_length(self, choices: list, lines: list):
-        if len(choices) != len(lines):
-            message = f"Choices and lines have different lengths: {len(choices)} vs {len(lines)}"
-            raise ChoicesAndLinesMismatch(message)
-
 
 class Result[T](list[T]):
     def __init__(
         self,
         end_status: EndStatus,
         event: Hotkey | Situation,
-        choices: list[T],
-        query: str,  # as in {q} placeholder
-        single_index: int | None,  # as in {n} placeholder
-        indices: list[int],  # as in {+n} placeholder
-        single_line: str | None,  # as in {} placeholder; stripped of ANSI codes
-        lines: list[str],  # as in {+} placeholder; stripped of ANSI codes
+        entries: list[T],
+        query: str,
+        current_index: int | None,
+        selected_indices: list[int],
+        selections: list[T],
+        target_indices: list[int],
     ):
         self.end_status: EndStatus = end_status
         self.event: Hotkey | Situation = event
         self.query = query
-        self.single_index = single_index  # of pointer starting from 0
-        self.indices = indices  # of marked selections or pointer if none are selected
-        self.single = choices[single_index] if single_index is not None else None
-        self.single_line = single_line  # pointed at
-        self.lines = lines  # marked selections or pointer if none are selected
-        super().__init__([choices[i] for i in indices])
+        self.current_index = current_index  # of pointer starting from 0
+        self.current = entries[current_index] if current_index is not None else None
+        self.selected_indices = selected_indices  # of marked selections
+        self.selections = selections
+        self.target_indices = target_indices  # of selections or current if no selections
+        super().__init__([entries[i] for i in target_indices])
 
-    def obj(self) -> dict:
+    def to_dict(self) -> dict:
         return {
             "status": self.end_status,
             "event": self.event,
             "query": self.query,
-            "single_index": self.single_index,
-            "indices": self.indices,
-            "single_line": self.single_line,
-            "lines": self.lines,
+            "current_index": self.current_index,
+            "current": self.current,
+            "selected_indices": self.selected_indices,
+            "selections": self.selections,
+            "target_indices": self.target_indices,
+            "targets": list(self),
         }
 
     def __str__(self) -> str:
-        return json.dumps(self.obj(), indent=4, default=repr)
+        return json.dumps(self.to_dict(), indent=4, default=repr)
 
 
 PromptStage = Literal["created", "ready to run", "running", "finished"]

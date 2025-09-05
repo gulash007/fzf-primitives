@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Callable
+
 import typer
 
 from ..config import Config
@@ -12,13 +14,13 @@ app = typer.Typer()
 class DefaultMultiselectPrompt[T, S](DefaultPrompt.DefaultPrompt[T, S]):
     def __init__(
         self,
-        choices: list[T] | None = None,
-        presented_choices: list[str] | None = None,
+        entries: list[T] | None = None,
+        converter: Callable[[T], str] = str,
         obj: S = None,
         *,
         override_basic_hotkeys: bool = False,
     ):
-        super().__init__(choices, presented_choices, obj, use_basic_hotkeys=override_basic_hotkeys)
+        super().__init__(entries, converter, obj, use_basic_hotkeys=override_basic_hotkeys)
         self.mod.options.multiselect
         self.mod.on_hotkey().CTRL_A.toggle_all
 
@@ -32,7 +34,7 @@ def main(
         Config.logging_enabled = True
     options = options or []
     try:
-        prompt = DefaultMultiselectPrompt(choices=BasePrompt.read_choices())
+        prompt = DefaultMultiselectPrompt(entries=BasePrompt.read_entries())
         prompt.mod.options.add(*options)
         output = prompt.run()
     except Quitting as e:

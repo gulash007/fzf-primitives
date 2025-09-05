@@ -114,5 +114,5 @@ class Server[T, S](Thread, LoggedComponent):
 
     def add_endpoint(self, endpoint: ServerEndpoint):
         if endpoint.id not in self.endpoints:
-            self.logger.debug(f"🤙 Adding server endpoint: {endpoint}", trace_point="adding_server_endpoint")
+            self.logger.debug(f"🤙 Adding server endpoint: {endpoint.id}", trace_point="adding_server_endpoint")
             self.endpoints[endpoint.id] = endpoint

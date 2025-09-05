@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+import json
 from pathlib import Path
 from typing import Iterable, Unpack
 
@@ -34,7 +35,19 @@ from .on_event import OnEventBase
 
 
 def preview_basic(prompt_data: PromptData):
-    return str(prompt_data.current_state)
+    return json.dumps(
+        {
+            "query": prompt_data.current_state.query,
+            "current_index": prompt_data.current_state.current_index,
+            "current": prompt_data.current,
+            "selected_indices": prompt_data.current_state.selected_indices,
+            "selections": prompt_data.selections,
+            "target_indices": prompt_data.current_state.target_indices,
+            "targets": prompt_data.targets,
+        },
+        indent=4,
+        default=str,
+    )
 
 
 def get_fzf_json(prompt_data: PromptData, FZF_PORT: str):
@@ -123,7 +136,7 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
         return self._specific_preview_mod
 
     # presets
-    basic = preview_preset("basic", output_generator=preview_basic, label="PromptData.current_state")
+    basic = preview_preset("basic", output_generator=preview_basic, label="PromptData state")
     fzf_json = preview_preset("fzf json", output_generator=get_fzf_json, label="fzf JSON")
 
     def file(
@@ -136,7 +149,7 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
         """Parametrized preset for viewing files"""
 
         def view_file(prompt_data: PromptData[T, S]):
-            if not (files := prompt_data.current_state.lines):
+            if not (files := [prompt_data.converter(f) for f in prompt_data.targets]):
                 return "No file selected"
             return FileViewer(language, theme, plain=plain).view(*files)
 

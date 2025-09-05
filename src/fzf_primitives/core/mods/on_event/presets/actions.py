@@ -5,27 +5,23 @@ from typing import Callable
 from ....FzfPrompt import PreviewFunction, PromptData, ServerCall
 from ....monitoring import LoggedComponent
 
-type ChoicesGetter[T, S] = Callable[[PromptData[T, S]], tuple[list[T], list[str] | None]]
+type EntriesGetter[T, S] = Callable[[PromptData[T, S]], list[T]]
 
 
-class ReloadChoices[T, S](ServerCall[T, S], LoggedComponent):
-    def __init__(self, choices_getter: ChoicesGetter[T, S], *, sync: bool = False):
+class ReloadEntries[T, S](ServerCall[T, S], LoggedComponent):
+    def __init__(self, entries_getter: EntriesGetter[T, S], *, sync: bool = False):
         LoggedComponent.__init__(self)
 
-        def reload_choices(prompt_data: PromptData[T, S]):
+        def reload_entries(prompt_data: PromptData[T, S]):
             try:
-                choices, lines = choices_getter(prompt_data)
-                if lines is None:
-                    lines = [str(choice) for choice in choices]
-                prompt_data.check_choices_and_lines_length(choices, lines)
-                prompt_data.choices = choices
-                prompt_data.presented_choices = lines
-                return "\n".join(lines)
+                entries = entries_getter(prompt_data)
+                prompt_data.entries = entries
+                return "\n".join([prompt_data.converter(entry) for entry in entries])
             except Exception as e:
                 self.logger.error(f"Error in reload_choices: {e}")
                 return None
 
-        super().__init__(reload_choices, command_type="reload-sync" if sync else "reload")
+        super().__init__(reload_entries, command_type="reload-sync" if sync else "reload")
 
     def __str__(self) -> str:
         return f"[RC]({self._get_function_name(self.endpoint.function)})"

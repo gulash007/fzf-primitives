@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import subprocess
 import threading
-from typing import TYPE_CHECKING, Callable, Iterable
+from typing import TYPE_CHECKING, Iterable
 
 if TYPE_CHECKING:
     from .prompt_data import PromptData
@@ -69,11 +69,7 @@ EXPECTED_FZF_ERR_CODES = (130, 1)  # 130 means aborted, 1 means accepted with no
 # ❗❗ FzfPrompt makes use of FZF_DEFAULT_OPTS variable
 # Inspired by https://github.com/nk412/pyfzf
 def run_fzf_prompt[T, S](
-    prompt_data: PromptData[T, S],
-    *,
-    executable_path=None,
-    choices_stream: Iterable[T] | None = None,
-    converter: Callable[[T], str] = str,
+    prompt_data: PromptData[T, S], *, executable_path=None, entries_stream: Iterable[T] | None = None
 ) -> Result[T]:
     try:
         logger = Logger.get_logger()
@@ -97,11 +93,11 @@ def run_fzf_prompt[T, S](
             )
             # TODO: what happens if the output is too large?
             delimiter = "\n" if "--read0" not in options else "\0"
-            if choices_stream is None:
+            if entries_stream is None:
                 subprocess.run(
                     [executable_path, *options],  # TODO: don't make options iterable; use method
                     shell=False,
-                    input=prompt_data.choices_string(delimiter),
+                    input=prompt_data.fzf_input(delimiter),
                     check=True,
                     env=prompt_data.run_vars["env"],
                     capture_output=True,
@@ -121,22 +117,20 @@ def run_fzf_prompt[T, S](
                 )
                 if (fzf_stdin := fzf_process.stdin) is None:
                     raise FzfExecutionError("STDIN of fzf process is None")
-                fzf_stdin.write(prompt_data.choices_string(delimiter))
+                fzf_stdin.write(prompt_data.fzf_input(delimiter))
                 fzf_stdin.flush()
 
                 def keep_piping():
-                    for choice in choices_stream:
+                    for entry in entries_stream:
                         # TODO: better name than line
-                        line = converter(choice)
-                        prompt_data.choices.append(choice)
-                        prompt_data.presented_choices.append(line)
+                        line = prompt_data.converter(entry)
+                        prompt_data.entries.append(entry)
                         try:
                             fzf_stdin.write(f"{line}{delimiter}")
                             fzf_stdin.flush()
                         except Exception as e:
                             logger.exception(str(e), trace_point="error_writing_line_to_fzf_process")
-                            prompt_data.choices.pop()
-                            prompt_data.presented_choices.pop()
+                            prompt_data.entries.pop()
                             pass
 
                 piping_thread = threading.Thread(target=keep_piping, daemon=True)
@@ -175,7 +169,7 @@ def run_fzf_prompt[T, S](
             logger.error(err_message, **{"trace_point": "prompt_not_finished_properly"})
             raise RuntimeError(err_message)
         if prompt_data.result.end_status == "quit":
-            raise Quitting(f"Exiting app with\n{prompt_data.result}", prompt_data.result)
+            raise Quitting("Exiting app...", prompt_data.result)
         event = prompt_data.result.event
         if not (final_action := prompt_data.action_menu.bindings[event].final_action):
             err_message = "Prompt ended on event that doesn't have final action. How did we get here?"
