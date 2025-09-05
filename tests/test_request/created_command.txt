@@ -1,1 +1,1 @@
-"$FZF_PRIMITIVES_REQUEST_CREATING_SCRIPT" "$FZF_PRIMITIVES_SOCKET_NUMBER" 'ID with '"'"'quotes'"'"'' {q} "{n}" {} "{+n}" "$(for x in {+}; do echo "$x"; done)"
+"$FZF_PRIMITIVES_REQUEST_CREATING_SCRIPT" "$FZF_PRIMITIVES_SOCKET_NUMBER" 'ID with '"'"'quotes'"'"'' {q} $FZF_POS $FZF_SELECT_COUNT "{+n}"

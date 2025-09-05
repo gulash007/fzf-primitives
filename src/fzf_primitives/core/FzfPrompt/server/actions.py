@@ -49,7 +49,7 @@ class ServerCall[T, S](ShellCommand):
         parameters = ServerCall._parse_function_parameters(server_endpoint.function)
         command = [
             f'"${MAKE_SERVER_CALL_ENV_VAR_NAME}" "${SOCKET_NUMBER_ENV_VAR}" {shlex.quote(server_endpoint.id)}',
-            '{q} "{n}" {} "{+n}" "$(for x in {+}; do echo "$x"; done)"',  # making use of fzf placeholders
+            '{q} $FZF_POS $FZF_SELECT_COUNT "{+n}"',  # making use of fzf placeholders and env vars
         ]
         for parameter in parameters:
             if isinstance(parameter.default, CommandOutput):
@@ -94,10 +94,10 @@ class PromptEndingAction[T, S](ServerCall, LoggedComponent):
         super().__init__(self._pipe_results, command_type="execute-silent")
 
     def _pipe_results(self, prompt_data: PromptData[T, S]):
-        if not self.allow_empty and not prompt_data.current_choices:
+        if not self.allow_empty and not prompt_data.targets:
             return
         prompt_data.finish(self.event, self.end_status)
-        self.logger.trace("Piping results", trace_point="piping_results", result=prompt_data.result.obj())
+        self.logger.trace("Piping results", trace_point="piping_results", result=prompt_data.result.to_dict())
 
     def __str__(self) -> str:
         return f"[PEA]({self.event},{self.end_status},{self._get_function_name(self.post_processor) if self.post_processor else None})"

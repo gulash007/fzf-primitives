@@ -10,7 +10,7 @@ from fzf_primitives.actions import (
     ChangePreviewWindow,
     ShowAndStorePreviewOutput,
     SetAsCurrentPreview,
-    ReloadChoices,
+    ReloadEntries,
 )
 
 

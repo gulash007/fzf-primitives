@@ -35,16 +35,14 @@ class PromptState:
     def __init__(
         self,
         query: str,
-        single_index: int | None,
-        indices: list[int],
-        single_line: str | None,
-        lines: list[str],
+        current_index: int | None,
+        selected_indices: list[int],
+        target_indices: list[int],  # expanded {+n} fzf placeholder
     ):
         self.query = query
-        self.single_index = single_index
-        self.indices = indices
-        self.single_line = single_line
-        self.lines = lines
+        self.current_index = current_index
+        self.selected_indices = selected_indices
+        self.target_indices = target_indices
 
     @classmethod
     def from_json(cls, data: dict) -> Self:

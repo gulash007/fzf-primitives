@@ -25,9 +25,9 @@ from ...FzfPrompt.options.actions import BaseAction, ShellCommandActionType
 from ...FzfPrompt.options.events import Hotkey, Situation
 from .presets import (
     FILE_EDITORS,
-    ChoicesGetter,
+    EntriesGetter,
     FileEditor,
-    ReloadChoices,
+    ReloadEntries,
     Repeater,
     ShowInPreview,
     clip_current_preview,
@@ -68,10 +68,10 @@ class OnEvent[T, S](OnEventBase[T, S]):
     def run_transform(self, name: str, get_actions: ActionsBuilder[T, S], *base_actions: BaseAction) -> Self:
         return self.run(name, Transform(get_actions), *base_actions)
 
-    def reload_choices(
+    def reload_entries(
         self,
-        choices_getter: ChoicesGetter[T, S],
-        name: str = "reload choices",
+        entries_getter: EntriesGetter[T, S],
+        name: str = "reload entries",
         *,
         sync: bool = False,
         repeat_interval: float | None = None,
@@ -79,11 +79,11 @@ class OnEvent[T, S](OnEventBase[T, S]):
     ):
         name = f"{name}{' (sync)' if sync else ''}"
         if repeat_interval is None:
-            return self.run(name, ReloadChoices(choices_getter, sync=sync))
+            return self.run(name, ReloadEntries(entries_getter, sync=sync))
         if repeat_interval < 0.2:
             raise ValueError("repeat_interval must be at least 0.2")
         return self.auto_repeat_run(
-            name, ReloadChoices(choices_getter, sync=sync), repeat_interval=repeat_interval, repeat_when=repeat_when
+            name, ReloadEntries(entries_getter, sync=sync), repeat_interval=repeat_interval, repeat_when=repeat_when
         )
 
     def auto_repeat_run(
@@ -195,7 +195,7 @@ class OnEvent[T, S](OnEventBase[T, S]):
     ):
         """❗ VS Code doesn't handle files with leading or trailing spaces/tabs/newlines (it strips them)
         NeoVim opens them all"""
-        file_getter = file_getter or (lambda pd: pd.current_state.lines)
+        file_getter = file_getter or (lambda pd: [pd.converter(f) for f in pd.targets])
         command = FILE_EDITORS[app]
         return self.run_function(f"open files in {app}", lambda pd: subprocess.run([command, "--", *file_getter(pd)]))
 

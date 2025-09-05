@@ -50,7 +50,6 @@ monday = DayOfTheWeek["Monday"]
 tuesday = DayOfTheWeek(2)
 
 TEST_CHOICES = list(DayOfTheWeek)
-TEST_PRESENTED_CHOICES = [day.name for day in TEST_CHOICES]
 
 
 def clip_socket_number(prompt_data, FZF_PRIMITIVES_SOCKET_NUMBER):
@@ -58,7 +57,7 @@ def clip_socket_number(prompt_data, FZF_PRIMITIVES_SOCKET_NUMBER):
 
 
 def prompt_builder():
-    prompt = Prompt(TEST_CHOICES, TEST_PRESENTED_CHOICES)
+    prompt = Prompt(TEST_CHOICES, lambda day: day.name)
     prompt.mod.options.multiselect.listen()
     prompt.mod.on_situation().BACKWARD_EOF.run_function("clip socket number", clip_socket_number)
     prompt.mod.on_hotkey().CTRL_A.toggle_all

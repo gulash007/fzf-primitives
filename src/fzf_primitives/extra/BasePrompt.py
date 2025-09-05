@@ -12,7 +12,7 @@ from ..core.FzfPrompt.options import Options
 app = typer.Typer()
 
 
-__all__ = ["run", "read_choices"]
+__all__ = ["run", "read_entries"]
 
 run = run_fzf_prompt
 
@@ -22,17 +22,17 @@ def read_from_pipe():
     return sys.stdin.read() if S_ISFIFO(os.fstat(0).st_mode) else None
 
 
-def read_choices():
-    if (choices := read_from_pipe()) is None:
-        choices = pyperclip.paste()
-    return choices.splitlines()
+def read_entries():
+    if (entries := read_from_pipe()) is None:
+        entries = pyperclip.paste()
+    return entries.splitlines()
 
 
 @app.command()
 def main(options: list[str] = typer.Argument(None, help="fzf options passed as string. Pass them after --")):
     options = options or []
     try:
-        output = run(prompt_data=PromptData(choices=read_choices(), options=Options(*options)))
+        output = run(prompt_data=PromptData(entries=read_entries(), options=Options(*options)))
     except Quitting as e:
         print(f"Exiting loop: {e}")
         exit(0)

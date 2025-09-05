@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Callable
 
 import typer
 
@@ -15,13 +16,13 @@ app = typer.Typer()
 class DefaultPrompt[T, S](Prompt[T, S]):
     def __init__(
         self,
-        choices: list[T] | None = None,
-        presented_choices: list[str] | None = None,
+        entries: list[T] | None = None,
+        converter: Callable[[T], str] = str,
         obj: S = None,
         *,
         use_basic_hotkeys: bool | None = None,
     ):
-        super().__init__(choices, presented_choices, obj, use_basic_hotkeys=use_basic_hotkeys)
+        super().__init__(entries, converter, obj, use_basic_hotkeys=use_basic_hotkeys)
         self.mod.preview().basic
         self.mod.default
 
@@ -41,7 +42,7 @@ def main(
         Config.logging_enabled = True
     options = options or []
     try:
-        prompt = DefaultPrompt(choices=BasePrompt.read_choices())
+        prompt = DefaultPrompt(entries=BasePrompt.read_entries())
         prompt.mod.options.add(*options)
         if lines_as == LineInterpretation.PATH:
             prompt.mod.on_hotkey().CTRL_O.open_files(app="Vim")

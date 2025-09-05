@@ -9,10 +9,9 @@ from typing import TypedDict
 
 class PromptState(TypedDict):
     query: str
-    single_index: int | None
-    single_line: str | None
-    indices: list[int]
-    lines: list[str]
+    current_index: int | None
+    selected_indices: list[int]
+    target_indices: list[int]
 
 
 def make_server_call(port: int, endpoint_id: str, prompt_state: PromptState | None, /, **kwargs):
@@ -36,14 +35,18 @@ def make_server_call(port: int, endpoint_id: str, prompt_state: PromptState | No
 def parse_args():
     port = int(sys.argv[1])
     endpoint_id = sys.argv[2]
+    query = sys.argv[3]  # {q} fzf placeholder
+    fzf_pos = int(sys.argv[4])  # FZF_POS fzf env var
+    fzf_select_count = int(sys.argv[5])  # FZF_SELECT_COUNT fzf env var
+    nplus_placeholder_indices = [int(x) for x in sys.argv[6].split() if x.isdigit()]  # {+n} fzf placeholder
+    selected_indices = nplus_placeholder_indices if fzf_select_count > 0 else []
     prompt_state: PromptState = {
-        "query": sys.argv[3],
-        "single_index": int(x) if (x := sys.argv[4]).isdigit() else None,
-        "single_line": sys.argv[5] or None,
-        "indices": [int(x) for x in sys.argv[6].split() if x.isdigit()],
-        "lines": sys.argv[7].splitlines(),
+        "query": query,
+        "current_index": fzf_pos - 1 if fzf_pos > 0 else None,
+        "selected_indices": selected_indices,
+        "target_indices": nplus_placeholder_indices,  # selected indices or current index if nothing selected
     }
-    kwargs = dict(zip(sys.argv[8::2], sys.argv[9::2]))
+    kwargs = dict(zip(sys.argv[7::2], sys.argv[8::2]))
     return port, endpoint_id, prompt_state, kwargs
 
 
