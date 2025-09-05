@@ -1,5 +1,5 @@
-from .. import Prompt, PromptData
-from ..config import Config
+from fzf_primitives import Prompt, PromptData
+from fzf_primitives.config import Config
 
 
 def double_choices(prompt_data: PromptData):

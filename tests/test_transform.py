@@ -1,7 +1,7 @@
-from .. import Prompt, PromptData
-from ..config import Config
-from ..core.FzfPrompt import Transform
-from ..core.FzfPrompt.previewer import Preview
+from fzf_primitives import Prompt, PromptData
+from fzf_primitives.config import Config
+from fzf_primitives.core.FzfPrompt import Transform
+from fzf_primitives.core.FzfPrompt.previewer import Preview
 
 
 def test_basic_transform():

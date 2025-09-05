@@ -1,11 +1,11 @@
 import pytest
 
-from .. import Prompt
-from ..core.FzfPrompt import BindingConflict
-from ..core.FzfPrompt.options import Options
-from ..core.mods import Mod, OnEvent, PostProcessing, PreviewMod
-from ..core.mods.event_adder.EventAdder import HotkeyAdder, SituationAdder
-from ..core.mods.preview_mod import SpecificPreviewMod, SpecificPreviewOnEvent
+from fzf_primitives import Prompt
+from fzf_primitives.core.FzfPrompt import BindingConflict
+from fzf_primitives.core.FzfPrompt.options import Options
+from fzf_primitives.core.mods import Mod, OnEvent, PostProcessing, PreviewMod
+from fzf_primitives.core.mods.event_adder.EventAdder import HotkeyAdder, SituationAdder
+from fzf_primitives.core.mods.preview_mod import SpecificPreviewMod, SpecificPreviewOnEvent
 
 
 def test_mod_return_value_types():

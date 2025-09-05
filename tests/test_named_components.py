@@ -1,9 +1,9 @@
-from ..core.FzfPrompt.action_menu.parametrized_actions import ParametrizedAction
-from ..core.FzfPrompt.action_menu.binding import Binding
-from ..core.FzfPrompt.action_menu.transform import Transform
-from ..core.FzfPrompt.server import ServerCall, PromptEndingAction
-from ..core.FzfPrompt.previewer.Preview import Preview
-from ..actions import (
+from fzf_primitives.core.FzfPrompt.action_menu.parametrized_actions import ParametrizedAction
+from fzf_primitives.core.FzfPrompt.action_menu.binding import Binding
+from fzf_primitives.core.FzfPrompt.action_menu.transform import Transform
+from fzf_primitives.core.FzfPrompt.server import ServerCall, PromptEndingAction
+from fzf_primitives.core.FzfPrompt.previewer.Preview import Preview
+from fzf_primitives.actions import (
     ShellCommand,
     ChangeBorderLabel,
     ChangePreviewLabel,

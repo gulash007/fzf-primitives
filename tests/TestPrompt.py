@@ -13,17 +13,17 @@ from enum import Enum, auto
 
 import pyperclip
 
-from .. import Prompt
-from ..actions import ParametrizedAction
-from ..config import Config
-from ..core.FzfPrompt import PreviewMutationArgs, PromptData
-from ..core.FzfPrompt.action_menu import Binding, ShellCommand
-from ..core.FzfPrompt.exceptions import PromptEnd, Quitting
-from ..core.FzfPrompt.previewer.Preview import ChangePreviewLabel
-from ..core.mods.multi_dimensional_generator import MultiDimensionalGenerator
-from ..core.monitoring import Logger
-from ..core.monitoring.constants import INTERNAL_LOG_DIR
-from .Recording import Recording
+from fzf_primitives import Prompt
+from fzf_primitives.actions import ParametrizedAction
+from fzf_primitives.config import Config
+from fzf_primitives.core.FzfPrompt import PreviewMutationArgs, PromptData
+from fzf_primitives.core.FzfPrompt.action_menu import Binding, ShellCommand
+from fzf_primitives.core.FzfPrompt.exceptions import PromptEnd, Quitting
+from fzf_primitives.core.FzfPrompt.previewer.Preview import ChangePreviewLabel
+from fzf_primitives.core.mods.multi_dimensional_generator import MultiDimensionalGenerator
+from fzf_primitives.core.monitoring import Logger
+from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
+from tests.Recording import Recording
 
 print(f"Imports: {perf_counter() - start} seconds")
 # TEST ALL KINDS OF STUFF

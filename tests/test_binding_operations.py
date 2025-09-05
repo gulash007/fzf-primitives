@@ -1,7 +1,7 @@
 import pytest
 
-from ..actions import ShellCommand
-from ..core.FzfPrompt.action_menu.binding import Binding
+from fzf_primitives.actions import ShellCommand
+from fzf_primitives.core.FzfPrompt.action_menu.binding import Binding
 
 binding1 = Binding("Some binding", ShellCommand("echo -n first && read"))
 binding2 = Binding("Some other binding", ShellCommand("echo -n second && read"))

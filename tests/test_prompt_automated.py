@@ -3,12 +3,12 @@ from datetime import datetime
 
 import pytest
 
-from ..config import Config
-from ..core.FzfPrompt.exceptions import Aborted, Quitting
-from ..core.monitoring import Logger
-from ..core.monitoring.constants import INTERNAL_LOG_DIR
-from . import TestPrompt
-from .Recording import Recording
+from fzf_primitives.config import Config
+from fzf_primitives.core.FzfPrompt.exceptions import Aborted, Quitting
+from fzf_primitives.core.monitoring import Logger
+from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
+from tests import TestPrompt
+from tests.Recording import Recording
 
 # TODO: test resolved options (need to control for variables)
 

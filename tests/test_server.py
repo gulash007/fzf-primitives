@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import Prompt, PromptData
-from ..core.FzfPrompt.server.actions import CommandOutput, ServerCall, ServerEndpoint
+from fzf_primitives import Prompt, PromptData
+from fzf_primitives.core.FzfPrompt.server.actions import CommandOutput, ServerCall, ServerEndpoint
 
 CORRECT_COMMAND_PATH = Path(__file__).parent.joinpath("test_request/correct_command.txt")
 CREATED_COMMAND_PATH = Path(__file__).parent.joinpath("test_request/created_command.txt")

@@ -1,4 +1,4 @@
-from ..core.FzfPrompt.options import Options
+from fzf_primitives.core.FzfPrompt.options import Options
 
 
 def test_options_comparisons():

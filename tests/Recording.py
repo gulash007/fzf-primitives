@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 from typing import Any, Self
 
-from ..core.monitoring import Logger
-from .SerializedLoguruEntry import SerializedLoguruEntry
+from fzf_primitives.core.monitoring import Logger
+from tests.SerializedLoguruEntry import SerializedLoguruEntry
 
 RECORDINGS_DIR = Path(__file__).parent.joinpath("recordings/")
 

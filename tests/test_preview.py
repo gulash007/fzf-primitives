@@ -1,12 +1,12 @@
 from typing import Any
 
-from .. import Prompt, PromptData
-from ..config import Config
-from ..core.FzfPrompt.previewer import Preview
-from ..core.FzfPrompt.server import CommandOutput
-from ..core.mods.preview_mod import FileViewer
-from ..core.monitoring import Logger
-from ..core.monitoring.constants import INTERNAL_LOG_DIR
+from fzf_primitives import Prompt, PromptData
+from fzf_primitives.config import Config
+from fzf_primitives.core.FzfPrompt.previewer import Preview
+from fzf_primitives.core.FzfPrompt.server import CommandOutput
+from fzf_primitives.core.mods.preview_mod import FileViewer
+from fzf_primitives.core.monitoring import Logger
+from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
 
 
 class record_preview_name:
