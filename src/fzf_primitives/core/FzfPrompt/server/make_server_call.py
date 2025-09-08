@@ -36,13 +36,13 @@ def parse_args():
     port = int(sys.argv[1])
     endpoint_id = sys.argv[2]
     query = sys.argv[3]  # {q} fzf placeholder
-    fzf_pos = int(sys.argv[4])  # FZF_POS fzf env var
+    n_placeholder = sys.argv[4]  # {n} fzf placeholder
     fzf_select_count = int(sys.argv[5])  # FZF_SELECT_COUNT fzf env var
     nplus_placeholder_indices = [int(x) for x in sys.argv[6].split() if x.isdigit()]  # {+n} fzf placeholder
     selected_indices = nplus_placeholder_indices if fzf_select_count > 0 else []
     prompt_state: PromptState = {
         "query": query,
-        "current_index": fzf_pos - 1 if fzf_pos > 0 else None,
+        "current_index": int(n_placeholder) if n_placeholder.isdigit() else None,
         "selected_indices": selected_indices,
         "target_indices": nplus_placeholder_indices,  # selected indices or current index if nothing selected
     }

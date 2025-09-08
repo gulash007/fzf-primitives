@@ -49,7 +49,7 @@ class ServerCall[T, S](ShellCommand):
         parameters = ServerCall._parse_function_parameters(server_endpoint.function)
         command = [
             f'"${MAKE_SERVER_CALL_ENV_VAR_NAME}" "${SOCKET_NUMBER_ENV_VAR}" {shlex.quote(server_endpoint.id)}',
-            '{q} $FZF_POS $FZF_SELECT_COUNT "{+n}"',  # making use of fzf placeholders and env vars
+            '{q} {n} $FZF_SELECT_COUNT "{+n}"',  # making use of fzf placeholders and env vars
         ]
         for parameter in parameters:
             if isinstance(parameter.default, CommandOutput):
