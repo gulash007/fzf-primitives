@@ -49,6 +49,6 @@ class Prompt[T, S]:
     def run(self, executable_path: str | Path | None = None) -> Result[T]:
         if self._entries_stream is not None:
             # Ensure that the preview is refreshed with new lines
-            self.mod.on_situation(on_conflict="append").RESULT.refresh_preview
+            self.mod.on_situation(on_conflict="prepend").RESULT.refresh_preview
         self.mod.apply(self._prompt_data)
         return run_fzf_prompt(self._prompt_data, executable_path=executable_path, entries_stream=self._entries_stream)
