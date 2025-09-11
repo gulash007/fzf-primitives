@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Literal
 
-
 Situation = Literal[
     "start",
     "load",
@@ -10,11 +9,13 @@ Situation = Literal[
     "result",
     "change",
     "focus",
+    "multi",
     "one",
     "zero",
     "backward-eof",
     "jump",
-    "jump-cancel"
+    "jump-cancel",
+    "click-header",
 ]
 
 # TODO: Add more available keys

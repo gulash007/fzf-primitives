@@ -28,7 +28,8 @@ class SituationAdder[M: OnEventBase]:
 
     @property
     def RESULT(self) -> M:
-        """Triggered when the filtering for the current query is complete and the result list is ready"""
+        """Triggered when the filtering for the current query is complete and the result list is ready.
+        Hint: Also triggers upon new lines being piped into fzf process"""
         return self._set_and_return_mod("result")
 
     @property
@@ -40,6 +41,11 @@ class SituationAdder[M: OnEventBase]:
     def FOCUS(self) -> M:
         """Triggered when the focus changes due to a vertical cursor movement or a search result update"""
         return self._set_and_return_mod("focus")
+
+    @property
+    def MULTI(self) -> M:
+        """Triggered when the multi-selection has changed."""
+        return self._set_and_return_mod("multi")
 
     @property
     def ONE(self) -> M:
@@ -65,6 +71,11 @@ class SituationAdder[M: OnEventBase]:
     def JUMP_CANCEL(self) -> M:
         """Triggered when jump mode is cancelled"""
         return self._set_and_return_mod("jump-cancel")
+
+    @property
+    def CLICK_HEADER(self) -> M:
+        """Triggered when a mouse click occurs within the header. Sets FZF_CLICK_HEADER_LINE and FZF_CLICK_HEADER_COLUMN environment variables starting from 1. It optionally sets FZF_CLICK_HEADER_WORD and FZF_CLICK_HEADER_NTH if clicked on a word."""
+        return self._set_and_return_mod("click-header")
 
 
 class HotkeyAdder[M: OnEventBase]:

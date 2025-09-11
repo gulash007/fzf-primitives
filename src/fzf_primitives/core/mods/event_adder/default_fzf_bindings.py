@@ -1,7 +1,6 @@
 from ...FzfPrompt.options.actions import BaseAction
 from ...FzfPrompt.options.events import Hotkey, Situation
 
-
 # Used to generate EventAdder using AI
 FZF_EVENTS: dict[Situation, str] = {
     "start": "Triggered only once when fzf finder starts. Since fzf consumes the input stream asynchronously, the input list is not available unless you use --sync",
@@ -10,11 +9,13 @@ FZF_EVENTS: dict[Situation, str] = {
     "result": "Triggered when the filtering for the current query is complete and the result list is ready",
     "change": "Triggered whenever the query string is changed",
     "focus": "Triggered when the focus changes due to a vertical cursor movement or a search result update",
+    "multi": "Triggered when the multi-selection has changed.",
     "one": "Triggered when there's only one match",
     "zero": "Triggered when there's no match",
     "backward-eof": "Triggered when the query string is already empty and you try to delete it backward",
     "jump": "Triggered when successfully jumped to the target item in jump mode",
     "jump-cancel": "Triggered when jump mode is cancelled",
+    "click-header": "Triggered when a mouse click occurs within the header. Sets FZF_CLICK_HEADER_LINE and FZF_CLICK_HEADER_COLUMN environment variables starting from 1. It optionally sets FZF_CLICK_HEADER_WORD and FZF_CLICK_HEADER_NTH if clicked on a word.",
 }
 
 DEFAULT_FZF_BINDINGS: dict[Hotkey, BaseAction | None] = {
