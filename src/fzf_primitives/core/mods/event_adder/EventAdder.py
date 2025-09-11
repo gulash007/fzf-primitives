@@ -59,12 +59,12 @@ class SituationAdder[M: OnEventBase]:
     @property
     def JUMP(self) -> M:
         """Triggered when successfully jumped to the target item in jump mode"""
-        return self._set_and_return_mod("backward-eof")
+        return self._set_and_return_mod("jump")
 
     @property
     def JUMP_CANCEL(self) -> M:
         """Triggered when jump mode is cancelled"""
-        return self._set_and_return_mod("backward-eof")
+        return self._set_and_return_mod("jump-cancel")
 
 
 class HotkeyAdder[M: OnEventBase]:
