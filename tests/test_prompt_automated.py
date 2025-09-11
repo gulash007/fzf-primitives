@@ -1,16 +1,45 @@
 from __future__ import annotations
+
 from datetime import datetime
+from enum import Enum, auto
 
 import pytest
 
 from fzf_primitives.config import Config
+from fzf_primitives.core import Prompt
 from fzf_primitives.core.FzfPrompt.exceptions import Aborted, Quitting
 from fzf_primitives.core.monitoring import Logger
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
-from tests import TestPrompt
 from tests.Recording import Recording
 
 # TODO: test resolved options (need to control for variables)
+
+
+class DayOfTheWeek(Enum):
+    Monday = auto()
+    Tuesday = auto()
+    Wednesday = auto()
+    Thursday = auto()
+    Friday = auto()
+    Saturday = auto()
+    Sunday = auto()
+
+
+monday = DayOfTheWeek["Monday"]
+tuesday = DayOfTheWeek(2)
+
+TEST_CHOICES = list(DayOfTheWeek)
+
+
+def prompt_builder():
+    prompt = Prompt(TEST_CHOICES, lambda day: day.name)
+    prompt.mod.options.multiselect.listen()
+    prompt.mod.on_hotkey().CTRL_A.toggle_all
+    prompt.mod.on_hotkey().CTRL_Q.quit
+    prompt.mod.preview("ctrl-y").fzf_json
+    prompt.mod.preview("ctrl-6").custom("Hello World")
+
+    return prompt
 
 
 # ❗ Checking events might be non-deterministic. Try running this test multiple times
@@ -24,7 +53,7 @@ def test_general():
 
     Recording.setup("TestPromptAutomated")
 
-    prompt = TestPrompt.prompt_builder()
+    prompt = prompt_builder()
     prompt.mod.automate_actions("up")
     prompt.mod.automate_actions("down")
     prompt.mod.automate("ctrl-y")
@@ -40,14 +69,14 @@ def test_general():
 
 def test_quit():
     with pytest.raises(Quitting):
-        prompt = TestPrompt.prompt_builder()
+        prompt = prompt_builder()
         prompt.mod.automate("ctrl-q")
         prompt.run()
 
 
 def test_abort():
     with pytest.raises(Aborted):
-        prompt = TestPrompt.prompt_builder()
+        prompt = prompt_builder()
         prompt.mod.lastly.raise_from_aborted_status()
         prompt.mod.automate(Config.default_abort_hotkey)
         prompt.run()
