@@ -42,7 +42,7 @@ class PromptData[T, S](LoggedComponent):
         self.bindings_to_automate: list[Binding] = []
         self.options = options or Options()
         self.post_processors: list[PostProcessor] = []
-        self._current_state: PromptState | None = None
+        self._state: PromptState | None = None
         self._result: Result[T]
         self.id = datetime.now().isoformat()  # TODO: Use it?
         self.run_vars: dict[str, Any] = {"env": os.environ.copy()}
@@ -51,30 +51,51 @@ class PromptData[T, S](LoggedComponent):
         self.make_server_call = make_server_call
 
     @property
-    def current_state(self) -> PromptState:
-        if not self._current_state:
+    def state(self) -> PromptState:
+        if not self._state:
             raise RuntimeError(
                 "Current state not set (you're probably accessing current state before prompt has started)"
             )
-        return self._current_state
+        return self._state
 
-    def set_current_state(self, prompt_state: PromptState):
-        self._current_state = prompt_state
+    def set_state(self, prompt_state: PromptState):
+        self._state = prompt_state
+
+    @property
+    def query(self) -> str:
+        return self.state.query
 
     @property
     def current(self) -> T | None:
-        if self.current_state.current_index is None:
+        if self.state.current_index is None:
             return None
-        return self.entries[self.current_state.current_index]
+        return self.entries[self.state.current_index]
+
+    @property
+    def current_index(self) -> int | None:
+        return self.state.current_index
 
     @property
     def selections(self) -> list[T]:
-        return [self.entries[i] for i in self.current_state.selected_indices]
+        if self.state.selected_count == 0:
+            return []
+        return [self.entries[i] for i in self.state.target_indices]
+
+    @property
+    def selected_indices(self) -> list[int]:
+        if self.state.selected_count == 0:
+            return []
+        return self.state.target_indices
 
     @property
     def targets(self) -> list[T]:
-        """Like with '+' fzf placeholders these are selections or current if no selections"""
-        return [self.entries[i] for i in self.current_state.target_indices]
+        """Like with '{+}' fzf placeholder these are selections or current if no selections"""
+        return [self.entries[i] for i in self.state.target_indices]
+
+    @property
+    def target_indices(self) -> list[int]:
+        """Like with '{+n}' fzf placeholder these are indices of selections or current if no selections"""
+        return self.state.target_indices
 
     @property
     def result(self) -> Result[T]:
@@ -95,11 +116,11 @@ class PromptData[T, S](LoggedComponent):
             end_status=end_status,
             event=event,
             entries=self.entries,
-            query=self.current_state.query,
-            current_index=self.current_state.current_index,
-            selected_indices=self.current_state.selected_indices,
+            query=self.state.query,
+            current_index=self.state.current_index,
+            selected_indices=self.selected_indices,
             selections=self.selections,
-            target_indices=self.current_state.target_indices,
+            target_indices=self.target_indices,
         )
         self._stage = "finished"
 

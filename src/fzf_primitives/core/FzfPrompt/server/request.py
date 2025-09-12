@@ -15,7 +15,7 @@ class ServerEndpoint:
 
     def run(self, prompt_data: PromptData, request: Request) -> Any:
         if request.prompt_state:
-            prompt_data.set_current_state(request.prompt_state)
+            prompt_data.set_state(request.prompt_state)
         return self.function(prompt_data, **request.kwargs)
 
 
@@ -36,12 +36,12 @@ class PromptState:
         self,
         query: str,
         current_index: int | None,
-        selected_indices: list[int],
+        selected_count: int,
         target_indices: list[int],  # expanded {+n} fzf placeholder
     ):
         self.query = query
         self.current_index = current_index
-        self.selected_indices = selected_indices
+        self.selected_count = selected_count
         self.target_indices = target_indices
 
     @classmethod

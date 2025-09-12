@@ -10,17 +10,15 @@ from typing import TypedDict
 class PromptState(TypedDict):
     query: str
     current_index: int | None
-    selected_indices: list[int]
+    selected_count: int
     target_indices: list[int]
 
 
-def make_server_call(port: int, endpoint_id: str, prompt_state: PromptState | None, /, **kwargs):
+def make_server_call(port: int, endpoint_id: str, prompt_state: PromptState | None, /, kwargs):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
         client.connect(("localhost", port))
         try:
             data = {"endpoint_id": endpoint_id, "prompt_state": prompt_state, "kwargs": kwargs}
-
-            # TODO: send it through a socket to Server instead of using nc
             payload = json.dumps(data).encode("utf-8")
         except Exception as err:
             payload = f"{sys.argv}\n{err}".encode("utf-8")
@@ -39,11 +37,10 @@ def parse_args():
     n_placeholder = sys.argv[4]  # {n} fzf placeholder
     fzf_select_count = int(sys.argv[5])  # FZF_SELECT_COUNT fzf env var
     nplus_placeholder_indices = [int(x) for x in sys.argv[6].split() if x.isdigit()]  # {+n} fzf placeholder
-    selected_indices = nplus_placeholder_indices if fzf_select_count > 0 else []
     prompt_state: PromptState = {
         "query": query,
-        "current_index": int(n_placeholder) if n_placeholder.isdigit() else None,
-        "selected_indices": selected_indices,
+        "current_index": int(n_placeholder) if n_placeholder.isdigit() else None,  # empty string if no shown entries
+        "selected_count": fzf_select_count,
         "target_indices": nplus_placeholder_indices,  # selected indices or current index if nothing selected
     }
     kwargs = dict(zip(sys.argv[7::2], sys.argv[8::2]))
@@ -52,5 +49,5 @@ def parse_args():
 
 if __name__ == "__main__":
     port, endpoint_id, prompt_state, kwargs = parse_args()
-    if response := make_server_call(port, endpoint_id, prompt_state, **kwargs):
+    if response := make_server_call(port, endpoint_id, prompt_state, kwargs):
         print(response)
