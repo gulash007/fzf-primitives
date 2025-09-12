@@ -1,0 +1,56 @@
+   AVAILABLE KEYS: (SYNONYMS)
+       ctrl-[a-z]
+       ctrl-space
+       ctrl-delete
+       ctrl-\
+       ctrl-]
+       ctrl-^	      (ctrl-6)
+       ctrl-/	      (ctrl-_)
+       ctrl-alt-[a-z]
+       alt-[*]	      (Any case-sensitive single character is allowed)
+       f[1-12]
+       enter	      (return ctrl-m)
+       space
+       backspace      (bspace bs)
+       alt-up
+       alt-down
+       alt-left
+       alt-right
+       alt-enter
+       alt-space
+       alt-backspace  (alt-bspace alt-bs)
+       tab
+       shift-tab      (btab)
+       esc
+       delete	      (del)
+       up
+       down
+       left
+       right
+       home
+       end
+       insert
+       page-up	      (pgup)
+       page-down      (pgdn)
+       shift-up
+       shift-down
+       shift-left
+       shift-right
+       shift-delete
+       alt-shift-up
+       alt-shift-down
+       alt-shift-left
+       alt-shift-right
+       left-click
+       right-click
+       double-click
+       scroll-up
+       scroll-down
+       preview-scroll-up
+       preview-scroll-down
+       shift-left-click
+       shift-right-click
+       shift-scroll-up
+       shift-scroll-down
+       or any single character
+
