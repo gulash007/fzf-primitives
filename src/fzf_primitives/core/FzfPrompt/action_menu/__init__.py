@@ -1,6 +1,18 @@
 from .ActionMenu import ActionMenu, BindingConflict, ConflictResolution
 from .binding import Binding
-from .parametrized_actions import Action, ChangeBorderLabel, ParametrizedAction, ShellCommand
+from .parametrized_actions import (
+    Action,
+    ChangeBorderLabel,
+    CompositeAction,
+    DeselectAt,
+    MovePointer,
+    ParametrizedAction,
+    SelectAt,
+    ShellCommand,
+    ToggleAt,
+    ToggleDownAt,
+    ToggleUpAt,
+)
 from .transform import ActionsBuilder, Transform
 
 __all__ = [
@@ -10,8 +22,15 @@ __all__ = [
     "ConflictResolution",
     "Action",
     "ParametrizedAction",
+    "CompositeAction",
     "ShellCommand",
     "ChangeBorderLabel",
+    "MovePointer",
+    "SelectAt",
+    "DeselectAt",
+    "ToggleAt",
+    "ToggleDownAt",
+    "ToggleUpAt",
     "Transform",
     "ActionsBuilder",
 ]

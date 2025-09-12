@@ -6,7 +6,7 @@ from typing import Iterable, overload
 from ...monitoring import LoggedComponent
 from ..server import PromptEndingAction
 from . import transform as t
-from .parametrized_actions import Action, ParametrizedAction
+from .parametrized_actions import Action, CompositeAction, ParametrizedAction
 
 
 class Binding(LoggedComponent):
@@ -42,7 +42,8 @@ class Binding(LoggedComponent):
     def action_string(self) -> str:
         actions = self.actions.copy()
         action_strings = [
-            action.action_string() if isinstance(action, ParametrizedAction) else action for action in actions
+            action.action_string() if isinstance(action, (ParametrizedAction, CompositeAction)) else action
+            for action in actions
         ]
         return "+".join(action_strings)
 

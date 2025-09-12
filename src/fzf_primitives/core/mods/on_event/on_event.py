@@ -20,7 +20,7 @@ from ...FzfPrompt import (
     ShellCommand,
     Transform,
 )
-from ...FzfPrompt.action_menu.parametrized_actions import ParametrizedAction
+from ...FzfPrompt.action_menu.parametrized_actions import MovePointer, ParametrizedAction
 from ...FzfPrompt.constants import SHELL_COMMAND
 from ...FzfPrompt.options.actions import BaseAction, ShellCommandActionType
 from ...FzfPrompt.options.events import Hotkey, Situation
@@ -30,6 +30,7 @@ from .presets import (
     FileEditor,
     ReloadEntries,
     Repeater,
+    SelectBy,
     ShowInPreview,
     clip_current_preview,
     clip_options,
@@ -71,6 +72,10 @@ class OnEvent[T, S](OnEventBase[T, S]):
 
     def run_transform(self, name: str, get_actions: ActionsBuilder[T, S], *base_actions: BaseAction) -> Self:
         return self.run(name, Transform(get_actions), *base_actions)
+
+    def select_by(self, name: str, predicate: Callable[[T], bool]) -> Self:
+        """Selects items by the given predicate acting on an entry"""
+        return self.run(name, SelectBy(predicate))
 
     def reload_entries(
         self,
@@ -181,7 +186,7 @@ class OnEvent[T, S](OnEventBase[T, S]):
                 if pd.run_vars.pop("running_clear_and_refocus", None):
                     saved_index = pd.run_vars.pop("saved_current_index", None)
                     if saved_index is not None:
-                        return [ParametrizedAction(str(saved_index + 1), "pos")]
+                        return [MovePointer(saved_index)]
                 return []
 
             pd.action_menu.add(

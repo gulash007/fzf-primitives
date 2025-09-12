@@ -15,5 +15,18 @@ def test_clear_query_and_focus_line():
     result = prompt.run()
     assert result.current == 3
 
+
+def test_select_by():
+    prompt = Prompt([1, 2, 3, 4, 5, 6, 7])
+
+    prompt.mod.options.multiselect
+    prompt.mod.on_hotkey().CTRL_6.select_by("select even numbers", lambda n: n % 2 == 0)
+    prompt.mod.automate("ctrl-6")
+    prompt.mod.automate(Prompt.config.default_accept_hotkey)
+    result = prompt.run()
+    assert result.selections == [2, 4, 6]
+
+
 if __name__ == "__main__":
     test_clear_query_and_focus_line()
+    test_select_by()

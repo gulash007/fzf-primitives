@@ -1,4 +1,16 @@
-from .core.FzfPrompt.action_menu import Action, ChangeBorderLabel, ParametrizedAction, ShellCommand, Transform
+from .core.FzfPrompt.action_menu import (
+    Action,
+    ChangeBorderLabel,
+    DeselectAt,
+    MovePointer,
+    ParametrizedAction,
+    SelectAt,
+    ShellCommand,
+    ToggleAt,
+    ToggleDownAt,
+    ToggleUpAt,
+    Transform,
+)
 from .core.FzfPrompt.options.actions import BaseAction
 from .core.FzfPrompt.previewer.actions import (
     ChangePreviewLabel,
@@ -15,6 +27,12 @@ __all__ = [
     "Action",
     "Transform",
     "ChangeBorderLabel",
+    "MovePointer",
+    "SelectAt",
+    "DeselectAt",
+    "ToggleAt",
+    "ToggleDownAt",
+    "ToggleUpAt",
     "ReloadEntries",
     "ShowInPreview",
     "ChangePreviewLabel",

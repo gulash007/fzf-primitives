@@ -2,10 +2,37 @@ from __future__ import annotations
 
 from typing import Callable
 
-from ....FzfPrompt import PreviewFunction, PromptData, ServerCall
+from ....FzfPrompt import Action, PreviewFunction, PromptData, ServerCall, Transform
+from ....FzfPrompt.action_menu import MovePointer, SelectAt
 from ....monitoring import LoggedComponent
 
 type EntriesGetter[T, S] = Callable[[PromptData[T, S]], list[T]]
+
+
+class SelectBy[T, S](Transform[T, S], LoggedComponent):
+    def __init__(self, predicate: Callable[[T], bool]):
+        LoggedComponent.__init__(self)
+
+        def get_select_actions(prompt_data: PromptData[T, S]) -> list[Action]:
+            try:
+                original_position = prompt_data.state.current_index
+                if original_position is None:
+                    return []
+                actions: list[Action] = []
+                for i, choice in enumerate(prompt_data.entries):
+                    if predicate(choice):
+                        self.logger.debug(f"Selecting choice at index {i} with value: {choice}")
+                        actions.append(SelectAt(i))
+                actions.append(MovePointer(original_position))
+                return actions
+            except Exception as e:
+                self.logger.error(f"Error in get_select_actions: {e}")
+                return ["bell"]
+
+        super().__init__(get_select_actions, f"Selecting by: {predicate.__name__}")
+
+    def __str__(self) -> str:
+        return f"[SB]({self._get_function_name(self.endpoint.function)})"
 
 
 class ReloadEntries[T, S](ServerCall[T, S], LoggedComponent):

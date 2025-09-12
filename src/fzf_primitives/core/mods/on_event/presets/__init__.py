@@ -10,7 +10,7 @@ import pyperclip
 
 from ....FzfPrompt import Action, Binding, PromptData
 from ....monitoring import LoggedComponent
-from .actions import EntriesGetter, ReloadEntries, ShowInPreview
+from .actions import EntriesGetter, ReloadEntries, SelectBy, ShowInPreview
 
 __all__ = [
     "clip_current_preview",
@@ -19,6 +19,7 @@ __all__ = [
     "Repeater",
     "FileEditor",
     "ReloadEntries",
+    "SelectBy",
     "EntriesGetter",
     "ShowInPreview",
 ]
