@@ -3,7 +3,7 @@ from __future__ import annotations
 import subprocess
 from abc import ABC
 from pathlib import Path
-from typing import Callable, Self
+from typing import Any, Callable, Self
 
 import pyperclip
 
@@ -83,17 +83,52 @@ class OnEvent[T, S](OnEventBase[T, S]):
         name: str = "reload entries",
         *,
         sync: bool = False,
+        preserve_selections_by_key: Callable[[T], Any] | None = None,
         repeat_interval: float | None = None,
         repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
     ):
+        """
+        Reload the entries list.
+
+        Args:
+            preserve_selections_by_key: Try to match previous selections with new entries on given predicate (usually some kind of equality).
+            If not provided, all previous selections will be cleared after reload.
+            repeat_interval: If provided, will auto-repeat the reload action every `repeat_interval` seconds. Must be at least 0.2.
+        """
         name = f"{name}{' (sync)' if sync else ''}"
+
+        if preserve_selections_by_key is not None:
+
+            def save_selection_keys(pd: PromptData[T, S]):
+                pd.run_vars["saved_selection_keys"] = {preserve_selections_by_key(item) for item in pd.selections}
+                pd.run_vars["running_reload_and_preserve_selections"] = True
+
+            self.run_function("save selections", save_selection_keys)
+
+            def add_conditional_result_action(pd: PromptData[T, S]):
+                def reselect_conditionally(pd: PromptData[T, S]):
+                    if pd.run_vars.pop("running_reload_and_preserve_selections", None):
+                        saved_keys = pd.run_vars.pop("saved_selection_keys", None)
+                        if saved_keys is not None:
+                            return [SelectBy[T, S](lambda item: preserve_selections_by_key(item) in saved_keys)]
+                    return []
+
+                pd.action_menu.add(
+                    "result",
+                    Binding(
+                        "reselect if 'reload and preserve selections' was invoked", Transform(reselect_conditionally)
+                    ),
+                    on_conflict="append",
+                )
+
+            self._additional_mods.append(add_conditional_result_action)
+
+        action = ReloadEntries(entries_getter, sync=sync)
         if repeat_interval is None:
-            return self.run(name, ReloadEntries(entries_getter, sync=sync))
+            return self.run(name, action)
         if repeat_interval < 0.2:
             raise ValueError("repeat_interval must be at least 0.2")
-        return self.auto_repeat_run(
-            name, ReloadEntries(entries_getter, sync=sync), repeat_interval=repeat_interval, repeat_when=repeat_when
-        )
+        return self.auto_repeat_run(name, action, repeat_interval=repeat_interval, repeat_when=repeat_when)
 
     def auto_repeat_run(
         self,
