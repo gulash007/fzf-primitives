@@ -342,7 +342,6 @@ DEFAULT_ACTION_TO_KEYS: dict[BaseAction, tuple[Hotkey, ...]] = {
     "toggle-all": (),
     "toggle-in": (),
     "toggle-out": (),
-    "toggle-bind": (),
     "toggle-header": (),
     "toggle-input": (),
     "toggle-multi-line": (),

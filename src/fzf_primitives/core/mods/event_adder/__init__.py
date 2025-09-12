@@ -21,7 +21,7 @@ def attach_hotkey_adder[X, E: Hotkey, M: OnEventBase](func: EventAddingFunction[
     ) -> M: ...
     @overload
     def with_hotkey_adder(self: X, *, on_conflict: ConflictResolution = "raise error") -> HotkeyAdder[M]: ...
-    def with_hotkey_adder(
+    def with_hotkey_adder(  # type: ignore # HACK: black magic
         self: X, *hotkeys: Hotkey, on_conflict: ConflictResolution = "raise error"
     ) -> M | HotkeyAdder[M]:
         if hotkeys:
@@ -38,7 +38,7 @@ def attach_situation_adder[X, E: Situation, M: OnEventBase](func: EventAddingFun
     ) -> M: ...
     @overload
     def with_situation_adder(self: X, *, on_conflict: ConflictResolution = "raise error") -> SituationAdder[M]: ...
-    def with_situation_adder(
+    def with_situation_adder(  # type: ignore # HACK: black magic
         self: X, *situations: Situation, on_conflict: ConflictResolution = "raise error"
     ) -> M | SituationAdder[M]:
         if situations:
@@ -53,7 +53,7 @@ def attach_event_adder[X, E: (Hotkey | Situation), M: OnEventBase](func: EventAd
     def with_event_adder(self: X, event: E, *events: E, on_conflict: ConflictResolution = "raise error") -> M: ...
     @overload
     def with_event_adder(self: X, *, on_conflict: ConflictResolution = "raise error") -> EventAdder[M]: ...
-    def with_event_adder(self: X, *events: E, on_conflict: ConflictResolution = "raise error"):
+    def with_event_adder(self: X, *events: E, on_conflict: ConflictResolution = "raise error"):  # type: ignore # HACK: black magic
         if events:
             return func(self, *events, on_conflict=on_conflict)
         return EventAdder[M](functools.partial(func, self, on_conflict=on_conflict))
