@@ -20,6 +20,7 @@ from ...FzfPrompt import (
     ShellCommand,
     Transform,
 )
+from ...FzfPrompt.action_menu.parametrized_actions import ParametrizedAction
 from ...FzfPrompt.constants import SHELL_COMMAND
 from ...FzfPrompt.options.actions import BaseAction, ShellCommandActionType
 from ...FzfPrompt.options.events import Hotkey, Situation
@@ -42,10 +43,13 @@ class OnEventBase[T, S](ABC):
         self._events: list[Hotkey | Situation] = list(events)
         self._on_conflict: ConflictResolution = on_conflict
         self._binding = Binding("")
+        self._additional_mods: list[Callable[[PromptData[T, S]], None]] = []
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         for event in self._events:
             prompt_data.action_menu.add(event, self._binding, on_conflict=self._on_conflict)
+        for mod in self._additional_mods:
+            mod(prompt_data)
 
 
 class OnEvent[T, S](OnEventBase[T, S]):
@@ -167,6 +171,33 @@ class OnEvent[T, S](OnEventBase[T, S]):
     @property
     def jump_accept(self):
         return self.run("jump and accept", "jump-accept")
+
+    @property
+    def clear_and_refocus(self):
+        """clear query and move pointer to current entry"""
+
+        def add_conditional_result_action(pd: PromptData[T, S]):
+            def refocus_conditionally(pd: PromptData[T, S]):
+                if pd.run_vars.pop("running_clear_and_refocus", None):
+                    saved_index = pd.run_vars.pop("saved_current_index", None)
+                    if saved_index is not None:
+                        return [ParametrizedAction(str(saved_index + 1), "pos")]
+                return []
+
+            pd.action_menu.add(
+                "result",
+                Binding("refocus if 'clear and refocus' was invoked", Transform(refocus_conditionally)),
+                on_conflict="append",
+            )
+
+        self._additional_mods.append(add_conditional_result_action)
+
+        def save_current_index(pd: PromptData[T, S]):
+            if pd.current_index is not None:
+                pd.run_vars["saved_current_index"] = pd.current_index
+                pd.run_vars["running_clear_and_refocus"] = True
+
+        return self.run_function("clear and refocus", save_current_index, "clear-query", silent=True)
 
     @property
     def clip_current_preview(self):
