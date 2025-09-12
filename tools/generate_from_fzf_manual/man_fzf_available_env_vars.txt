@@ -1,0 +1,27 @@
+ENVIRONMENT VARIABLES EXPORTED TO CHILD PROCESSES
+       fzf exports the following environment variables to its child processes.
+
+       FZF_LINES	   Number of lines fzf takes up excluding padding and margin
+       FZF_COLUMNS	   Number of columns fzf takes up excluding padding and margin
+       FZF_TOTAL_COUNT	   Total number of items
+       FZF_MATCH_COUNT	   Number of matched items
+       FZF_SELECT_COUNT    Number of selected items
+       FZF_POS		   Vertical position of the cursor in the list starting from 1
+       FZF_QUERY	   Current query string
+       FZF_INPUT_STATE	   Current input state (enabled, disabled, hidden)
+       FZF_NTH		   Current --nth option
+       FZF_PROMPT	   Prompt string
+       FZF_GHOST	   Ghost string
+       FZF_POINTER	   Pointer string
+       FZF_PREVIEW_LABEL   Preview label string
+       FZF_BORDER_LABEL    Border label string
+       FZF_LIST_LABEL	   List label string
+       FZF_INPUT_LABEL	   Input label string
+       FZF_HEADER_LABEL    Header label string
+       FZF_ACTION	   The name of the last action performed
+       FZF_KEY		   The name of the last key pressed
+       FZF_PORT 	   Port number when --listen option is used
+       FZF_PREVIEW_TOP	   Top position of the preview window
+       FZF_PREVIEW_LEFT    Left position of the preview window
+       FZF_PREVIEW_LINES   Number of lines in the preview window
+       FZF_PREVIEW_COLUMNS Number of columns in the preview window
