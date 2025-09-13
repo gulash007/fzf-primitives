@@ -5,7 +5,6 @@ from typing import Callable
 import typer
 
 from ..config import Config
-from ..core.FzfPrompt.exceptions import Quitting
 from . import BasePrompt, DefaultPrompt
 
 app = typer.Typer()
@@ -33,13 +32,9 @@ def main(
     if log:
         Config.logging_enabled = True
     options = options or []
-    try:
-        prompt = DefaultMultiselectPrompt(entries=BasePrompt.read_entries())
-        prompt.mod.options.add(*options)
-        output = prompt.run()
-    except Quitting as e:
-        print(f"Exiting loop: {e}")
-        exit(0)
+    prompt = DefaultMultiselectPrompt(entries=BasePrompt.read_entries())
+    prompt.mod.options.add(*options)
+    output = prompt.run()
     typer.echo(output, color=True)
 
 

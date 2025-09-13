@@ -7,7 +7,6 @@ import typer
 
 from .. import Prompt
 from ..config import Config
-from ..core.FzfPrompt.exceptions import Quitting
 from . import BasePrompt
 
 app = typer.Typer()
@@ -41,15 +40,11 @@ def main(
     if log:
         Config.logging_enabled = True
     options = options or []
-    try:
-        prompt = DefaultPrompt(entries=BasePrompt.read_entries())
-        prompt.mod.options.add(*options)
-        if lines_as == LineInterpretation.PATH:
-            prompt.mod.on_hotkey().CTRL_O.open_files(app="Vim")
-        output = prompt.run()
-    except Quitting as e:
-        print(f"Exiting loop: {e}")
-        exit(0)
+    prompt = DefaultPrompt(entries=BasePrompt.read_entries())
+    prompt.mod.options.add(*options)
+    if lines_as == LineInterpretation.PATH:
+        prompt.mod.on_hotkey().CTRL_O.open_files(app="Vim")
+    output = prompt.run()
     typer.echo(output, color=True)
 
 

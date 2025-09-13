@@ -13,7 +13,6 @@ from .action_menu.binding import Binding
 from .action_menu.parametrized_actions import Action, ShellCommand
 from .action_menu.transform import ActionsBuilder, Transform
 from .controller import Controller
-from .exceptions import Quitting
 from .previewer import (
     Preview,
     PreviewChangePreProcessor,
@@ -168,8 +167,6 @@ def run_fzf_prompt[T, S](
             err_message = "Prompt not finished (you aborted prompt without finishing PromptData)"
             logger.error(err_message, **{"trace_point": "prompt_not_finished_properly"})
             raise RuntimeError(err_message)
-        if prompt_data.result.end_status == "quit":
-            raise Quitting("Exiting app...", prompt_data.result)
         event = prompt_data.result.event
         if not (final_action := prompt_data.action_menu.bindings[event].final_action):
             err_message = "Prompt ended on event that doesn't have final action. How did we get here?"

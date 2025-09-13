@@ -18,7 +18,7 @@ from fzf_primitives.actions import ParametrizedAction
 from fzf_primitives.config import Config
 from fzf_primitives.core.FzfPrompt import PreviewMutationArgs, PromptData
 from fzf_primitives.core.FzfPrompt.action_menu import Binding, ShellCommand
-from fzf_primitives.core.FzfPrompt.exceptions import PromptEnd, Quitting
+from fzf_primitives.core.FzfPrompt.exceptions import PromptEnd
 from fzf_primitives.core.FzfPrompt.previewer.Preview import ChangePreviewLabel
 from fzf_primitives.core.mods.multi_dimensional_generator import MultiDimensionalGenerator
 from fzf_primitives.core.monitoring import Logger

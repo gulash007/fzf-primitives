@@ -6,7 +6,6 @@ import pyperclip
 import typer
 
 from ..core.FzfPrompt import PromptData, run_fzf_prompt
-from ..core.FzfPrompt.exceptions import Quitting
 from ..core.FzfPrompt.options import Options
 
 app = typer.Typer()
@@ -17,7 +16,7 @@ __all__ = ["run", "read_entries"]
 run = run_fzf_prompt
 
 
-# TODO: cache read choices for multiple rounds of selection
+# TODO: cache read entries for multiple rounds of selection
 def read_from_pipe():
     return sys.stdin.read() if S_ISFIFO(os.fstat(0).st_mode) else None
 
@@ -31,11 +30,7 @@ def read_entries():
 @app.command()
 def main(options: list[str] = typer.Argument(None, help="fzf options passed as string. Pass them after --")):
     options = options or []
-    try:
-        output = run(prompt_data=PromptData(entries=read_entries(), options=Options(*options)))
-    except Quitting as e:
-        print(f"Exiting loop: {e}")
-        exit(0)
+    output = run(prompt_data=PromptData(entries=read_entries(), options=Options(*options)))
     typer.echo(output, color=True)
 
 

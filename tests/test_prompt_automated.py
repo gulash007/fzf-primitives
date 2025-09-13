@@ -6,7 +6,7 @@ import pytest
 
 from fzf_primitives.config import Config
 from fzf_primitives.core import Prompt
-from fzf_primitives.core.FzfPrompt.exceptions import Aborted, Quitting
+from fzf_primitives.core.FzfPrompt.exceptions import Aborted
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
 from tests.LoggingSetup import LoggingSetup
 from tests.Recording import Recording
@@ -66,10 +66,9 @@ def test_general():
 
 @logging_setup.attach
 def test_quit():
-    with pytest.raises(Quitting):
-        prompt = prompt_builder()
-        prompt.mod.automate("ctrl-q")
-        prompt.run()
+    prompt = prompt_builder()
+    prompt.mod.automate("ctrl-q")
+    assert prompt.run().end_status == "quit"
 
 
 @logging_setup.attach

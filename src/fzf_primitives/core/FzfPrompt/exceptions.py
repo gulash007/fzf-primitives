@@ -9,7 +9,3 @@ class PromptEnd(Exception):
 
 class Aborted(PromptEnd):
     pass
-
-
-class Quitting(PromptEnd):
-    pass
