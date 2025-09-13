@@ -16,6 +16,7 @@ from .request import ServerEndpoint
 type ServerCallFunctionGeneric[T, S, R] = Callable[Concatenate[PromptData[T, S], ...], R]
 type ServerCallFunction[T, S] = ServerCallFunctionGeneric[T, S, Any]
 SOCKET_NUMBER_ENV_VAR = "FZF_PRIMITIVES_SOCKET_NUMBER"
+SOCKET_PATH_ENV_VAR = "FZF_PRIMITIVES_UNIX_SOCKET_PATH"
 MAKE_SERVER_CALL_ENV_VAR_NAME = "FZF_PRIMITIVES_REQUEST_CREATING_SCRIPT"
 
 
@@ -48,7 +49,7 @@ class ServerCall[T, S](ShellCommand):
     def _create_command(server_endpoint: ServerEndpoint) -> str:
         parameters = ServerCall._parse_function_parameters(server_endpoint.function)
         command = [
-            f'"${MAKE_SERVER_CALL_ENV_VAR_NAME}" "${SOCKET_NUMBER_ENV_VAR}" {shlex.quote(server_endpoint.id)}',
+            f'"${MAKE_SERVER_CALL_ENV_VAR_NAME}" "${SOCKET_PATH_ENV_VAR}" {shlex.quote(server_endpoint.id)}',
             '{q} {n} $FZF_SELECT_COUNT "{+n}"',  # making use of fzf placeholders and env vars
         ]
         for parameter in parameters:

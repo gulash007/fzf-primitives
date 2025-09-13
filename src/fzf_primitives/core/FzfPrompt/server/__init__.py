@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import socket
+import tempfile
 import traceback
+from pathlib import Path
 from threading import Event, Thread
 from typing import TYPE_CHECKING
 
@@ -11,9 +13,11 @@ if TYPE_CHECKING:
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
 from ..options import EndStatus
+from . import make_server_call
 from .actions import (
     MAKE_SERVER_CALL_ENV_VAR_NAME,
     SOCKET_NUMBER_ENV_VAR,
+    SOCKET_PATH_ENV_VAR,
     CommandOutput,
     PostProcessor,
     PromptEndingAction,
@@ -21,7 +25,6 @@ from .actions import (
     ServerCallFunction,
     ServerCallFunctionGeneric,
 )
-from . import make_server_call
 from .request import PromptState, Request, ServerEndpoint
 
 __all__ = [
@@ -48,33 +51,48 @@ class Server[T, S](Thread, LoggedComponent):
         self.setup_finished = Event()
         self.should_close = Event()
         self.endpoints: dict[str, ServerEndpoint] = {}
-        self.port: int
+        self.socket_path: Path
 
     # TODO: Use automator to end running prompt and propagate errors
     def run(self):
         try:
-            # TODO: Use socket.AF_UNIX
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-                server_socket.bind(("localhost", 0))
-                socket_specs = server_socket.getsockname()
-                self.port = socket_specs[1]
-                self.prompt_data.run_vars["env"][SOCKET_NUMBER_ENV_VAR] = str(self.port)
+            socket_dir = Path(tempfile.gettempdir()) / "app_sockets"
+            socket_dir.mkdir(exist_ok=True)
+            socket_path = socket_dir / f"server_{id(self)}.sock"
+
+            # Clean up any existing socket file
+            try:
+                socket_path.unlink()
+            except FileNotFoundError:
+                pass
+
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server_socket:
+                server_socket.bind(str(socket_path))
+
+                self.socket_path = socket_path  # TODO: Use it?
+                self.prompt_data.run_vars["env"][SOCKET_PATH_ENV_VAR] = str(socket_path)
                 self.prompt_data.run_vars["env"][MAKE_SERVER_CALL_ENV_VAR_NAME] = make_server_call.__file__
 
                 server_socket.listen()
-                self.logger.info(f"Server listening on {socket_specs}...", trace_point="server_listening")
-
+                self.logger.info(f"Server listening on Unix socket: {socket_path}")
                 self.setup_finished.set()
                 server_socket.settimeout(0.05)
-                while True:
+                try:
+                    while True:
+                        try:
+                            client_socket, addr = server_socket.accept()
+                        except socket.timeout:
+                            if self.should_close.is_set():
+                                self.logger.info("Server closing")
+                                return
+                            continue
+                        self._handle_request(client_socket, self.prompt_data)
+                finally:
+                    # Clean up socket file when done
                     try:
-                        client_socket, addr = server_socket.accept()
-                    except TimeoutError:
-                        if self.should_close.is_set():
-                            self.logger.info("Server closing", trace_point="server_closing")
-                            break
-                        continue
-                    self._handle_request(client_socket, self.prompt_data)
+                        socket_path.unlink()
+                    except FileNotFoundError:
+                        pass
         except Exception as e:
             self.logger.exception(e)
             raise

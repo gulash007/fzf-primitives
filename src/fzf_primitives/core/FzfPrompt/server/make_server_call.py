@@ -14,24 +14,22 @@ class PromptState(TypedDict):
     target_indices: list[int]
 
 
-def make_server_call(port: int, endpoint_id: str, prompt_state: PromptState | None, /, kwargs):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-        client.connect(("localhost", port))
+def make_server_call(socket_path: str, endpoint_id: str, prompt_state: PromptState | None, /, kwargs):
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+        client.connect(socket_path)
         try:
             data = {"endpoint_id": endpoint_id, "prompt_state": prompt_state, "kwargs": kwargs}
             payload = json.dumps(data).encode("utf-8")
         except Exception as err:
             payload = f"{sys.argv}\n{err}".encode("utf-8")
-
         client.send(len(payload).to_bytes(4))
         client.sendall(payload)
-
         response_length = int.from_bytes(client.recv(4))
         return client.recv(response_length, socket.MSG_WAITALL).decode("utf-8")
 
 
 def parse_args():
-    port = int(sys.argv[1])
+    socket_path = sys.argv[1]
     endpoint_id = sys.argv[2]
     query = sys.argv[3]  # {q} fzf placeholder
     n_placeholder = sys.argv[4]  # {n} fzf placeholder
@@ -44,7 +42,7 @@ def parse_args():
         "target_indices": nplus_placeholder_indices,  # selected indices or current index if nothing selected
     }
     kwargs = dict(zip(sys.argv[7::2], sys.argv[8::2]))
-    return port, endpoint_id, prompt_state, kwargs
+    return socket_path, endpoint_id, prompt_state, kwargs
 
 
 if __name__ == "__main__":
