@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import itertools
-import json
 from pathlib import Path
 from typing import Iterable, Unpack
 
-from ..FzfPrompt import (
+from ...FzfPrompt import (
     Binding,
     ConflictResolution,
     Preview,
@@ -16,9 +15,9 @@ from ..FzfPrompt import (
     PromptData,
     ServerCall,
 )
-from ..FzfPrompt.action_menu.transform import Transform
-from ..FzfPrompt.options import Hotkey, RelativeWindowSize, Situation, WindowPosition
-from ..FzfPrompt.previewer.Preview import (
+from ...FzfPrompt.action_menu.transform import Transform
+from ...FzfPrompt.options import Hotkey, RelativeWindowSize, Situation, WindowPosition
+from ...FzfPrompt.previewer.Preview import (
     DEFAULT_BEFORE_CHANGE_DO,
     DEFAULT_LABEL,
     DEFAULT_LINE_WRAP,
@@ -28,34 +27,11 @@ from ..FzfPrompt.previewer.Preview import (
     DEFAULT_WINDOW_SIZE,
     PreviewStyleMutationArgs,
 )
-from ..FzfPrompt.shell import shell_command
-from ..monitoring import LoggedComponent
-from .event_adder import attach_hotkey_adder, attach_situation_adder
-from .on_event import OnEventBase
-
-
-def preview_basic(prompt_data: PromptData):
-    return json.dumps(
-        {
-            "query": prompt_data.current_state.query,
-            "current_index": prompt_data.current_state.current_index,
-            "current": prompt_data.current,
-            "selected_indices": prompt_data.current_state.selected_indices,
-            "selections": prompt_data.selections,
-            "target_indices": prompt_data.current_state.target_indices,
-            "targets": prompt_data.targets,
-        },
-        indent=4,
-        default=str,
-    )
-
-
-def get_fzf_json(prompt_data: PromptData, FZF_PORT: str):
-    import json
-
-    import requests
-
-    return json.dumps(requests.get(f"http://127.0.0.1:{FZF_PORT}").json(), indent=2)
+from ...FzfPrompt.shell import shell_command
+from ...monitoring import LoggedComponent
+from ..event_adder import attach_hotkey_adder, attach_situation_adder
+from ..on_event import OnEventBase
+from .presets import get_fzf_env_vars, get_fzf_json, preview_basic
 
 
 class FileViewer:
@@ -138,6 +114,7 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
     # presets
     basic = preview_preset("basic", output_generator=preview_basic, label="PromptData state")
     fzf_json = preview_preset("fzf json", output_generator=get_fzf_json, label="fzf JSON")
+    fzf_env_vars = preview_preset("fzf env vars", output_generator=get_fzf_env_vars, label="fzf env vars")
 
     def file(
         self,
