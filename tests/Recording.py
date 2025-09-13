@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any, Self
 
+from fzf_primitives.config import Config
 from fzf_primitives.core.monitoring import Logger
 from tests.SerializedLoguruEntry import SerializedLoguruEntry
 

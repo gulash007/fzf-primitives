@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from enum import Enum, auto
 
 import pytest
@@ -8,11 +7,14 @@ import pytest
 from fzf_primitives.config import Config
 from fzf_primitives.core import Prompt
 from fzf_primitives.core.FzfPrompt.exceptions import Aborted, Quitting
-from fzf_primitives.core.monitoring import Logger
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
+from tests.LoggingSetup import LoggingSetup
 from tests.Recording import Recording
 
 # TODO: test resolved options (need to control for variables)
+
+
+logging_setup = LoggingSetup(INTERNAL_LOG_DIR / "test_prompt_automated")
 
 
 class DayOfTheWeek(Enum):
@@ -31,6 +33,7 @@ tuesday = DayOfTheWeek(2)
 TEST_CHOICES = list(DayOfTheWeek)
 
 
+@logging_setup.attach
 def prompt_builder():
     prompt = Prompt(TEST_CHOICES, lambda day: day.name)
     prompt.mod.options.multiselect.listen()
@@ -43,14 +46,8 @@ def prompt_builder():
 
 
 # ❗ Checking events might be non-deterministic. Try running this test multiple times
+@logging_setup.attach
 def test_general():
-    Config.logging_enabled = True
-    Logger.remove_preset_handlers()
-    LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath(
-        f"TestPromptAutomated/{datetime.now().isoformat(timespec='milliseconds')}.log"
-    )
-    Logger.add_file_handler(LOG_FILE_PATH, serialize=True)
-
     Recording.setup("TestPromptAutomated")
 
     prompt = prompt_builder()
@@ -67,6 +64,7 @@ def test_general():
     assert expected.compare(recording)
 
 
+@logging_setup.attach
 def test_quit():
     with pytest.raises(Quitting):
         prompt = prompt_builder()
@@ -74,6 +72,7 @@ def test_quit():
         prompt.run()
 
 
+@logging_setup.attach
 def test_abort():
     with pytest.raises(Aborted):
         prompt = prompt_builder()

@@ -1,7 +1,12 @@
 from fzf_primitives import Prompt
 from fzf_primitives.actions import ParametrizedAction
+from fzf_primitives.core.monitoring import INTERNAL_LOG_DIR
+from tests.LoggingSetup import LoggingSetup
+
+logging_setup = LoggingSetup(INTERNAL_LOG_DIR / "test_on_event_presets")
 
 
+@logging_setup.attach
 def test_clear_query_and_focus_line():
     prompt = Prompt([1, 2, 3, 4, 5, 6, 7])
 
@@ -16,6 +21,7 @@ def test_clear_query_and_focus_line():
     assert result.current == 3
 
 
+@logging_setup.attach
 def test_select_by():
     prompt = Prompt([1, 2, 3, 4, 5, 6, 7])
 

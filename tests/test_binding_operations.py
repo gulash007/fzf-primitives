@@ -21,6 +21,9 @@ def test_names_after_binding_addition(self: Binding, other: Binding, expected_na
     assert result.name == expected_name
 
 
+# ruff: noqa: SLF001
+
+
 def test_binding_addition_associative():
     binding12_3 = (binding1 + binding2) + binding3
     binding1_23 = binding1 + (binding2 + binding3)

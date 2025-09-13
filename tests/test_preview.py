@@ -5,8 +5,10 @@ from fzf_primitives.config import Config
 from fzf_primitives.core.FzfPrompt.previewer import Preview
 from fzf_primitives.core.FzfPrompt.server import CommandOutput
 from fzf_primitives.core.mods.preview_mod import FileViewer
-from fzf_primitives.core.monitoring import Logger
-from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
+from fzf_primitives.core.monitoring import INTERNAL_LOG_DIR
+from tests.LoggingSetup import LoggingSetup
+
+logging_setup = LoggingSetup(INTERNAL_LOG_DIR / "test_preview")
 
 
 class record_preview_name:
@@ -21,6 +23,7 @@ class record_preview_name:
         return f"{self.__class__.__name__}({self.name})"
 
 
+@logging_setup.attach
 def test_main_preview_without_event():
     prompt = Prompt(obj=[])
     name = "Check success"
@@ -31,6 +34,7 @@ def test_main_preview_without_event():
     assert prompt.obj == [name]
 
 
+@logging_setup.attach
 def test_no_explicit_main_preview_having_first_added_as_main():
     prompt = Prompt(obj=[])
     prompt.mod.preview("ctrl-x").custom("first", record_preview_name("first"))
@@ -40,6 +44,7 @@ def test_no_explicit_main_preview_having_first_added_as_main():
     assert prompt.obj == ["first"]
 
 
+@logging_setup.attach
 def test_preview_with_preview_function_that_has_command_output():
     prompt = Prompt(obj="")
     command = "printf 'hello\\nworld'"
@@ -54,6 +59,7 @@ def test_preview_with_preview_function_that_has_command_output():
     assert prompt.current_preview == "hello\nworld"
 
 
+@logging_setup.attach
 def test_storing_preview_output():
     prompt = Prompt(obj="")
     command = "printf 'hello\\nworld'"
@@ -65,12 +71,14 @@ def test_storing_preview_output():
 
 
 # Modding
+@logging_setup.attach
 def get_file_preview_prompt():
     prompt = Prompt([__file__], obj=[])
     prompt.mod.preview().file()
     return prompt
 
 
+@logging_setup.attach
 def test_file_preview():
     prompt = get_file_preview_prompt()
     prompt.mod.automate(Config.default_accept_hotkey)
@@ -78,6 +86,7 @@ def test_file_preview():
     assert prompt.current_preview == FileViewer().view(__file__)
 
 
+@logging_setup.attach
 def get_cycle_previews_prompt():
     prompt = Prompt(obj=[])
     prompt.mod.preview("ctrl-y").cycle_previews(
@@ -90,6 +99,7 @@ def get_cycle_previews_prompt():
     return prompt
 
 
+@logging_setup.attach
 def test_cycle_previews():
     prompt = get_cycle_previews_prompt()
 
@@ -104,6 +114,7 @@ def test_cycle_previews():
     assert prompt.obj == ["first", "second", "first", "third", "first", "second"]
 
 
+@logging_setup.attach
 def get_cycle_mutators_prompt():
     prompt = Prompt(obj=[])
     prompt.mod.preview("ctrl-x").custom("third", record_preview_name("third"))
@@ -121,6 +132,7 @@ def get_cycle_mutators_prompt():
     return prompt
 
 
+@logging_setup.attach
 def test_cycle_mutators():
     prompt = get_cycle_mutators_prompt()
 
@@ -134,11 +146,5 @@ def test_cycle_mutators():
     assert prompt.obj == ["third", "first", "second", "third", "second"]
 
 
-LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath("test_preview.log")
 if __name__ == "__main__":
-    Config.logging_enabled = True
-    logger = Logger.get_logger()
-    Logger.remove_preset_handlers()
-    Logger.add_file_handler(LOG_FILE_PATH, "TRACE")
-    prompt = get_cycle_previews_prompt()
-    prompt.mod.on_hotkey().CTRL_L.view_logs_in_terminal(LOG_FILE_PATH)
+    pass

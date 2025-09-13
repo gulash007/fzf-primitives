@@ -1,12 +1,17 @@
 from fzf_primitives import Prompt, PromptData
 from fzf_primitives.actions import MovePointer
 from fzf_primitives.config import Config
+from fzf_primitives.core.monitoring import INTERNAL_LOG_DIR
+from tests.LoggingSetup import LoggingSetup
+
+logging_setup = LoggingSetup(INTERNAL_LOG_DIR / "test_reloading_entries")
 
 
 def add_number(prompt_data: PromptData):
     return prompt_data.entries + [prompt_data.entries[-1] + 1]
 
 
+@logging_setup.attach
 def test_reloading_entries():
     prompt = get_prompt_for_reloading_entries()
 
@@ -21,6 +26,7 @@ def test_reloading_entries():
     assert result.current == 4
 
 
+@logging_setup.attach
 def get_prompt_for_reloading_entries():
     prompt = Prompt([0, 1, 2, 3])
     prompt.mod.on_hotkey().CTRL_R.reload_entries(add_number)
@@ -32,6 +38,7 @@ def get_prompt_for_reloading_entries():
 INITIAL_PEOPLE = [{"name": "Alice", "id": 0}, {"name": "Bob", "id": 1}, {"name": "Charlie", "id": 2}]
 
 
+@logging_setup.attach
 def test_remembering_selections_after_reload():
     prompt = get_prompt_for_remembering_selections_after_reload()
 
@@ -47,6 +54,7 @@ def test_remembering_selections_after_reload():
     assert result.selections == [INITIAL_PEOPLE[1], INITIAL_PEOPLE[2]]
 
 
+@logging_setup.attach
 def get_prompt_for_remembering_selections_after_reload():
     prompt = Prompt(INITIAL_PEOPLE)
     prompt.mod.on_hotkey().CTRL_6.reload_entries(
