@@ -103,9 +103,13 @@ class Server[T, S](Thread, LoggedComponent):
                 self.logger.error(f"Available server calls:\n{list(self.endpoints.keys())}")
         finally:
             response_bytes = str(response).encode("utf-8")
-            client_socket.send(len(response_bytes).to_bytes(4))
-            client_socket.sendall(response_bytes)
-            client_socket.close()
+            try:
+                client_socket.send(len(response_bytes).to_bytes(4))
+                client_socket.sendall(response_bytes)
+            except Exception as e:
+                self.logger.exception(f"Error sending response: {e}")
+            finally:
+                client_socket.close()
 
     def add_endpoints(self, binding: Binding):
         for action in binding.actions:
