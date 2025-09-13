@@ -212,16 +212,15 @@ class OnEvent[T, S](OnEventBase[T, S]):
     def jump_accept(self):
         return self.run("jump and accept", "jump-accept")
 
-    @property
-    def clear_and_refocus(self):
+    def clear_and_refocus(self, offset_middle: bool = True) -> Self:
         """clear query and move pointer to current entry"""
 
         def add_conditional_result_action(pd: PromptData[T, S]):
-            def refocus_conditionally(pd: PromptData[T, S]):
+            def refocus_conditionally(pd: PromptData[T, S]) -> list[Action]:
                 if pd.run_vars.pop("running_clear_and_refocus", None):
-                    saved_index = pd.run_vars.pop("saved_current_index", None)
-                    if saved_index is not None:
-                        return [MovePointer(saved_index)]
+                    i = pd.run_vars.pop("saved_current_index", None)
+                    if i is not None:
+                        return [MovePointer(i), "offset-middle"] if offset_middle else [MovePointer(i)]
                 return []
 
             pd.action_menu.add(
