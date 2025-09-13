@@ -233,7 +233,7 @@ class OnEvent[T, S](OnEventBase[T, S]):
         self._additional_mods.append(add_conditional_result_action)
 
         def save_current_index(pd: PromptData[T, S]):
-            if pd.current_index is not None:
+            if pd.current_index is not None and pd.query != "":
                 pd.run_vars["saved_current_index"] = pd.current_index
                 pd.run_vars["running_clear_and_refocus"] = True
 
