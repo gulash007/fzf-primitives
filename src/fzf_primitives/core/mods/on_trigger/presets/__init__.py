@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import shlex
-import subprocess
 import time
 from threading import Thread
 from typing import Callable, Literal
@@ -9,6 +7,7 @@ from typing import Callable, Literal
 import pyperclip
 
 from ....FzfPrompt import Action, Binding, PromptData
+from ....FzfPrompt.action_menu import ParametrizedAction
 from ....monitoring import LoggedComponent
 from .actions import EntriesGetter, ReloadEntries, SelectBy, ShowInPreview
 
@@ -66,13 +65,13 @@ class Repeater[T, S]:
     def __call__(self, prompt_data: PromptData, FZF_PORT: str):
         prompt_data.server.add_endpoints(Binding("", *self.actions))
         if not self.thread:
-            self.thread = self.create_automating_thread(prompt_data, FZF_PORT)
+            self.thread = self.create_automating_thread(prompt_data, int(FZF_PORT))
             self.thread.start()
         else:
             self.thread.should_stop = True
             self.thread = None
 
-    def create_automating_thread(self, prompt_data: PromptData[T, S], port: str):
+    def create_automating_thread(self, prompt_data: PromptData[T, S], port: int):
         return AutomatingThread(
             prompt_data, port, *self.actions, repeat_interval=self.repeat_interval, repeat_when=self.repeat_when
         )
@@ -85,7 +84,7 @@ class AutomatingThread[T, S](Thread, LoggedComponent):
     def __init__(
         self,
         prompt_data: PromptData[T, S],
-        port: str,
+        port: int,
         *actions: Action,
         repeat_interval: float = 0.5,
         repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
@@ -101,23 +100,14 @@ class AutomatingThread[T, S](Thread, LoggedComponent):
         self.repeat_when = repeat_when
 
     def run(self) -> None:
-        subprocess.Popen(["curl", "-XPOST", f"localhost:{self.port}", "-d", "change-prompt(Auto-updating...> )"])
+        self.prompt_data.controller.execute(
+            self.port, Binding("", ParametrizedAction('echo "Auto-updating...$FZF_PROMPT"', "transform-prompt"))
+        )
         while True:
             try:
                 if not self.repeat_when(self.prompt_data):
                     continue
-                subprocess.Popen(
-                    shlex.join(
-                        [
-                            "curl",
-                            "-XPOST",
-                            f"localhost:{self.port}",
-                            "-d",
-                            Binding("", *self.actions).action_string(),
-                        ]
-                    ),
-                    shell=True,  # ❗ required for getting FZF_PORT
-                )
+                self.prompt_data.controller.execute(self.port, Binding("", *self.actions))
             except Exception as err:
                 self.logger.exception(err)
                 self.should_stop = True
@@ -125,6 +115,9 @@ class AutomatingThread[T, S](Thread, LoggedComponent):
             finally:
                 if self.should_stop:
                     # TODO: reset prompt back to previous
-                    subprocess.Popen(["curl", "-XPOST", f"localhost:{self.port}", "-d", "change-prompt(> )"])
+                    self.prompt_data.controller.execute(
+                        self.port,
+                        Binding("", ParametrizedAction('echo "${FZF_PROMPT#Auto-updating...}"', "transform-prompt")),
+                    )
                     break
                 time.sleep(self.repeat_interval)
