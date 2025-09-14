@@ -5,7 +5,7 @@ from stat import S_ISFIFO
 import pyperclip
 import typer
 
-from ..core.FzfPrompt import PromptData, run_fzf_prompt
+from ..core.FzfPrompt import PromptData, execute_fzf
 from ..core.FzfPrompt.options import Options
 
 app = typer.Typer()
@@ -13,7 +13,7 @@ app = typer.Typer()
 
 __all__ = ["run", "read_entries"]
 
-run = run_fzf_prompt
+run = execute_fzf
 
 
 # TODO: cache read entries for multiple rounds of selection

@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Callable, Iterable
 
 from ..config import Config
-from .FzfPrompt import PromptData, Result, run_fzf_prompt
+from .FzfPrompt import PromptData, Result, execute_fzf
 from .FzfPrompt.decorators import single_use_method
 from .mods import Mod
 
@@ -51,4 +51,4 @@ class Prompt[T, S]:
             # Ensure that the preview is refreshed with new lines
             self.mod.on_event(on_conflict="prepend").RESULT.refresh_preview
         self.mod.apply(self._prompt_data)
-        return run_fzf_prompt(self._prompt_data, executable_path=executable_path, entries_stream=self._entries_stream)
+        return execute_fzf(self._prompt_data, executable_path=executable_path, entries_stream=self._entries_stream)
