@@ -14,14 +14,21 @@ class LoggingSetup:
     def __init__(self, log_subdir: Path):
         self.__log_file_path = log_subdir / f"{datetime.now().isoformat(timespec='milliseconds')}.log"
         self.__logging_set_up = False
+        self.handler_id: int
 
     def attach(self, func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
         def with_logging_set_up(*args: P.args, **kwargs: P.kwargs) -> R:
             if Config.logging_enabled and not self.__logging_set_up:
                 Logger.remove_preset_handlers()
-                Logger.add_file_handler(self.__log_file_path, serialize=True)
+                self.handler_id = Logger.add_file_handler(self.__log_file_path, serialize=True)
                 self.__logging_set_up = True
+                try:
+                    return func(*args, **kwargs)
+                finally:
+                    Logger.remove(self.handler_id)
+                    self.__logging_set_up = False
+
             return func(*args, **kwargs)
 
         return with_logging_set_up

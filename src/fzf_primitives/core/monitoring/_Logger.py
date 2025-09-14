@@ -6,6 +6,7 @@ from typing import Literal
 
 import loguru
 from loguru import logger
+from loguru._handler import Handler
 
 from .constants import LOG_FORMATS, MAIN_LOG_FILE_PATH, LogFormat
 
@@ -48,6 +49,10 @@ def remove_preset_handlers(*handler_names: HandlerName):
 
 def remove(handler_id: int | None = None) -> None:
     logger.remove(handler_id)
+
+
+def handlers() -> dict[int, Handler]:
+    return getattr(logger, "_core").handlers
 
 
 def get_logger() -> loguru.Logger:

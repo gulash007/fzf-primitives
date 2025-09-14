@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING
 from ... import config
 
 if TYPE_CHECKING:
-    from ._Logger import add_file_handler, get_logger, remove, remove_preset_handlers
+    from ._Logger import add_file_handler, get_logger, handlers, remove, remove_preset_handlers
 
-__all__ = ["get_logger", "remove_preset_handlers", "remove", "add_file_handler"]
+__all__ = ["add_file_handler", "get_logger", "handlers", "remove_preset_handlers", "remove"]
 
 
 _dynamic_imports = {
@@ -13,6 +13,7 @@ _dynamic_imports = {
     "remove": (__package__, "._Logger"),
     "remove_preset_handlers": (__package__, "._Logger"),
     "add_file_handler": (__package__, "._Logger"),
+    "handlers": (__package__, "._Logger"),
 }
 
 
