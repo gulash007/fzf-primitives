@@ -58,6 +58,7 @@ class Recording:
 
     @staticmethod
     def setup(name: str) -> None:
+        Config.logging_enabled = True
         Logger.add_file_handler(
             Path(__file__).parent.joinpath("recordings", f"{name}.log"),
             "TRACE",
