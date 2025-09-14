@@ -25,7 +25,7 @@ class Automator(Thread, LoggedComponent):
         self._bindings: list[am.Binding] = []
         self._binding_executed = Event()
         self.move_to_next_binding_server_call = ServerCall(self._move_to_next_binding)
-        super().__init__()
+        super().__init__(daemon=True)
 
     @property
     def port(self) -> int:
@@ -40,7 +40,6 @@ class Automator(Thread, LoggedComponent):
                 self.execute_binding(binding_to_automate)
         except Exception as e:
             self.logger.exception(e)
-            raise
 
     @single_use_method
     def prepare(self):
