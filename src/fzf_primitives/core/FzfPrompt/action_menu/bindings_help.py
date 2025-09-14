@@ -7,4 +7,4 @@ if TYPE_CHECKING:
 
 
 def get_bindings_help(action_menu: ActionMenu) -> str:
-    return "\n".join(f"{event}\t{binding.name}" for event, binding in action_menu.bindings.items())
+    return "\n".join(f"{trigger}\t{binding.name}" for trigger, binding in action_menu.bindings.items())

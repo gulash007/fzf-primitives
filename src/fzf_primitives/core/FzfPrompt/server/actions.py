@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
 from ..action_menu.parametrized_actions import ShellCommand
-from ..options import EndStatus, Hotkey, ShellCommandActionType, Situation
+from ..options import EndStatus, Hotkey, ShellCommandActionType, Event
 from .request import ServerEndpoint
 
 # means it requires first parameter to be of type PromptData but other parameters can be anything
@@ -81,7 +81,7 @@ class PromptEndingAction[T, S](ServerCall, LoggedComponent):
     def __init__(
         self,
         end_status: EndStatus,
-        event: Hotkey | Situation,
+        trigger: Hotkey | Event,
         post_processor: PostProcessor[T, S] | None = None,
         *,
         allow_empty: bool = True,
@@ -89,18 +89,18 @@ class PromptEndingAction[T, S](ServerCall, LoggedComponent):
         LoggedComponent.__init__(self)
         self.end_status: EndStatus = end_status
         self.post_processor = post_processor
-        self.event: Hotkey | Situation = event
+        self.trigger: Hotkey | Event = trigger
         self.allow_empty = allow_empty
         super().__init__(self._pipe_results, command_type="execute-silent")
 
     def _pipe_results(self, prompt_data: PromptData[T, S]):
         if not self.allow_empty and not prompt_data.targets:
             return
-        prompt_data.finish(self.event, self.end_status)
+        prompt_data.finish(self.trigger, self.end_status)
         self.logger.trace("Piping results", trace_point="piping_results", result=prompt_data.result.to_dict())
 
     def __str__(self) -> str:
-        return f"[PEA]({self.event},{self.end_status},{self._get_function_name(self.post_processor) if self.post_processor else None})"
+        return f"[PEA]({self.trigger},{self.end_status},{self._get_function_name(self.post_processor) if self.post_processor else None})"
 
     @override
     def action_string(self) -> str:

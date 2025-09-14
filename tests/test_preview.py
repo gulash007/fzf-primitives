@@ -24,7 +24,7 @@ class record_preview_name:
 
 
 @logging_setup.attach
-def test_main_preview_without_event():
+def test_main_preview_without_trigger():
     prompt = Prompt(obj=[])
     name = "Check success"
     prompt.mod.preview().custom(name, record_preview_name(name))

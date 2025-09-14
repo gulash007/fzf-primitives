@@ -1,6 +1,6 @@
 import os
 
-from .core.FzfPrompt.options.events import Hotkey
+from .core.FzfPrompt.options.triggers import Hotkey
 
 ENV_VAR_FOR_LOGGING = "FZF_PRIMITIVES_ENABLE_INTERNAL_LOGGING"
 

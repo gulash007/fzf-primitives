@@ -16,7 +16,7 @@ from ...FzfPrompt import (
     ServerCall,
 )
 from ...FzfPrompt.action_menu.transform import Transform
-from ...FzfPrompt.options import Hotkey, RelativeWindowSize, Situation, WindowPosition
+from ...FzfPrompt.options import Hotkey, RelativeWindowSize, Event, WindowPosition
 from ...FzfPrompt.previewer.Preview import (
     DEFAULT_BEFORE_CHANGE_DO,
     DEFAULT_LABEL,
@@ -29,8 +29,8 @@ from ...FzfPrompt.previewer.Preview import (
 )
 from ...FzfPrompt.shell import shell_command
 from ...monitoring import LoggedComponent
-from ..event_adder import attach_hotkey_adder, attach_situation_adder
-from ..on_event import OnEventBase
+from ..on_trigger import OnTriggerBase
+from ..trigger_adder import attach_hotkey_adder, attach_event_adder
 from .presets import get_fzf_env_vars, get_fzf_json, preview_basic
 
 
@@ -64,11 +64,11 @@ class preview_preset:
         return obj.custom(self._name, **self._kwargs)
 
 
-class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
+class PreviewMod[T, S](OnTriggerBase[T, S], LoggedComponent):
     def __init__(
-        self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error", main: bool = False
+        self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error", main: bool = False
     ):
-        super().__init__(*events, on_conflict=on_conflict)
+        super().__init__(*triggers, on_conflict=on_conflict)
         LoggedComponent.__init__(self)
         self._preview: Preview[T, S]
         self._specific_preview_mod: SpecificPreviewMod[T, S] | None = None
@@ -81,8 +81,8 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
             self.logger.warning("PreviewMod has no effect as its Preview has not been set")
             return
         prompt_data.previewer.add(preview, main=self._main)
-        for event in self._events:
-            prompt_data.action_menu.add(event, preview.preview_change_binding, on_conflict=self._on_conflict)
+        for trigger in self._triggers:
+            prompt_data.action_menu.add(trigger, preview.preview_change_binding, on_conflict=self._on_conflict)
         if self._specific_preview_mod:
             self._specific_preview_mod(prompt_data)
 
@@ -136,14 +136,14 @@ class PreviewMod[T, S](OnEventBase[T, S], LoggedComponent):
     def cycle_previews(self, previews: list[Preview[T, S]], name: str = ""):
         """If you don't need to separate Preview style specs (size, label, line wrap,…) for each preview, you can use cycle_functions"""
         if not name:
-            name = f'[{"|".join(preview.name for preview in previews)}]'
+            name = f"[{'|'.join(preview.name for preview in previews)}]"
         self._preview = CyclicalPreview(name, previews)
 
 
 # HACK: ❗This object pretends to be a preview but when transform is invoked it injects its previews cyclically
 # into Previewer as current previews (it's never itself a current preview).
 class CyclicalPreview[T, S](Preview[T, S], LoggedComponent):
-    def __init__(self, name: str, previews: list[Preview[T, S]], event: Hotkey | Situation | None = None):
+    def __init__(self, name: str, previews: list[Preview[T, S]], trigger: Hotkey | Event | None = None):
         LoggedComponent.__init__(self)
         self._previews = itertools.cycle(previews)
         initial_preview = next(self._previews)
@@ -167,7 +167,7 @@ class CyclicalPreview[T, S](Preview[T, S], LoggedComponent):
 class SpecificPreviewMod[T, S]:
     def __init__(self, preview: Preview[T, S]):
         self._preview = preview
-        self._mods: list[SpecificPreviewOnEvent] = []
+        self._mods: list[SpecificPreviewOnTrigger] = []
 
     def __call__(self, prompt_data: PromptData[T, S]):
         try:
@@ -182,26 +182,26 @@ class SpecificPreviewMod[T, S]:
     @attach_hotkey_adder
     def on_hotkey(
         self, *hotkeys: Hotkey, on_conflict: ConflictResolution = "raise error"
-    ) -> SpecificPreviewOnEvent[T, S]:
-        return self.on_event(*hotkeys, on_conflict=on_conflict)
+    ) -> SpecificPreviewOnTrigger[T, S]:
+        return self.on_trigger(*hotkeys, on_conflict=on_conflict)
 
-    @attach_situation_adder
-    def on_situation(
-        self, *situations: Situation, on_conflict: ConflictResolution = "raise error"
-    ) -> SpecificPreviewOnEvent[T, S]:
-        return self.on_event(*situations, on_conflict=on_conflict)
+    @attach_event_adder
+    def on_event(
+        self, *events: Event, on_conflict: ConflictResolution = "raise error"
+    ) -> SpecificPreviewOnTrigger[T, S]:
+        return self.on_trigger(*events, on_conflict=on_conflict)
 
-    def on_event(self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error"):
-        on_event_mod = SpecificPreviewOnEvent[T, S](*events, preview=self._preview, on_conflict=on_conflict)
-        self._mods.append(on_event_mod)
-        return on_event_mod
+    def on_trigger(self, *trigger: Hotkey | Event, on_conflict: ConflictResolution = "raise error"):
+        on_trigger_mod = SpecificPreviewOnTrigger[T, S](*trigger, preview=self._preview, on_conflict=on_conflict)
+        self._mods.append(on_trigger_mod)
+        return on_trigger_mod
 
 
-class SpecificPreviewOnEvent[T, S](OnEventBase[T, S]):
+class SpecificPreviewOnTrigger[T, S](OnTriggerBase[T, S]):
     def __init__(
-        self, *events: Hotkey | Situation, preview: Preview[T, S], on_conflict: ConflictResolution = "raise error"
+        self, *triggers: Hotkey | Event, preview: Preview[T, S], on_conflict: ConflictResolution = "raise error"
     ):
-        super().__init__(*events, on_conflict=on_conflict)
+        super().__init__(*triggers, on_conflict=on_conflict)
         self._preview = preview
         self._initial_mutation = lambda pd: None
 

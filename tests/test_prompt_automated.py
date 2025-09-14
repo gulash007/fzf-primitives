@@ -45,7 +45,7 @@ def prompt_builder():
     return prompt
 
 
-# ❗ Checking events might be non-deterministic. Try running this test multiple times
+# ❗ Checking recording might be non-deterministic. Try running this test multiple times
 @logging_setup.attach
 def test_general():
     Recording.setup("TestPromptAutomated")

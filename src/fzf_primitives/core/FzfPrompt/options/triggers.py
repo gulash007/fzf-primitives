@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-Situation = Literal[
+Event = Literal[
     "start",
     "load",
     "resize",
@@ -337,3 +337,5 @@ Hotkey = Literal[
     "alt-shift-left",
     "alt-shift-right",
 ]
+
+Trigger = Hotkey | Event

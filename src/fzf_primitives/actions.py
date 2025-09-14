@@ -18,8 +18,8 @@ from .core.FzfPrompt.previewer.actions import (
     SetAsCurrentPreview,
     ShowAndStorePreviewOutput,
 )
-from .core.mods.on_event.presets import ReloadEntries, ShowInPreview
 from .core.FzfPrompt.server import PromptEndingAction, ServerCall
+from .core.mods.on_trigger.presets import ReloadEntries, ShowInPreview
 
 __all__ = [
     "ParametrizedAction",

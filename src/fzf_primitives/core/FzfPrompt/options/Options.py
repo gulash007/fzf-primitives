@@ -4,7 +4,7 @@ import shlex
 from typing import Self
 
 from .actions import BaseAction, ParametrizedActionType, ShellCommandActionType
-from .events import Hotkey, Situation
+from .triggers import Hotkey, Event
 from .values import Border, EndStatus, Layout, RelativeWindowSize, WindowPosition
 
 DEFAULT_OPTS = [
@@ -74,16 +74,16 @@ class Options:
     def preview_label(self, label: str) -> Self:
         return self.add(f"--preview-label={label}")
 
-    def bind(self, event: Hotkey | Situation, action: str) -> Self:
-        return self.add(f"--bind={event}:{action}")
+    def bind(self, trigger: Hotkey | Event, action: str) -> Self:
+        return self.add(f"--bind={trigger}:{action}")
 
-    def bind_base_action(self, event: Hotkey | Situation, action: BaseAction) -> Self:
-        return self.bind(event, action)
+    def bind_base_action(self, trigger: Hotkey | Event, action: BaseAction) -> Self:
+        return self.bind(trigger, action)
 
     def bind_shell_command(
-        self, event: Hotkey | Situation, command: str, command_type: ShellCommandActionType = "execute"
+        self, trigger: Hotkey | Event, command: str, command_type: ShellCommandActionType = "execute"
     ) -> Self:
-        return self.bind(event, f"{command_type}({command})")
+        return self.bind(trigger, f"{command_type}({command})")
 
     def expect(self, *hotkeys: Hotkey) -> Self:
         return self.add(f"--expect={','.join(hotkeys)}")

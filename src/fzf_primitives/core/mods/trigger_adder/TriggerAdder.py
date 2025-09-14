@@ -1,15 +1,15 @@
 from typing import Callable
 
-from ...FzfPrompt.options import Hotkey, Situation
-from ..on_event import OnEventBase
+from ...FzfPrompt.options import Hotkey, Event
+from ..on_trigger import OnTriggerBase
 
 
-class SituationAdder[M: OnEventBase]:
-    def __init__(self, mod_adder: Callable[[Situation], M]):
+class EventAdder[M: OnTriggerBase]:
+    def __init__(self, mod_adder: Callable[[Event], M]):
         self._mod_adder = mod_adder
 
-    def _set_and_return_mod(self, situation: Situation) -> M:
-        return self._mod_adder(situation)
+    def _set_and_return_mod(self, event: Event) -> M:
+        return self._mod_adder(event)
 
     @property
     def START(self) -> M:
@@ -78,7 +78,7 @@ class SituationAdder[M: OnEventBase]:
         return self._set_and_return_mod("click-header")
 
 
-class HotkeyAdder[_M: OnEventBase]:  # _M to prevent conflict with M hotkey
+class HotkeyAdder[_M: OnTriggerBase]:  # _M to prevent conflict with M hotkey
     def __init__(self, mod_adder: Callable[[Hotkey], _M]):
         self._mod_adder = mod_adder
 
@@ -1671,9 +1671,9 @@ class HotkeyAdder[_M: OnEventBase]:  # _M to prevent conflict with M hotkey
         return self._set_and_return_mod("alt-shift-right")
 
 
-class EventAdder[M: OnEventBase](HotkeyAdder[M], SituationAdder[M]):
-    def __init__(self, mod_adder: Callable[[Hotkey | Situation], M]):
+class TriggerAdder[M: OnTriggerBase](HotkeyAdder[M], EventAdder[M]):
+    def __init__(self, mod_adder: Callable[[Hotkey | Event], M]):
         self._mod_adder = mod_adder
 
-    def _set_and_return_mod(self, event: Hotkey | Situation) -> M:
-        return self._mod_adder(event)
+    def _set_and_return_mod(self, case: Hotkey | Event) -> M:
+        return self._mod_adder(case)

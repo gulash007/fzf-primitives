@@ -3,43 +3,44 @@ import pytest
 from fzf_primitives import Prompt
 from fzf_primitives.core.FzfPrompt import BindingConflict
 from fzf_primitives.core.FzfPrompt.options import Options
-from fzf_primitives.core.mods import Mod, OnEvent, PostProcessing, PreviewMod
-from fzf_primitives.core.mods.event_adder.EventAdder import HotkeyAdder, SituationAdder
-from fzf_primitives.core.mods.preview_mod import SpecificPreviewMod, SpecificPreviewOnEvent
+from fzf_primitives.core.mods import Mod, OnTrigger, PostProcessing, PreviewMod
+from fzf_primitives.core.mods.trigger_adder.TriggerAdder import HotkeyAdder, EventAdder
+from fzf_primitives.core.mods.preview_mod import SpecificPreviewMod, SpecificPreviewOnTrigger
 
+# ruff: noqa: SLF001
 
 def test_mod_return_value_types():
     prompt = Prompt()
 
-    # test chaining on_events
-    assert type(prompt.mod.on_hotkey().CTRL_A) == OnEvent
-    assert type(prompt.mod.on_situation().LOAD.run("toggle-all", "toggle-all")) == OnEvent
-    assert type(prompt.mod.on_hotkey().CTRL_O.open_files()) == OnEvent
+    # test chaining on_triggers
+    assert type(prompt.mod.on_hotkey().CTRL_A) is OnTrigger
+    assert type(prompt.mod.on_event().LOAD.run("toggle-all", "toggle-all")) is OnTrigger
+    assert type(prompt.mod.on_hotkey().CTRL_O.open_files()) is OnTrigger
     ## except for .end_prompt
     assert prompt.mod.on_hotkey().CTRL_Q.end_prompt("accept", "accept") is None
     assert prompt.mod.on_hotkey().CTRL_C.accept is None
 
     # test preview modding
-    assert type(prompt.mod.preview()) == PreviewMod
-    assert type(prompt.mod.preview().custom("some preview", "echo hello")) == SpecificPreviewMod
-    assert type(prompt.mod.preview().custom("some preview", "echo hello").on_hotkey("ctrl-c")) == SpecificPreviewOnEvent
+    assert type(prompt.mod.preview()) is PreviewMod
+    assert type(prompt.mod.preview().custom("some preview", "echo hello")) is SpecificPreviewMod
+    assert type(prompt.mod.preview().custom("some preview", "echo hello").on_hotkey("ctrl-c")) is SpecificPreviewOnTrigger
 
     # test chaining post_processing
-    assert type(prompt.mod.lastly) == PostProcessing
-    assert type(prompt.mod.lastly.custom(lambda pd: None)) == PostProcessing
-    assert type(prompt.mod.lastly.raise_aborted_on(lambda pd: True)) == PostProcessing
-    assert type(prompt.mod.lastly.raise_from_aborted_status("Aborted!")) == PostProcessing
+    assert type(prompt.mod.lastly) is PostProcessing
+    assert type(prompt.mod.lastly.custom(lambda pd: None)) is PostProcessing
+    assert type(prompt.mod.lastly.raise_aborted_on(lambda pd: True)) is PostProcessing
+    assert type(prompt.mod.lastly.raise_from_aborted_status("Aborted!")) is PostProcessing
 
     # test chaining options
-    assert type(prompt.mod.options) == Options
-    assert type(prompt.mod.options.multiselect) == Options
-    assert type(prompt.mod.options.multiselect.add_header("")) == Options
+    assert type(prompt.mod.options) is Options
+    assert type(prompt.mod.options.multiselect) is Options
+    assert type(prompt.mod.options.multiselect.add_header("")) is Options
 
     # test mod presets
-    assert type(prompt.mod.default) == Mod
+    assert type(prompt.mod.default) is Mod
 
 
-def test_checking_for_event_conflicts():
+def test_checking_for_trigger_conflicts():
     prompt = Prompt()
     with pytest.raises(BindingConflict):
         prompt.mod.on_hotkey().CTRL_A.accept
@@ -82,18 +83,18 @@ def test_checking_for_event_conflicts():
     )
 
 
-def test_event_adder_usage():
+def test_trigger_adder_usage():
     prompt = Prompt()
 
-    assert type(prompt.mod.on_hotkey()) == HotkeyAdder
-    assert type(prompt.mod.on_situation()) == SituationAdder
-    assert type(prompt.mod.on_hotkey("ctrl-c")) == OnEvent
-    assert type(prompt.mod.on_situation("one")) == OnEvent
+    assert type(prompt.mod.on_hotkey()) is HotkeyAdder
+    assert type(prompt.mod.on_event()) is EventAdder
+    assert type(prompt.mod.on_hotkey("ctrl-c")) is OnTrigger
+    assert type(prompt.mod.on_event("one")) is OnTrigger
 
     # used in PreviewMutationMod
     preview_mod = prompt.mod.preview()
     preview_mutation_mod = preview_mod.custom("some preview", "echo hello")
-    assert type(preview_mutation_mod.on_hotkey()) == HotkeyAdder
-    assert type(preview_mutation_mod.on_situation()) == SituationAdder
-    assert type(preview_mutation_mod.on_hotkey("ctrl-c")) == SpecificPreviewOnEvent
-    assert type(preview_mutation_mod.on_situation("one")) == SpecificPreviewOnEvent
+    assert type(preview_mutation_mod.on_hotkey()) is HotkeyAdder
+    assert type(preview_mutation_mod.on_event()) is EventAdder
+    assert type(preview_mutation_mod.on_hotkey("ctrl-c")) is SpecificPreviewOnTrigger
+    assert type(preview_mutation_mod.on_event("one")) is SpecificPreviewOnTrigger

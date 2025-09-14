@@ -34,7 +34,7 @@ def test_handling_partial_functions():
 
 def test_server_call():
     prompt = Prompt(obj=[])
-    prompt.mod.on_situation("start").run_function("Add 1", lambda pd: pd.obj.append(1)).accept
+    prompt.mod.on_event("start").run_function("Add 1", lambda pd: pd.obj.append(1)).accept
     prompt.run()
     assert prompt.obj[0] == 1
 
@@ -52,6 +52,6 @@ def test_server_call_with_command_output(command: str, expected: str):
     def function_with_command_output(prompt_data: PromptData, command_output: str = CommandOutput(command)):
         prompt_data.obj = command_output
 
-    prompt.mod.on_situation("start").run_function("Hello world", function_with_command_output).accept
+    prompt.mod.on_event("start").run_function("Hello world", function_with_command_output).accept
     prompt.run()
     assert re.match(expected, prompt.obj), f"'{prompt.obj}' doesn't match pattern '{expected}'"

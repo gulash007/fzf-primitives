@@ -23,7 +23,7 @@ from ...FzfPrompt import (
 from ...FzfPrompt.action_menu.parametrized_actions import MovePointer, ParametrizedAction
 from ...FzfPrompt.constants import SHELL_COMMAND
 from ...FzfPrompt.options.actions import BaseAction, ShellCommandActionType
-from ...FzfPrompt.options.events import Hotkey, Situation
+from ...FzfPrompt.options.triggers import Hotkey, Event
 from .presets import (
     FILE_EDITORS,
     EntriesGetter,
@@ -37,23 +37,24 @@ from .presets import (
 )
 
 
-class OnEventBase[T, S](ABC):
-    def __init__(self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error"):
-        if len(events) != len(set(events)):
-            raise ValueError(f"Duplicate events for this mod: {events}")
-        self._events: list[Hotkey | Situation] = list(events)
+class OnTriggerBase[T, S](ABC):
+    def __init__(self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error"):
+        if len(triggers) != len(set(triggers)):
+            raise ValueError(f"Duplicate triggers for this mod: {triggers}")
+        self._triggers: list[Hotkey | Event] = list(triggers)
         self._on_conflict: ConflictResolution = on_conflict
         self._binding = Binding("")
         self._additional_mods: list[Callable[[PromptData[T, S]], None]] = []
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
-        for event in self._events:
-            prompt_data.action_menu.add(event, self._binding, on_conflict=self._on_conflict)
+        for trigger in self._triggers:
+            prompt_data.action_menu.add(trigger, self._binding, on_conflict=self._on_conflict)
         for mod in self._additional_mods:
             mod(prompt_data)
 
 
-class OnEvent[T, S](OnEventBase[T, S]):
+# TODO: run should accept a binding instead of actions (create run_actions method?)
+class OnTrigger[T, S](OnTriggerBase[T, S]):
     def run(self, name: str, *actions: Action) -> Self:
         self._binding += Binding(name, *actions)
         return self
@@ -149,10 +150,10 @@ class OnEvent[T, S](OnEventBase[T, S]):
         *,
         allow_empty: bool = True,
     ):
-        """Post-processor is called after the prompt has ended and before common post-processors are applied (defined in Mod.lastly)"""
-        for event in self._events:
+        """Post-processor is called after the prompt has ended and before common post-processors are applied"""
+        for trigger in self._triggers:
             self._binding += Binding(
-                name, PromptEndingAction(end_status, event, post_processor, allow_empty=allow_empty)
+                name, PromptEndingAction(end_status, trigger, post_processor, allow_empty=allow_empty)
             )
 
     # presets
@@ -212,6 +213,10 @@ class OnEvent[T, S](OnEventBase[T, S]):
     def jump_accept(self):
         return self.run("jump and accept", "jump-accept")
 
+    # TODO: Add .after_event or something
+    # FIXME: This can break if 'result' event doesn't trigger e.g. when clear-query doesn't change filtered list
+    ## It can break by run_vars being modified without immediately triggering 'result' event so when
+    ## it triggers it can lead to unexpected behavior
     def clear_and_refocus(self, offset_middle: bool = True) -> Self:
         """clear query and move pointer to current entry"""
 
@@ -237,6 +242,11 @@ class OnEvent[T, S](OnEventBase[T, S]):
                 pd.run_vars["running_clear_and_refocus"] = True
 
         return self.run_function("clear and refocus", save_current_index, "clear-query", silent=True)
+
+    def become(self, command_getter: Callable[[PromptData[T, S]], str]) -> Self:
+        return self.run(
+            "clear query and focus line", Transform[T, S](lambda pd: [ParametrizedAction(command_getter(pd), "become")])
+        )
 
     @property
     def clip_current_preview(self):

@@ -59,7 +59,7 @@ def clip_socket_number(prompt_data, FZF_PRIMITIVES_SOCKET_NUMBER):
 def prompt_builder():
     prompt = Prompt(TEST_CHOICES, lambda day: day.name)
     prompt.mod.options.multiselect.listen()
-    prompt.mod.on_situation().BACKWARD_EOF.run_function("clip socket number", clip_socket_number)
+    prompt.mod.on_event().BACKWARD_EOF.run_function("clip socket number", clip_socket_number)
     prompt.mod.on_hotkey().CTRL_A.toggle_all
     prompt.mod.on_hotkey().CTRL_Q.quit
     prompt.mod.on_hotkey().CTRL_C.clip_current_preview.accept
@@ -93,7 +93,7 @@ def prompt_builder():
         lambda pd: preview_mutation_generator.next("has world"),
     )
 
-    prompt.mod.on_situation(on_conflict="append").START.run_function(
+    prompt.mod.on_event(on_conflict="append").START.run_function(
         "measure startup time", lambda pd: print(f"Startup time: {perf_counter() - start} seconds")
     )
 

@@ -4,7 +4,7 @@ from typing import Literal
 
 from ...monitoring import LoggedComponent
 from ..decorators import single_use_method
-from ..options import Hotkey, Options, Situation
+from ..options import Event, Hotkey, Options
 from .binding import Binding
 from .bindings_help import get_bindings_help
 from .parametrized_actions import Action
@@ -17,33 +17,33 @@ from .parametrized_actions import Action
 class ActionMenu[T, S](LoggedComponent):
     def __init__(self) -> None:
         super().__init__()
-        self.bindings: dict[Hotkey | Situation, Binding] = {}
+        self.bindings: dict[Hotkey | Event, Binding] = {}
 
     @property
     def actions(self) -> list[Action]:
         return [action for binding in self.bindings.values() for action in binding.actions]
 
-    def add(self, event: Hotkey | Situation, binding: Binding, *, on_conflict: ConflictResolution = "raise error"):
+    def add(self, trigger: Hotkey | Event, binding: Binding, *, on_conflict: ConflictResolution = "raise error"):
         self.logger.debug(
-            f"🔗 Adding binding for '{event}': {binding} ({on_conflict} on conflict)",
+            f"🔗 Adding binding for '{trigger}': {binding} ({on_conflict} on conflict)",
             trace_point="adding_binding_to_action_menu",
-            event=event,
+            trigger=trigger,
             binding=binding.description,
         )
-        if event not in self.bindings:
-            self.bindings[event] = binding
+        if trigger not in self.bindings:
+            self.bindings[trigger] = binding
         else:
             match on_conflict:
                 case "raise error":
-                    raise BindingConflict(f"Event {event} already has a binding: {self.bindings[event]}")
+                    raise BindingConflict(f"Trigger {trigger} already has a binding: {self.bindings[trigger]}")
                 case "override":
-                    self.bindings[event] = binding
+                    self.bindings[trigger] = binding
                 case "append":
-                    self.bindings[event] += binding
+                    self.bindings[trigger] += binding
                 case "prepend":
-                    self.bindings[event] = binding + self.bindings[event]
+                    self.bindings[trigger] = binding + self.bindings[trigger]
                 case "cycle with":
-                    self.bindings[event] = self.bindings[event] | binding
+                    self.bindings[trigger] = self.bindings[trigger] | binding
                 case _:
                     raise ValueError(f"Invalid conflict resolution: {on_conflict}")
 
@@ -54,8 +54,8 @@ class ActionMenu[T, S](LoggedComponent):
     @single_use_method
     def resolve_options(self) -> Options:
         options = Options()
-        for event, binding in self.bindings.items():
-            options.bind(event, binding.action_string())
+        for trigger, binding in self.bindings.items():
+            options.bind(trigger, binding.action_string())
         options.add_header(self.get_bindings_help()).header_first
         return options
 

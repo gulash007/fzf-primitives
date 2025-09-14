@@ -11,7 +11,7 @@ from ..monitoring import LoggedComponent
 from .action_menu import ActionMenu, Binding
 from .controller import Controller
 from .decorators import single_use_method
-from .options import Hotkey, Options, Situation
+from .options import Hotkey, Options, Event
 from .previewer import Previewer
 from .server import EndStatus, PostProcessor, PromptState, Server, ServerCall
 from .server.make_server_call import make_server_call
@@ -111,10 +111,10 @@ class PromptData[T, S](LoggedComponent):
     def set_stage(self, stage: PromptStage):
         self._stage = stage
 
-    def finish(self, event: Hotkey | Situation, end_status: EndStatus):
+    def finish(self, trigger: Hotkey | Event, end_status: EndStatus):
         self._result = Result(
             end_status=end_status,
-            event=event,
+            trigger=trigger,
             entries=self.entries,
             query=self.state.query,
             current_index=self.state.current_index,
@@ -180,7 +180,7 @@ class Result[T](list[T]):
     def __init__(
         self,
         end_status: EndStatus,
-        event: Hotkey | Situation,
+        trigger: Hotkey | Event,
         entries: list[T],
         query: str,
         current_index: int | None,
@@ -189,7 +189,7 @@ class Result[T](list[T]):
         target_indices: list[int],
     ):
         self.end_status: EndStatus = end_status
-        self.event: Hotkey | Situation = event
+        self.trigger: Hotkey | Event = trigger
         self.query = query
         self.current_index = current_index  # of pointer starting from 0
         self.current = entries[current_index] if current_index is not None else None
@@ -201,7 +201,7 @@ class Result[T](list[T]):
     def to_dict(self) -> dict:
         return {
             "status": self.end_status,
-            "event": self.event,
+            "trigger": self.trigger,
             "query": self.query,
             "current_index": self.current_index,
             "current": self.current,

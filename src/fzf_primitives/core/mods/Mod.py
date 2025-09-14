@@ -4,10 +4,10 @@ from __future__ import annotations
 from typing import Callable, Self
 
 from ..FzfPrompt import Action, ConflictResolution, PromptData
-from ..FzfPrompt.options import Hotkey, Options, Situation
+from ..FzfPrompt.options import Hotkey, Options, Event
 from ..monitoring import LoggedComponent
-from .event_adder import attach_hotkey_adder, attach_situation_adder
-from .on_event import OnEvent
+from .trigger_adder import attach_hotkey_adder, attach_event_adder
+from .on_trigger import OnTrigger
 from .post_processing import PostProcessing
 from .preview_mod import PreviewMod
 
@@ -31,23 +31,23 @@ class Mod[T, S](LoggedComponent):
         self._mods = []
         self._options = Options()
 
-    # on event
+    # on trigger
     @attach_hotkey_adder
-    def on_hotkey(self, *hotkeys: Hotkey, on_conflict: ConflictResolution = "raise error") -> OnEvent[T, S]:
-        return self.on_event(*hotkeys, on_conflict=on_conflict)
+    def on_hotkey(self, *hotkeys: Hotkey, on_conflict: ConflictResolution = "raise error") -> OnTrigger[T, S]:
+        return self.on_trigger(*hotkeys, on_conflict=on_conflict)
 
-    @attach_situation_adder
-    def on_situation(self, *situations: Situation, on_conflict: ConflictResolution = "raise error") -> OnEvent[T, S]:
-        return self.on_event(*situations, on_conflict=on_conflict)
+    @attach_event_adder
+    def on_event(self, *events: Event, on_conflict: ConflictResolution = "raise error") -> OnTrigger[T, S]:
+        return self.on_trigger(*events, on_conflict=on_conflict)
 
-    def on_event(self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error"):
-        on_event_mod = OnEvent[T, S](*events, on_conflict=on_conflict)
-        self._mods.append(on_event_mod)
-        return on_event_mod
+    def on_trigger(self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error"):
+        on_trigger_mod = OnTrigger[T, S](*triggers, on_conflict=on_conflict)
+        self._mods.append(on_trigger_mod)
+        return on_trigger_mod
 
     # preview
-    def preview(self, *events: Hotkey | Situation, on_conflict: ConflictResolution = "raise error", main: bool = False):
-        preview_mod = PreviewMod[T, S](*events, on_conflict=on_conflict, main=main)
+    def preview(self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error", main: bool = False):
+        preview_mod = PreviewMod[T, S](*triggers, on_conflict=on_conflict, main=main)
         self._mods.append(preview_mod)
         return preview_mod
 

@@ -22,10 +22,10 @@ for combo, func_name in data["valid"].items():
     default = f"default: {df}" if (df := defaults.get(combo)) else "free"
     properties.append(property_template.format(combo=combo, func_name=func_name, default=default))
 
-with open(Path(__file__).parent / "EventAdder.py", "w") as f:
+with open(Path(__file__).parent / "TriggerAdder.py", "w") as f:
     f.write(
         f"""
-class HotkeyAdder[_M: OnEventBase]:  # _M to prevent conflict with M hotkey
+class HotkeyAdder[_M: OnTriggerBase]:  # _M to prevent conflict with M hotkey
     def __init__(self, mod_adder: Callable[[Hotkey], _M]):
         self._mod_adder = mod_adder
 

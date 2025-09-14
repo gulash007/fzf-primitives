@@ -1,10 +1,10 @@
 from typing import get_args
 
 from ...FzfPrompt.options.actions import BaseAction
-from ...FzfPrompt.options.events import Hotkey, Situation
+from ...FzfPrompt.options.triggers import Hotkey, Event
 
-# Used to generate EventAdder using AI
-FZF_EVENTS: dict[Situation, str] = {
+# Used to generate TriggerAdder using AI
+FZF_EVENTS: dict[Event, str] = {
     "start": "Triggered only once when fzf finder starts. Since fzf consumes the input stream asynchronously, the input list is not available unless you use --sync",
     "load": "Triggered when the input stream is complete and the initial processing of the list is complete",
     "resize": "Triggered when the terminal size is changed",
