@@ -13,6 +13,7 @@ from .action_menu import Action, Binding
 from .controller import Controller
 from .decorators import single_use_method
 from .server import ServerCall
+from ...config import Config
 
 
 class Automator(Thread, LoggedComponent):
@@ -48,7 +49,7 @@ class Automator(Thread, LoggedComponent):
         self._prompt_data.options.listen()
 
     def execute_binding(self, binding: am.Binding):
-        time.sleep(0.25)  # TODO: add to config
+        time.sleep(Config.automator_delay)
         self.logger.debug(f">>>>> Automating {binding}", trace_point="automating_binding", binding=binding.name)
         if not binding.final_action:
             binding += am.Binding("move to next automated binding", self.move_to_next_binding_server_call)
