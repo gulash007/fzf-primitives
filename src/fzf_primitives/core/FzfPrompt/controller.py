@@ -9,8 +9,11 @@ class Controller(LoggedComponent):
 
     def execute(self, port: int, binding: Binding):
         """Executes a binding"""
-        response = requests.post(f"http://localhost:{port}", data=binding.action_string())
-        if message := response.text:
-            if not message.startswith("unknown action:"):
-                self.logger.log("WEIRDNESS", message)
-            raise RuntimeError(message)
+        try:
+            response = requests.post(f"http://localhost:{port}", data=binding.action_string())
+            if message := response.text:
+                if not message.startswith("unknown action:"):
+                    self.logger.log("WEIRDNESS", message)
+                raise RuntimeError(message)
+        except Exception as e:
+            self.logger.exception(str(e), trace_point="error_executing_binding")
