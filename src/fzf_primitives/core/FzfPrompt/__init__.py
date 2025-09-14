@@ -178,6 +178,11 @@ def run_fzf_prompt[T, S](
         if final_action.post_processor:
             final_action.post_processor(prompt_data)
     finally:
+        logger.info(
+            "Applying post-processors",
+            trace_point="applying_post_processors",
+            count=str(len(prompt_data.post_processors)),
+        )
         for post_processor in prompt_data.post_processors:
             post_processor(prompt_data)
     return prompt_data.result

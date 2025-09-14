@@ -2,8 +2,10 @@ import itertools
 from typing import Any, Callable, Iterable, Mapping
 
 
-class MultiDimensionalGenerator[K, T]:
-    def __init__(self, dimensions: Mapping[K, Callable | Iterable], get_result: Callable[..., T] = lambda *args: args):
+class VectorGenerator[K, T]:
+    def __init__(
+        self, dimensions: Mapping[K, Callable[[], Any] | Iterable], get_result: Callable[..., T] = lambda *args: args
+    ):
         self.dimensions: dict[Any, dict] = {}
         for dimension_name, value_getter in dimensions.items():
             if callable(value_getter):

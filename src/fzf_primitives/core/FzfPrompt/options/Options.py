@@ -105,7 +105,7 @@ class Options:
     @property
     def read0(self) -> Self:
         """Read input delimited by ASCII NUL characters instead of newline characters.
-        💡 Useful for multiline choices"""
+        💡 Useful for multiline entries"""
         return self.add("--read0")
 
     @property

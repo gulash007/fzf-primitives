@@ -20,7 +20,7 @@ from fzf_primitives.core.FzfPrompt import PreviewMutationArgs, PromptData
 from fzf_primitives.core.FzfPrompt.action_menu import Binding, ShellCommand
 from fzf_primitives.core.FzfPrompt.exceptions import PromptEnd
 from fzf_primitives.core.FzfPrompt.previewer.Preview import ChangePreviewLabel
-from fzf_primitives.core.mods.multi_dimensional_generator import MultiDimensionalGenerator
+from fzf_primitives.core.mods.vector_generator import VectorGenerator
 from fzf_primitives.core.monitoring import Logger
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
 from tests.Recording import Recording
@@ -81,7 +81,7 @@ def prompt_builder():
             label="world" if has_world else "",
         )
 
-    preview_mutation_generator = MultiDimensionalGenerator(mutation_dict, get_mutation_args)
+    preview_mutation_generator = VectorGenerator(mutation_dict, get_mutation_args)
     complex_preview = prompt.mod.preview("ctrl-6").custom("Hello World")
     complex_preview.on_hotkey().CTRL_X.mutate(
         "[Hello World] Cycle between hello right/bye left",

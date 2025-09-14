@@ -4,12 +4,12 @@ from __future__ import annotations
 from typing import Callable, Self
 
 from ..FzfPrompt import Action, ConflictResolution, PromptData
-from ..FzfPrompt.options import Hotkey, Options, Event
+from ..FzfPrompt.options import Event, Hotkey, Options
 from ..monitoring import LoggedComponent
-from .trigger_adder import attach_hotkey_adder, attach_event_adder
 from .on_trigger import OnTrigger
 from .post_processing import PostProcessing
 from .preview_mod import PreviewMod
+from .trigger_adder import attach_event_adder, attach_hotkey_adder
 
 
 class Mod[T, S](LoggedComponent):
@@ -62,6 +62,7 @@ class Mod[T, S](LoggedComponent):
     # automations
     # TODO: custom (accepts function acting on PromptData)?
     def automate(self, *to_execute: Hotkey):
+        """Currently can only automate hotkeys that have been explicitly bound"""
         self._mods.append(lambda pd: pd.automator.automate(*to_execute))
 
     def automate_actions(self, *actions: Action):
@@ -75,6 +76,7 @@ class Mod[T, S](LoggedComponent):
     # presets
     @property
     def default(self) -> Self:
+        """Some default useful preset"""
         self.on_hotkey().CTRL_C.clip
         self.on_hotkey().CTRL_X.clip_current_preview
         self.on_hotkey().CTRL_Y.clip_options

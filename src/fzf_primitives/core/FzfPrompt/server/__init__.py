@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
 from ..options import EndStatus
+from . import make_server_call
 from .actions import (
     MAKE_SERVER_CALL_ENV_VAR_NAME,
     SOCKET_NUMBER_ENV_VAR,
@@ -21,7 +22,6 @@ from .actions import (
     ServerCallFunction,
     ServerCallFunctionGeneric,
 )
-from . import make_server_call
 from .request import PromptState, Request, ServerEndpoint
 
 __all__ = [

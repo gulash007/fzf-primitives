@@ -16,7 +16,7 @@ from ...FzfPrompt import (
     ServerCall,
 )
 from ...FzfPrompt.action_menu.transform import Transform
-from ...FzfPrompt.options import Hotkey, RelativeWindowSize, Event, WindowPosition
+from ...FzfPrompt.options import Event, Hotkey, RelativeWindowSize, WindowPosition
 from ...FzfPrompt.previewer.Preview import (
     DEFAULT_BEFORE_CHANGE_DO,
     DEFAULT_LABEL,
@@ -30,7 +30,7 @@ from ...FzfPrompt.previewer.Preview import (
 from ...FzfPrompt.shell import shell_command
 from ...monitoring import LoggedComponent
 from ..on_trigger import OnTriggerBase
-from ..trigger_adder import attach_hotkey_adder, attach_event_adder
+from ..trigger_adder import attach_event_adder, attach_hotkey_adder
 from .presets import get_fzf_env_vars, get_fzf_json, preview_basic
 
 
@@ -65,9 +65,7 @@ class preview_preset:
 
 
 class PreviewMod[T, S](OnTriggerBase[T, S], LoggedComponent):
-    def __init__(
-        self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error", main: bool = False
-    ):
+    def __init__(self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error", main: bool = False):
         super().__init__(*triggers, on_conflict=on_conflict)
         LoggedComponent.__init__(self)
         self._preview: Preview[T, S]
@@ -191,8 +189,8 @@ class SpecificPreviewMod[T, S]:
     ) -> SpecificPreviewOnTrigger[T, S]:
         return self.on_trigger(*events, on_conflict=on_conflict)
 
-    def on_trigger(self, *trigger: Hotkey | Event, on_conflict: ConflictResolution = "raise error"):
-        on_trigger_mod = SpecificPreviewOnTrigger[T, S](*trigger, preview=self._preview, on_conflict=on_conflict)
+    def on_trigger(self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error"):
+        on_trigger_mod = SpecificPreviewOnTrigger[T, S](*triggers, preview=self._preview, on_conflict=on_conflict)
         self._mods.append(on_trigger_mod)
         return on_trigger_mod
 

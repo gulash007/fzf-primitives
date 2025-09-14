@@ -19,7 +19,10 @@ SOCKET_NUMBER_ENV_VAR = "FZF_PRIMITIVES_SOCKET_NUMBER"
 MAKE_SERVER_CALL_ENV_VAR_NAME = "FZF_PRIMITIVES_REQUEST_CREATING_SCRIPT"
 
 
-class CommandOutput(str): ...
+class CommandOutput(str):
+    """A special type of string that when used as default value in ServerCallFunction parameters
+    will be executed as a shell command and the output will be passed to the parameter.
+    """
 
 
 class ServerCall[T, S](ShellCommand):
