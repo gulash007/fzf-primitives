@@ -3,13 +3,14 @@ from typing import TYPE_CHECKING
 from ... import config
 
 if TYPE_CHECKING:
-    from ._Logger import get_logger, remove_preset_handlers, add_file_handler
+    from ._Logger import add_file_handler, get_logger, remove, remove_preset_handlers
 
-__all__ = ["get_logger", "remove_preset_handlers", "add_file_handler"]
+__all__ = ["get_logger", "remove_preset_handlers", "remove", "add_file_handler"]
 
 
 _dynamic_imports = {
     "get_logger": (__package__, "._Logger"),
+    "remove": (__package__, "._Logger"),
     "remove_preset_handlers": (__package__, "._Logger"),
     "add_file_handler": (__package__, "._Logger"),
 }

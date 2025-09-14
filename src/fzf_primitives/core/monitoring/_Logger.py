@@ -28,9 +28,9 @@ def add_file_handler(
     return logger.add(file_path, level=level, format=LOG_FORMATS[format], colorize=colorize, **kwargs)
 
 
-HandlerID = Literal["STDERR", "MAIN_LOG_FILE"]
+HandlerName = Literal["STDERR", "MAIN_LOG_FILE", "SERIALIZED_MAIN_LOG_FILE"]
 
-PRESET_HANDLERS: dict[HandlerID, int] = {
+PRESET_HANDLERS: dict[HandlerName, int] = {
     "STDERR": logger.add(sys.stderr, level="DEBUG", format=LOG_FORMATS["default"], colorize=True),
     "MAIN_LOG_FILE": add_file_handler(MAIN_LOG_FILE_PATH, "DEBUG", format="default", colorize=True),
 }
@@ -38,12 +38,16 @@ PRESET_HANDLERS: dict[HandlerID, int] = {
 logger.level("WEIRDNESS", no=42, icon="🤖", color="<MAGENTA><bold>")
 
 
-def remove_preset_handlers(*handler_ids: HandlerID):
-    if not handler_ids:
-        for handler_number in PRESET_HANDLERS.values():
-            logger.remove(handler_number)
-    for handler_id in handler_ids:
-        logger.remove(PRESET_HANDLERS[handler_id])
+def remove_preset_handlers(*handler_names: HandlerName):
+    for handler_name in handler_names or list(PRESET_HANDLERS.copy().keys()):
+        if handler_name not in PRESET_HANDLERS:
+            continue
+        logger.remove(PRESET_HANDLERS[handler_name])
+        PRESET_HANDLERS.pop(handler_name, None)
+
+
+def remove(handler_id: int | None = None) -> None:
+    logger.remove(handler_id)
 
 
 def get_logger() -> loguru.Logger:
