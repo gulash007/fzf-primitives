@@ -1,5 +1,5 @@
 from fzf_primitives.config import Config
-from fzf_primitives.core.monitoring import Logger
+from fzf_primitives.core.monitoring import LoggedComponent, Logger
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
 from fzf_primitives.core.monitoring.LazyLogger import _DummyObject
 from tests.LoggingSetup import LoggingSetup
@@ -13,6 +13,19 @@ def test_lazy_logging():
         assert isinstance(Logger.remove(), _DummyObject)
         assert isinstance(Logger.add_file_handler("some_path.log"), _DummyObject)
         assert isinstance(Logger.get_logger(), _DummyObject)
+    finally:
+        Config.logging_enabled = logging_enabled
+
+    class TestClass(LoggedComponent):
+        def logger_is_dummy(self):
+            return isinstance(self.logger, _DummyObject)
+
+    test_instance = TestClass()
+    try:
+        Config.logging_enabled = True
+        assert not test_instance.logger_is_dummy()
+        Config.logging_enabled = False
+        assert test_instance.logger_is_dummy()
     finally:
         Config.logging_enabled = logging_enabled
 
