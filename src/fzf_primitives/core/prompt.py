@@ -46,7 +46,7 @@ class Prompt[T, S]:
         return self._prompt_data.get_current_preview()
 
     @single_use_method
-    def run(self, executable_path: str | Path | None = None) -> Result[T]:
+    def run(self, executable_path: str | Path | None = None) -> Result[T, S]:
         if self._entries_stream is not None:
             # Ensure that the preview is refreshed with new lines
             self.mod.on_event(on_conflict="prepend").RESULT.refresh_preview

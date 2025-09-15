@@ -20,7 +20,7 @@ class PostProcessing[T, S]:
 
     # presets
     # TODO: clip presented selections or the selections passed as choices?
-    def clip_output(self, transformer: Callable[[Result[T]], str] = str):
+    def clip_output(self, transformer: Callable[[Result[T, S]], str] = str):
         raise NotImplementedError("clip output not implemented yet")
 
     # TODO: Check correctness or if it's needed

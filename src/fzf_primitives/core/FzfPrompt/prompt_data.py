@@ -43,7 +43,7 @@ class PromptData[T, S](LoggedComponent):
         self.options = options or Options()
         self.post_processors: list[PostProcessor] = []
         self._state: PromptState | None = None
-        self._result: Result[T]
+        self._result: Result[T, S]
         self.id = datetime.now().isoformat()  # TODO: Use it?
         self.run_vars: dict[str, Any] = {"env": os.environ.copy()}
         self._stage: PromptStage = "created"
@@ -98,7 +98,7 @@ class PromptData[T, S](LoggedComponent):
         return self.state.target_indices
 
     @property
-    def result(self) -> Result[T]:
+    def result(self) -> Result[T, S]:
         try:
             return self._result
         except AttributeError as err:
@@ -121,6 +121,7 @@ class PromptData[T, S](LoggedComponent):
             selected_indices=self.selected_indices,
             selections=self.selections,
             target_indices=self.target_indices,
+            obj=self.obj,
         )
         self._stage = "finished"
 
@@ -176,7 +177,7 @@ class PromptData[T, S](LoggedComponent):
         self._stage = "ready to run"
 
 
-class Result[T](list[T]):
+class Result[T, S](list[T]):
     def __init__(
         self,
         end_status: EndStatus,
@@ -187,6 +188,7 @@ class Result[T](list[T]):
         selected_indices: list[int],
         selections: list[T],
         target_indices: list[int],
+        obj: S,
     ):
         self.end_status: EndStatus = end_status
         self.trigger: Hotkey | Event = trigger
@@ -196,6 +198,7 @@ class Result[T](list[T]):
         self.selected_indices = selected_indices  # of marked selections
         self.selections = selections
         self.target_indices = target_indices  # of selections or current if no selections
+        self.obj = obj
         super().__init__([entries[i] for i in target_indices])
 
     def to_dict(self) -> dict:
@@ -209,6 +212,7 @@ class Result[T](list[T]):
             "selections": self.selections,
             "target_indices": self.target_indices,
             "targets": list(self),
+            "obj": self.obj,
         }
 
     def __str__(self) -> str:

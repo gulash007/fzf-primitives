@@ -9,12 +9,12 @@ from ..core.monitoring import Logger
 # TODO: Rename to Executor or something
 
 type PromptBuilder[T, S] = Callable[[], Prompt[T, S]]
-type ResultProcessor[T] = Callable[[Result[T]], None]
+type ResultProcessor[T, S] = Callable[[Result[T, S]], None]
 
 
 def run_in_loop[T, S](
     prompt_builder: PromptBuilder[T, S],
-    result_processor: ResultProcessor[T] = lambda x: None,
+    result_processor: ResultProcessor[T, S] = lambda x: None,
     quit_hotkey: Hotkey = "ctrl-q",
 ):
     logger = Logger.get_logger()
