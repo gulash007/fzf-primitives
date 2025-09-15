@@ -1,4 +1,5 @@
-from .preview_mod import CyclicalPreview, FileViewer, PreviewMod, SpecificPreviewMod, SpecificPreviewOnTrigger
+from .presets import CyclicalPreview, FileViewer
+from .preview_mod import PreviewMod, SpecificPreviewMod, SpecificPreviewOnTrigger
 
 __all__ = [
     "CyclicalPreview",
