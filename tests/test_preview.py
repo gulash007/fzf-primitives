@@ -75,6 +75,9 @@ def test_storing_preview_output():
 def get_file_preview_prompt():
     prompt = Prompt([__file__], obj=[])
     prompt.mod.preview().file()
+    prompt.mod.on_event().LOAD.run_function(
+        "record preview width", lambda pd, FZF_PREVIEW_COLUMNS: pd.obj.append(int(FZF_PREVIEW_COLUMNS))
+    )
     return prompt
 
 
@@ -82,8 +85,9 @@ def get_file_preview_prompt():
 def test_file_preview():
     prompt = get_file_preview_prompt()
     prompt.mod.automate(Config.default_accept_hotkey)
-    prompt.run()
-    assert prompt.current_preview == FileViewer().view(__file__)
+    result = prompt.run()
+    width = result.obj[0]
+    assert prompt.current_preview == FileViewer().view(__file__, width=width)
 
 
 @logging_setup.attach
