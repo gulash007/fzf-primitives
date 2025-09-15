@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 from pathlib import Path
-from typing import Iterable, Unpack
+from typing import Callable, Iterable, Unpack
 
 from ...FzfPrompt import (
     Binding,
@@ -119,12 +119,14 @@ class PreviewMod[T, S](OnTriggerBase[T, S], LoggedComponent):
         language: str = "",
         theme: str = "Solarized (light)",
         plain: bool = True,
+        converter: Callable[[T], str | Path] | None = None,
         **kwargs: Unpack[PreviewStyleMutationArgs],
     ):
         """Parametrized preset for viewing files"""
 
         def view_file(prompt_data: PromptData[T, S]):
-            if not (files := [prompt_data.converter(f) for f in prompt_data.targets]):
+            converter_ = converter or prompt_data.converter
+            if not (files := [converter_(f) for f in prompt_data.targets]):
                 return "No file selected"
             return FileViewer(language, theme, plain=plain).view(*files)
 
