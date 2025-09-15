@@ -71,8 +71,10 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
     ) -> Self:
         return self.run(name, ShellCommand(command, command_type=command_type), *base_actions)
 
-    def run_transform(self, name: str, get_actions: ActionsBuilder[T, S], *base_actions: BaseAction) -> Self:
-        return self.run(name, Transform(get_actions), *base_actions)
+    def run_transform(
+        self, name: str, get_actions: ActionsBuilder[T, S], *base_actions: BaseAction, bg: bool = False
+    ) -> Self:
+        return self.run(name, Transform(get_actions, bg=bg), *base_actions)
 
     def select_by(self, name: str, predicate: Callable[[T], bool]) -> Self:
         """Selects items by the given predicate acting on an entry"""

@@ -14,20 +14,21 @@ type ActionsBuilder[T, S] = Callable[[PromptData[T, S]], Iterable[Action]]
 
 
 class Transform[T, S](ServerCall[T, S], LoggedComponent):
-    def __init__(self, get_actions: ActionsBuilder[T, S], description: str | None = None) -> None:
+    def __init__(self, get_actions: ActionsBuilder[T, S], description: str | None = None, *, bg: bool = False) -> None:
+        """Hint: In get_actions, use 'bell' action as backup to errors so you can hear when an error happened"""
         LoggedComponent.__init__(self)
 
         self.get_actions = get_actions
         self._created_endpoints: list[str] = []
-        super().__init__(self.get_transform_string, description or self._get_function_name(get_actions), "transform")
+        super().__init__(
+            self.get_transform_string,
+            description or self._get_function_name(get_actions),
+            "transform" if not bg else "bg-transform",
+        )
 
     def get_transform_string(self, prompt_data: PromptData[T, S]) -> str:
         binding = b.Binding(None, *self.get_actions(prompt_data))
-        self.logger.debug(
-            f"{self}: Created {binding}",
-            trace_point="transform_created",
-            binding=binding.name,
-        )
+        self.logger.debug(f"{self}: Created {binding}", trace_point="transform_created", binding=binding.name)
 
         for server_call_id in self._created_endpoints:
             with contextlib.suppress(KeyError):
