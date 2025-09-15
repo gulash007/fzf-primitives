@@ -17,9 +17,19 @@ class FileViewer:
         self.theme = theme
         self.plain = plain
 
-    def view(self, *files: str | Path):
-        if not files:
+    def view(self, *paths: str | Path):
+        if not paths:
             return "No file selected"
+        files = []
+        directories = []
+        for path in paths:
+            path = Path(path)
+            if path.is_file():
+                files.append(path)
+            elif path.is_dir():
+                directories.append(path)
+            else:
+                return f"Cannot preview: {path} (not a file or directory)"
         command = ["bat", "--color=always"]
         if self.language:
             command.extend(("--language", self.language))
@@ -29,7 +39,9 @@ class FileViewer:
             command.append("--plain")
         command.append("--")  # Fixes file names starting with a hyphen
         command.extend(map(str, files))
-        return shell_command(command)
+        output = shell_command(command) if files else "No files for viewing"
+        dir_output = "".join(f"Directory: {dir_path}\n" for dir_path in directories)
+        return dir_output + output
 
 
 # HACK: ❗This object pretends to be a preview but when transform is invoked it injects its previews cyclically
