@@ -2,16 +2,12 @@ from __future__ import annotations
 
 import itertools
 import json
-from io import StringIO
 from pathlib import Path
-from typing import Literal
 
-from pygments.lexers import guess_lexer
 from rich import box
-from rich.console import Console
 from rich.panel import Panel
-from rich.syntax import Syntax
 
+from ....utils import CodeTheme, render_to_string, syntax_highlight
 from ...FzfPrompt import Binding, Preview, PromptData
 from ...FzfPrompt.action_menu.transform import Transform
 from ...FzfPrompt.options import Event, Hotkey
@@ -21,7 +17,7 @@ from ...monitoring import LoggedComponent
 class FileViewer:
     def __init__(self, language: str = "", theme: CodeTheme = "dracula", plain: bool = True):
         self.language = language
-        self.theme = theme
+        self.theme: CodeTheme = theme
         self.plain = plain
 
     def view(self, *paths: str | Path, width: int | None = None):
@@ -31,8 +27,17 @@ class FileViewer:
         proper_paths = [Path(p) if not isinstance(p, Path) else p for p in paths]
         for path in proper_paths:
             if path.is_file():
-                outputs.append(self.prettify(path.read_text(encoding="utf-8", errors="ignore"), width))
+                outputs.append(
+                    syntax_highlight(
+                        path.read_text(encoding="utf-8", errors="ignore"),
+                        theme=self.theme,
+                        width=width,
+                        line_numbers=not self.plain,
+                        language=self.language,
+                    )
+                )
             elif path.is_dir():
+                # TODO: maybe implement directory listing with tree command or similar
                 outputs.append("Cannot preview directory...")
             else:
                 return f"Cannot preview: {path} (not a file or directory)"
@@ -44,43 +49,6 @@ class FileViewer:
                     f"{render_to_string(Panel(header, style='bold cyan', box=box.HEAVY))}\n{output}"
                 )
         return "\n".join(outputs)
-
-    def prettify(self, text: str, width: int | None = None) -> str:
-        if self.language:
-            language = self.language
-        else:
-            lexer = guess_lexer(text)  # use Pygments to guess language from file content
-            language = lexer.aliases[0]
-        syntax = Syntax(text, language, theme=self.theme, line_numbers=not self.plain)
-        return render_to_string(syntax, width)
-
-
-def render_to_string(renderable, width: int | None = None) -> str:
-    buffer = StringIO()
-    console = Console(file=buffer, width=width, force_terminal=True, color_system="truecolor")
-    console.print(renderable)
-    return buffer.getvalue()
-
-
-CodeTheme = Literal[
-    "lightbulb",
-    "github-dark",
-    "monokai",
-    "dracula",
-    "solarized-dark",
-    "vim",
-    "nord",
-    "material",
-    "one-dark",
-    "nord-darker",
-    "gruvbox-dark",
-    "stata-dark",
-    "paraiso-dark",
-    "coffee",
-    "native",
-    "inkpot",
-    "fruity",
-]
 
 
 # HACK: ❗This object pretends to be a preview but when transform is invoked it injects its previews cyclically
