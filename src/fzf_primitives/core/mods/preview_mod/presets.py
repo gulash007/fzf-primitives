@@ -19,7 +19,7 @@ from ...monitoring import LoggedComponent
 
 
 class FileViewer:
-    def __init__(self, language: str = "", theme: CodeTheme = "monokai", plain: bool = True):
+    def __init__(self, language: str = "", theme: CodeTheme = "dracula", plain: bool = True):
         self.language = language
         self.theme = theme
         self.plain = plain

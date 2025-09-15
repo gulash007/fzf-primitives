@@ -95,7 +95,7 @@ class PreviewMod[T, S](OnTriggerBase[T, S], LoggedComponent):
     def file(
         self,
         language: str = "",
-        theme: CodeTheme = "monokai",
+        theme: CodeTheme = "dracula",
         plain: bool = True,
         converter: Callable[[T], str | Path] | None = None,
         **kwargs: Unpack[PreviewStyleMutationArgs],
