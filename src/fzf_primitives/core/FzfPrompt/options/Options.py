@@ -4,7 +4,7 @@ import shlex
 from typing import Self
 
 from .actions import BaseAction, ParametrizedActionType, ShellCommandActionType
-from .triggers import Hotkey, Event
+from .triggers import Event, Hotkey
 from .values import Border, EndStatus, Layout, RelativeWindowSize, WindowPosition
 
 DEFAULT_OPTS = [
@@ -158,5 +158,5 @@ class Options:
 
     # TODO: __sub__ for removing options?
 
-    def __eq__(self, __other: Self) -> bool:
+    def __eq__(self, __other) -> bool:
         return self.options == __other.options and self._header_strings == __other._header_strings

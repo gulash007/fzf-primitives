@@ -4,7 +4,11 @@ from ..options import BaseAction, ParametrizedActionType, ShellCommandActionType
 class ParametrizedAction:
     def __init__(self, action_value: str, action_type: ParametrizedActionType) -> None:
         self.action_value = action_value
-        self.action_type: ParametrizedActionType = action_type
+        self._action_type: ParametrizedActionType = action_type
+
+    @property
+    def action_type(self) -> ParametrizedActionType:
+        return self._action_type
 
     def action_string(self) -> str:
         return f"{self.action_type}({self.action_value})"
@@ -26,8 +30,12 @@ class CompositeAction:
 
 class ShellCommand(ParametrizedAction):
     def __init__(self, command: str, command_type: ShellCommandActionType = "execute") -> None:
-        self.action_type: ShellCommandActionType
+        self._command_type: ShellCommandActionType = command_type
         super().__init__(command, command_type)
+
+    @property
+    def action_type(self) -> ShellCommandActionType:
+        return self._command_type
 
     @property
     def command(self) -> str:
@@ -35,7 +43,7 @@ class ShellCommand(ParametrizedAction):
 
     @property
     def command_type(self) -> ShellCommandActionType:
-        return self.action_type
+        return self._command_type
 
     def __str__(self) -> str:
         return f"[ShC]{self.action_type}({self.action_value if len(self.action_value) < 20 else f'{self.action_value[:20]}...'})"

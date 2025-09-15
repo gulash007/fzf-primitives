@@ -8,8 +8,8 @@ class EventAdder[M: OnTriggerBase]:
     def __init__(self, mod_adder: Callable[[Event], M]):
         self._mod_adder = mod_adder
 
-    def _set_and_return_mod(self, event: Event) -> M:
-        return self._mod_adder(event)
+    def _set_and_return_mod(self, trigger: Event) -> M:
+        return self._mod_adder(trigger)
 
     @property
     def START(self) -> M:
@@ -82,8 +82,8 @@ class HotkeyAdder[_M: OnTriggerBase]:  # _M to prevent conflict with M hotkey
     def __init__(self, mod_adder: Callable[[Hotkey], _M]):
         self._mod_adder = mod_adder
 
-    def _set_and_return_mod(self, hotkey: Hotkey) -> _M:
-        return self._mod_adder(hotkey)
+    def _set_and_return_mod(self, trigger: Hotkey) -> _M:
+        return self._mod_adder(trigger)
 
     @property
     def NUM_0(self) -> _M:
@@ -1675,5 +1675,5 @@ class TriggerAdder[M: OnTriggerBase](HotkeyAdder[M], EventAdder[M]):
     def __init__(self, mod_adder: Callable[[Hotkey | Event], M]):
         self._mod_adder = mod_adder
 
-    def _set_and_return_mod(self, case: Hotkey | Event) -> M:
-        return self._mod_adder(case)
+    def _set_and_return_mod(self, trigger: Hotkey | Event) -> M:
+        return self._mod_adder(trigger)

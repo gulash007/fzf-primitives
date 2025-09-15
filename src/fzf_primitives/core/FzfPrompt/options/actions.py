@@ -76,7 +76,7 @@ BaseAction = Literal[
     "toggle-header",
     "toggle-in",
     "toggle-out",
-    # "toggle-bind", # BUG: unknown action in fzf 0.64.0 (0076ec2e)
+    # "toggle-bind", # BUG: unknown action in fzf 0.64.0 (0076ec2e) though it exists in manual
     "toggle-header",
     "toggle-hscroll",
     "toggle-input",
@@ -98,61 +98,6 @@ BaseAction = Literal[
     "yank",
 ]
 
-# fzf actions that require an extra value
-ParametrizedActionType = Literal[
-    "become",
-    "change-border-label",
-    "change-ghost",
-    "change-header",
-    "change-header-label",
-    "change-input-label",
-    "change-list-label",
-    "change-multi",
-    "change-nth",
-    "change-pointer",
-    "change-preview",
-    "change-preview-label",
-    "change-preview-window",
-    "change-prompt",
-    "change-query",
-    "execute",
-    "execute-silent",
-    "pos",
-    "preview",
-    "print",
-    "put",
-    "rebind",
-    "reload",
-    "reload-sync",
-    "search",
-    "transform",
-    "transform-border-label",
-    "transform-ghost",
-    "transform-header",
-    "transform-header-label",
-    "transform-input-label",
-    "transform-list-label",
-    "transform-nth",
-    "transform-pointer",
-    "transform-preview-label",
-    "transform-prompt",
-    "transform-query",
-    "transform-search",
-    "bg-transform",
-    "bg-transform-border-label",
-    "bg-transform-ghost",
-    "bg-transform-header",
-    "bg-transform-header-label",
-    "bg-transform-input-label",
-    "bg-transform-list-label",
-    "bg-transform-nth",
-    "bg-transform-pointer",
-    "bg-transform-preview-label",
-    "bg-transform-prompt",
-    "bg-transform-query",
-    "bg-transform-search",
-    "unbind",
-]
 
 # those parametrized actions whose value is a shell command
 ShellCommandActionType = Literal[
@@ -191,3 +136,26 @@ ShellCommandActionType = Literal[
     "bg-transform-query",
     "bg-transform-search",
 ]
+# actions that take a parameter that's not a shell command
+ValueActionType = Literal[
+    "change-border-label",
+    "change-ghost",
+    "change-header",
+    "change-header-label",
+    "change-input-label",
+    "change-list-label",
+    "change-multi",
+    "change-nth",
+    "change-pointer",
+    "change-preview-label",
+    "change-preview-window",
+    "change-query",
+    "pos",
+    "print",
+    "put",
+    "rebind",
+    "search",
+    "unbind",
+]
+
+ParametrizedActionType = ShellCommandActionType | ValueActionType

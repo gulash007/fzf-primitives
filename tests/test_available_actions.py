@@ -14,8 +14,9 @@ def test_base_actions():
 
 def test_parametrized_actions():
     fzf_bindings = []
-    for action in get_args(ParametrizedActionType):
-        fzf_bindings.append(f"--bind=a:{action}(0)")
+    for action_category in get_args(ParametrizedActionType):
+        for action in get_args(action_category):
+            fzf_bindings.append(f"--bind=a:{action}(0)")
 
     subprocess.check_output(["fzf", "--version", *fzf_bindings])
 

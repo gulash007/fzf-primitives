@@ -18,9 +18,8 @@ EXPECTED_FZF_ERR_CODES = (130, 1)  # 130 means aborted, 1 means accepted with no
 def execute_fzf[T, S](
     prompt_data: PromptData[T, S], *, executable_path=None, entries_stream: Iterable[T] | None = None
 ) -> Result[T]:
+    logger = Logger.get_logger()
     try:
-        logger = Logger.get_logger()
-
         prompt_data.run_initial_setup()
         server = prompt_data.server
         server.start()
