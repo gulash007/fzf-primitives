@@ -114,12 +114,12 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
                             return [SelectBy[T, S](lambda item: preserve_selections_by_key(item) in saved_keys)]
                     return []
 
+                binding_name = "reselect if 'reload and preserve selections' was invoked"
+                if binding := pd.action_menu.bindings.get("result"):
+                    if binding_name in binding.name:
+                        return
                 pd.action_menu.add(
-                    "result",
-                    Binding(
-                        "reselect if 'reload and preserve selections' was invoked", Transform(reselect_conditionally)
-                    ),
-                    on_conflict="append",
+                    "result", Binding(binding_name, Transform(reselect_conditionally)), on_conflict="append"
                 )
 
             self._additional_mods.append(add_conditional_result_action)
