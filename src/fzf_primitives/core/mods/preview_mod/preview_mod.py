@@ -30,7 +30,7 @@ from ...FzfPrompt.previewer.Preview import (
 from ...monitoring import LoggedComponent
 from ..on_trigger import OnTriggerBase
 from ..trigger_adder import attach_event_adder, attach_hotkey_adder
-from .presets import CyclicalPreview, FileViewer, get_fzf_env_vars, get_fzf_json, preview_basic
+from .presets import CodeTheme, CyclicalPreview, FileViewer, get_fzf_env_vars, get_fzf_json, preview_basic
 
 
 class preview_preset:
@@ -95,18 +95,18 @@ class PreviewMod[T, S](OnTriggerBase[T, S], LoggedComponent):
     def file(
         self,
         language: str = "",
-        theme: str = "Solarized (light)",
+        theme: CodeTheme = "monokai",
         plain: bool = True,
         converter: Callable[[T], str | Path] | None = None,
         **kwargs: Unpack[PreviewStyleMutationArgs],
     ):
         """Parametrized preset for viewing files"""
 
-        def view_file(prompt_data: PromptData[T, S]):
+        def view_file(prompt_data: PromptData[T, S], FZF_PREVIEW_COLUMNS: str):
             converter_ = converter or prompt_data.converter
             if not (files := [converter_(f) for f in prompt_data.targets]):
                 return "No file selected"
-            return FileViewer(language, theme, plain=plain).view(*files)
+            return FileViewer(language, theme, plain=plain).view(*files, width=int(FZF_PREVIEW_COLUMNS))
 
         return self.custom("View File", view_file, label="View file", **kwargs)
 

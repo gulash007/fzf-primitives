@@ -2,46 +2,85 @@ from __future__ import annotations
 
 import itertools
 import json
+from io import StringIO
 from pathlib import Path
+from typing import Literal
+
+from pygments.lexers import guess_lexer
+from rich import box
+from rich.console import Console
+from rich.panel import Panel
+from rich.syntax import Syntax
 
 from ...FzfPrompt import Binding, Preview, PromptData
 from ...FzfPrompt.action_menu.transform import Transform
 from ...FzfPrompt.options import Event, Hotkey
-from ...FzfPrompt.shell import shell_command
 from ...monitoring import LoggedComponent
 
 
 class FileViewer:
-    def __init__(self, language: str = "", theme: str = "Solarized (light)", *, plain: bool = True):
+    def __init__(self, language: str = "", theme: CodeTheme = "monokai", plain: bool = True):
         self.language = language
         self.theme = theme
         self.plain = plain
 
-    def view(self, *paths: str | Path):
+    def view(self, *paths: str | Path, width: int | None = None):
         if not paths:
             return "No file selected"
-        files = []
-        directories = []
-        for path in paths:
-            path = Path(path)
+        outputs = []
+        proper_paths = [Path(p) if not isinstance(p, Path) else p for p in paths]
+        for path in proper_paths:
             if path.is_file():
-                files.append(path)
+                outputs.append(self.prettify(path.read_text(encoding="utf-8", errors="ignore"), width))
             elif path.is_dir():
-                directories.append(path)
+                outputs.append("Cannot preview directory...")
             else:
                 return f"Cannot preview: {path} (not a file or directory)"
-        command = ["bat", "--color=always"]
+
+        if len(outputs) > 1:
+            for output, path in zip(outputs, proper_paths, strict=True):
+                header = f"{'Directory' if path.is_dir() else 'File'}: {str(path)}"
+                outputs[outputs.index(output)] = (
+                    f"{render_to_string(Panel(header, style='bold cyan', box=box.HEAVY))}\n{output}"
+                )
+        return "\n".join(outputs)
+
+    def prettify(self, text: str, width: int | None = None) -> str:
         if self.language:
-            command.extend(("--language", self.language))
-        if self.theme:
-            command.extend(("--theme", self.theme))
-        if self.plain:
-            command.append("--plain")
-        command.append("--")  # Fixes file names starting with a hyphen
-        command.extend(map(str, files))
-        output = shell_command(command) if files else "No files for viewing"
-        dir_output = "".join(f"Directory: {dir_path}\n" for dir_path in directories)
-        return dir_output + output
+            language = self.language
+        else:
+            lexer = guess_lexer(text)  # use Pygments to guess language from file content
+            language = lexer.aliases[0]
+        syntax = Syntax(text, language, theme=self.theme, line_numbers=not self.plain)
+        return render_to_string(syntax, width)
+
+
+def render_to_string(renderable, width: int | None = None) -> str:
+    buffer = StringIO()
+    console = Console(file=buffer, width=width, force_terminal=True, color_system="truecolor")
+    console.print(renderable)
+    return buffer.getvalue()
+
+
+CodeTheme = Literal[
+    "lightbulb",
+    "github-dark",
+    "monokai",
+    "dracula",
+    "solarized-dark",
+    "vim",
+    "nord",
+    "material",
+    "one-dark",
+    "nord-darker",
+    "gruvbox-dark",
+    "stata-dark",
+    "paraiso-dark",
+    "coffee",
+    "native",
+    "inkpot",
+    "fruity",
+]
 
 
 # HACK: ❗This object pretends to be a preview but when transform is invoked it injects its previews cyclically
