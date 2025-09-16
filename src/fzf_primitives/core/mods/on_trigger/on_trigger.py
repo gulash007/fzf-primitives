@@ -101,19 +101,26 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         name = f"{name}{' (sync)' if sync else ''}"
 
         if preserve_selections_by_key is not None:
+            condition_key = "running_reload_and_preserve_selections"
+            saved_selection_key = "running_reload_and_preserve_selections_saved_selections"
+            saved_query_key = "running_reload_and_preserve_selections_saved_query"
 
             def save_selection_keys(pd: PromptData[T, S]):
-                pd.run_vars["saved_selection_keys"] = {preserve_selections_by_key(item) for item in pd.selections}
-                pd.run_vars["running_reload_and_preserve_selections"] = True
+                pd.run_vars[saved_selection_key] = {preserve_selections_by_key(item) for item in pd.selections}
+                pd.run_vars[saved_query_key] = pd.query
+                pd.run_vars[condition_key] = True
 
-            self.run_function("save selections", save_selection_keys)
+            self.run_function("save selections", save_selection_keys, "clear-query")
 
             def add_conditional_result_action(pd: PromptData[T, S]):
-                def reselect_conditionally(pd: PromptData[T, S]):
-                    if pd.run_vars.pop("running_reload_and_preserve_selections", None):
-                        saved_keys = pd.run_vars.pop("saved_selection_keys", None)
+                def reselect_conditionally(pd: PromptData[T, S]) -> list[Action]:
+                    if pd.run_vars.pop(condition_key, None):
+                        saved_keys = pd.run_vars.pop(saved_selection_key, None)
                         if saved_keys is not None:
-                            return [SelectBy[T, S](lambda item: preserve_selections_by_key(item) in saved_keys)]
+                            return [
+                                SelectBy[T, S](lambda item: preserve_selections_by_key(item) in saved_keys),
+                                ParametrizedAction(pd.run_vars[saved_query_key], "put"),
+                            ]
                     return []
 
                 binding_name = "reselect if 'reload and preserve selections' was invoked"
