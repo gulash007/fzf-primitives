@@ -27,15 +27,16 @@ class FileViewer:
         proper_paths = [Path(p) if not isinstance(p, Path) else p for p in paths]
         for path in proper_paths:
             if path.is_file():
-                outputs.append(
-                    syntax_highlight(
-                        path.read_text(encoding="utf-8", errors="ignore"),
-                        theme=self.theme,
-                        width=width,
-                        line_numbers=not self.plain,
-                        language=self.language,
+                try:
+                    content = path.read_text(encoding="utf-8")
+                except UnicodeDecodeError:
+                    outputs.append("Cannot preview binary file...")
+                else:
+                    outputs.append(
+                        syntax_highlight(
+                            content, theme=self.theme, width=width, line_numbers=not self.plain, language=self.language
+                        )
                     )
-                )
             elif path.is_dir():
                 # TODO: maybe implement directory listing with tree command or similar
                 outputs.append("Cannot preview directory...")
