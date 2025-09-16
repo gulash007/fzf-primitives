@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import contextlib
-from typing import TYPE_CHECKING, Callable, Iterable
+import functools
+from typing import TYPE_CHECKING, Callable, Concatenate, Iterable
 
 if TYPE_CHECKING:
     from ..prompt_data import PromptData
@@ -10,7 +11,7 @@ from ...monitoring import LoggedComponent
 from ..server import ServerCall
 from . import binding as b
 
-type ActionsBuilder[T, S] = Callable[[PromptData[T, S]], Iterable[Action]]
+type ActionsBuilder[T, S] = Callable[Concatenate[PromptData[T, S], ...], Iterable[Action]]
 
 
 class Transform[T, S](ServerCall[T, S], LoggedComponent):
@@ -21,25 +22,29 @@ class Transform[T, S](ServerCall[T, S], LoggedComponent):
         self.get_actions = get_actions
         self._created_endpoints: list[str] = []
         super().__init__(
-            self.get_transform_string,
+            self.getting_transform_string(get_actions),
             description or self._get_function_name(get_actions),
             "transform" if not bg else "bg-transform",
         )
 
-    def get_transform_string(self, prompt_data: PromptData[T, S]) -> str:
-        binding = b.Binding(None, *self.get_actions(prompt_data))
-        self.logger.debug(f"{self}: Created {binding}", trace_point="transform_created", binding=binding.name)
+    def getting_transform_string(self, actions_builder: ActionsBuilder[T, S]):
+        @functools.wraps(actions_builder)
+        def get_transform_string(prompt_data: PromptData[T, S], *args, **kwargs) -> str:
+            binding = b.Binding(None, *actions_builder(prompt_data, *args, **kwargs))
+            self.logger.debug(f"{self}: Created {binding}", trace_point="transform_created", binding=binding.name)
 
-        for server_call_id in self._created_endpoints:
-            with contextlib.suppress(KeyError):
-                prompt_data.server.endpoints.pop(server_call_id)
-        self._created_endpoints.clear()
-        for action in binding.actions:
-            if isinstance(action, ServerCall):
-                prompt_data.server.add_endpoint(action.endpoint)
-                self._created_endpoints.append(action.endpoint.id)
+            for server_call_id in self._created_endpoints:
+                with contextlib.suppress(KeyError):
+                    prompt_data.server.endpoints.pop(server_call_id)
+            self._created_endpoints.clear()
+            for action in binding.actions:
+                if isinstance(action, ServerCall):
+                    prompt_data.server.add_endpoint(action.endpoint)
+                    self._created_endpoints.append(action.endpoint.id)
 
-        return binding.action_string()
+            return binding.action_string()
+
+        return get_transform_string
 
     def __str__(self) -> str:
         return f"[T]({self.id})"
