@@ -133,4 +133,5 @@ dmypy.json
 
 _logs/
 !tests/recordings/TestPrompt.log
+tests/example-filesystem
 .personal
