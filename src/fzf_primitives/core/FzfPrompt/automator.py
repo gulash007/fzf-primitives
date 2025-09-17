@@ -7,13 +7,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .options import Hotkey
     from .prompt_data import PromptData
+from ...config import Config
 from ..monitoring import LoggedComponent
 from . import action_menu as am
 from .action_menu import Action, Binding
 from .controller import Controller
 from .decorators import single_use_method
 from .server import ServerCall
-from ...config import Config
 
 
 class Automator(Thread, LoggedComponent):
@@ -43,7 +43,6 @@ class Automator(Thread, LoggedComponent):
 
     @single_use_method
     def prepare(self):
-        self._bindings.extend(self._prompt_data.bindings_to_automate)
         self._prompt_data.server.add_endpoint(self.move_to_next_binding_server_call.endpoint)
         self._prompt_data.options.listen()
 

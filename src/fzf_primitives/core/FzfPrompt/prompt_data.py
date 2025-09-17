@@ -8,12 +8,11 @@ from typing import TYPE_CHECKING, Any, Callable, Literal
 if TYPE_CHECKING:
     from .automator import Automator
 from ..monitoring import LoggedComponent
-from .action_menu import ActionMenu, Binding
+from .action_menu import ActionMenu
 from .controller import Controller
-from .decorators import single_use_method
-from .options import Hotkey, Options, Event
+from .options import Event, Hotkey, Options
 from .previewer import Previewer
-from .server import EndStatus, PostProcessor, PromptState, Server, ServerCall
+from .server import EndStatus, PostProcessor, PromptState, Server
 from .server.make_server_call import make_server_call
 
 
@@ -39,7 +38,6 @@ class PromptData[T, S](LoggedComponent):
         self.previewer = previewer or Previewer()
         self._automator: Automator | None = None
         self._controller: Controller | None = None
-        self.bindings_to_automate: list[Binding] = []
         self.options = options or Options()
         self.post_processors: list[PostProcessor] = []
         self._state: PromptState | None = None
@@ -140,6 +138,10 @@ class PromptData[T, S](LoggedComponent):
         return self._automator
 
     @property
+    def should_run_automator(self) -> bool:
+        return self._automator is not None
+
+    @property
     def controller(self) -> Controller:
         if not self._controller:
             from ..FzfPrompt.controller import Controller
@@ -150,31 +152,12 @@ class PromptData[T, S](LoggedComponent):
     @property
     def control_port(self) -> int:
         if not self._control_port:
-            raise RuntimeError("Control port not set (Are you sure you used Options.listen()?)")
+            raise RuntimeError("Control port not set (Are you sure you used Options.listen() (fzf --listen)?)")
         return self._control_port
 
-    @single_use_method
-    def run_initial_setup(self):
-        self.previewer.resolve_main_preview(self)
-        if self._automator:
-            self._automator.prepare()
-            self._automator.start()
-
-        def on_startup_success(prompt_data: PromptData, FZF_PORT: str):
-            self.set_stage("running")
-            if FZF_PORT.isdigit():
-                self._control_port = int(FZF_PORT)
-
-        self.action_menu.add(
-            "start",
-            Binding("On startup success", ServerCall(on_startup_success, command_type="execute-silent")),
-            on_conflict="prepend",
-        )
-        for binding in self.action_menu.bindings.values():
-            self.server.add_endpoints(binding)
-        self.options += self.action_menu.resolve_options()
-        self.options.listen()  # for ServerCalls with FZF_PORT parameter
-        self._stage = "ready to run"
+    @control_port.setter
+    def control_port(self, port: int):
+        self._control_port = port
 
 
 class Result[T, S](list[T]):

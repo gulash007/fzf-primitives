@@ -20,7 +20,6 @@ def execute_fzf[T, S](
 ) -> Result[T, S]:
     logger = Logger.get_logger()
     try:
-        prompt_data.run_initial_setup()
         server = prompt_data.server
         server.start()
         server.setup_finished.wait()
