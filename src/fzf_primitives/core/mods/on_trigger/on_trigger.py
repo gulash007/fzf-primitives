@@ -23,7 +23,7 @@ from ...FzfPrompt import (
 from ...FzfPrompt.action_menu.parametrized_actions import MovePointer, ParametrizedAction
 from ...FzfPrompt.constants import SHELL_COMMAND
 from ...FzfPrompt.options.actions import BaseAction, ShellCommandActionType
-from ...FzfPrompt.options.triggers import Hotkey, Event
+from ...FzfPrompt.options.triggers import Event, Hotkey, Trigger
 from .presets import (
     FILE_EDITORS,
     EntriesGetter,
@@ -41,23 +41,26 @@ class OnTriggerBase[T, S](ABC):
     def __init__(self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error"):
         if len(triggers) != len(set(triggers)):
             raise ValueError(f"Duplicate triggers for this mod: {triggers}")
-        self._triggers: list[Hotkey | Event] = list(triggers)
         self._on_conflict: ConflictResolution = on_conflict
-        self._binding = Binding("")
+        self._bindings: dict[Trigger, Binding] = {trigger: Binding("") for trigger in triggers}
         self._additional_mods: list[Callable[[PromptData[T, S]], None]] = []
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
-        for trigger in self._triggers:
-            prompt_data.action_menu.add(trigger, self._binding, on_conflict=self._on_conflict)
+        for trigger, binding in self._bindings.items():
+            prompt_data.action_menu.add(trigger, binding, on_conflict=self._on_conflict)
         for mod in self._additional_mods:
             mod(prompt_data)
+
+    def run_binding(self, binding: Binding) -> Self:
+        for trigger in self._bindings.keys():
+            self._bindings[trigger] += binding
+        return self
 
 
 # TODO: run should accept a binding instead of actions (create run_actions method?)
 class OnTrigger[T, S](OnTriggerBase[T, S]):
     def run(self, name: str, *actions: Action) -> Self:
-        self._binding += Binding(name, *actions)
-        return self
+        return self.run_binding(Binding(name, *actions))
 
     def run_function(
         self, name: str, function: ServerCallFunction[T, S], *base_actions: BaseAction, silent: bool = False
@@ -160,8 +163,8 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         allow_empty: bool = True,
     ):
         """Post-processor is called after the prompt has ended and before common post-processors are applied"""
-        for trigger in self._triggers:
-            self._binding += Binding(
+        for trigger in self._bindings.keys():
+            self._bindings[trigger] += Binding(
                 name, PromptEndingAction(end_status, trigger, post_processor, allow_empty=allow_empty)
             )
 
@@ -270,10 +273,10 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
 
     @property
     def show_bindings_help_in_preview(self):
-        self._binding += Binding(
-            "Show bindings help in preview", ShowInPreview(lambda pd: pd.action_menu.get_bindings_help())
-        ) | Binding("", "refresh-preview")
-        return self
+        return self.run_binding(
+            Binding("Show bindings help in preview", ShowInPreview(lambda pd: pd.action_menu.get_bindings_help()))
+            | Binding("", "refresh-preview")
+        )
 
     def view_logs_in_terminal(self, log_file_path: str | Path):
         command = f"less +F '{log_file_path}'"

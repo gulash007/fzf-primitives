@@ -47,20 +47,17 @@ class PreviewMod[T, S](OnTriggerBase[T, S], LoggedComponent):
         super().__init__(*triggers, on_conflict=on_conflict)
         LoggedComponent.__init__(self)
         self._preview: Preview[T, S]
-        self._specific_preview_mod: SpecificPreviewMod[T, S] | None = None
         self._main = main
+        self._additional_mods.append(lambda pd: pd.previewer.add(self._preview, main=self._main))
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         try:
-            preview = self._preview
+            self._preview
         except AttributeError:
             self.logger.warning("PreviewMod has no effect as its Preview has not been set")
             return
-        prompt_data.previewer.add(preview, main=self._main)
-        for trigger in self._triggers:
-            prompt_data.action_menu.add(trigger, preview.preview_change_binding, on_conflict=self._on_conflict)
-        if self._specific_preview_mod:
-            self._specific_preview_mod(prompt_data)
+        self.run_binding(self._preview.preview_change_binding)
+        return super().__call__(prompt_data)
 
     def custom(
         self,
@@ -84,8 +81,8 @@ class PreviewMod[T, S](OnTriggerBase[T, S], LoggedComponent):
             before_change_do=before_change_do,
             store_output=store_output,
         )
-        self._specific_preview_mod = SpecificPreviewMod(self._preview)
-        return self._specific_preview_mod
+        self._additional_mods.append(specific_preview_mod := SpecificPreviewMod(self._preview))
+        return specific_preview_mod
 
     # presets
     basic = preview_preset("basic", output_generator=preview_basic, label="PromptData state")
@@ -157,11 +154,6 @@ class SpecificPreviewOnTrigger[T, S](OnTriggerBase[T, S]):
     ):
         super().__init__(*triggers, on_conflict=on_conflict)
         self._preview = preview
-        self._initial_mutation = lambda pd: None
-
-    def __call__(self, prompt_data: PromptData[T, S]) -> None:
-        super().__call__(prompt_data)
-        self._initial_mutation(prompt_data)
 
     def mutate(
         self,
@@ -174,26 +166,29 @@ class SpecificPreviewOnTrigger[T, S](OnTriggerBase[T, S]):
     ) -> None:
         """This method can be called multiple times on the same PreviewMod object to add multiple mutators"""
 
-        self._binding = Binding(
-            f"[{self._preview.name}] {name}",
-            Transform(
-                lambda pd: (
-                    ServerCall[T, S](
-                        lambda pd: self._preview.update(**mutator(pd))
-                        if pd.previewer.current_preview.id == self._preview.id or not mutate_only_when_already_focused
-                        else None,
-                        command_type="execute-silent",
-                    ),
-                    *(
-                        self._preview.preview_change_binding.actions
-                        if focus_preview or self._preview.id == pd.previewer.current_preview.id
-                        else ()
-                    ),
-                )
-            ),
+        self.run_binding(
+            Binding(
+                f"[{self._preview.name}] {name}",
+                Transform(
+                    lambda pd: (
+                        ServerCall[T, S](
+                            lambda pd: self._preview.update(**mutator(pd))
+                            if pd.previewer.current_preview.id == self._preview.id
+                            or not mutate_only_when_already_focused
+                            else None,
+                            command_type="execute-silent",
+                        ),
+                        *(
+                            self._preview.preview_change_binding.actions
+                            if focus_preview or self._preview.id == pd.previewer.current_preview.id
+                            else ()
+                        ),
+                    )
+                ),
+            )
         )
         if auto_apply_first:
-            self._initial_mutation = lambda pd: self._preview.update(**mutator(pd))
+            self._additional_mods.append(lambda pd: self._preview.update(**mutator(pd)))
 
     def cycle_mutators(
         self,
