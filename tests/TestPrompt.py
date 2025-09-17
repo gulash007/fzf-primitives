@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-import argparse
-import contextlib
-import sys
-from datetime import datetime
 from time import perf_counter
 
 start = perf_counter()
@@ -18,15 +14,17 @@ from fzf_primitives.actions import ParametrizedAction
 from fzf_primitives.config import Config
 from fzf_primitives.core.FzfPrompt import PreviewMutationArgs, PromptData
 from fzf_primitives.core.FzfPrompt.action_menu import Binding, ShellCommand
-from fzf_primitives.core.FzfPrompt.exceptions import PromptEnd
 from fzf_primitives.core.FzfPrompt.previewer.Preview import ChangePreviewLabel
 from fzf_primitives.core.mods.vector_generator import VectorGenerator
 from fzf_primitives.core.monitoring import Logger
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
+from tests.LoggingSetup import LoggingSetup
 from tests.Recording import Recording
 
 print(f"Imports: {perf_counter() - start} seconds")
 # TEST ALL KINDS OF STUFF
+
+logging_setup = LoggingSetup(INTERNAL_LOG_DIR / "TestPrompt")
 
 
 def wait_for_input(prompt_data: PromptData[DayOfTheWeek, None]):
@@ -56,6 +54,7 @@ def clip_socket_number(prompt_data, FZF_PRIMITIVES_SOCKET_NUMBER):
     pyperclip.copy(FZF_PRIMITIVES_SOCKET_NUMBER)
 
 
+@logging_setup.attach
 def prompt_builder():
     prompt = Prompt(TEST_CHOICES, lambda day: day.name)
     prompt.mod.options.multiselect.listen()
@@ -66,7 +65,7 @@ def prompt_builder():
     prompt.mod.on_hotkey().CTRL_O.clip_options
     prompt.mod.on_hotkey().CTRL_N.run_function("wait", wait_for_input)
     prompt.mod.on_hotkey().CTRL_ALT_N.run_function("wait", lambda pd: input("Press Enter to continue..."))
-    prompt.mod.on_hotkey().CTRL_L.view_logs_in_terminal(LOG_FILE_PATH)
+    prompt.mod.on_hotkey().CTRL_L.view_logs_in_terminal(logging_setup.path)
     # prompt.mod.on_hotkey().CTRL_X.run_function("wait", bad_server_call_function) # uncomment to reveal error
     prompt.mod.preview("ctrl-y").fzf_json
     mutation_dict = {
@@ -101,18 +100,5 @@ def prompt_builder():
     return prompt
 
 
-LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath(f"TestPrompt/{datetime.now().isoformat(timespec='milliseconds')}.log")
-
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--record", action="store_true", help="Enable recording")
-    parsed_args = parser.parse_args(args)
-
-    Config.logging_enabled = True
-    Logger.remove_preset_handlers()
-    Logger.add_file_handler(LOG_FILE_PATH, "DEBUG", serialize=True)
-    if parsed_args.record:
-        Recording.setup("TestPrompt")
-    with contextlib.suppress(PromptEnd):
-        result = prompt_builder().run()
+    prompt_builder().run()

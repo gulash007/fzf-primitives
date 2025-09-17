@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import argparse
+import contextlib
+import sys
 from enum import Enum, auto
 
 import pytest
 
 from fzf_primitives.config import Config
 from fzf_primitives.core import Prompt
-from fzf_primitives.core.FzfPrompt.exceptions import Aborted
+from fzf_primitives.core.FzfPrompt.exceptions import Aborted, PromptEnd
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
 from tests.LoggingSetup import LoggingSetup
 from tests.Recording import Recording
@@ -40,7 +43,7 @@ def prompt_builder():
     prompt.mod.on_hotkey().CTRL_A.toggle_all
     prompt.mod.on_hotkey().CTRL_Q.quit
     prompt.mod.preview("ctrl-y").fzf_json
-    prompt.mod.preview("ctrl-6").custom("Hello World")
+    prompt.mod.preview("ctrl-6").custom("Hello World", "echo 'Hello World'")
 
     return prompt
 
@@ -60,8 +63,8 @@ def test_general():
     prompt.run()
 
     recording = Recording.load("TestPromptAutomated")
-    expected = Recording.load("TestPrompt")
-    assert expected.compare(recording)
+    expected = Recording.load("expected")
+    assert recording.text == expected.text
 
 
 @logging_setup.attach
@@ -81,4 +84,14 @@ def test_abort():
 
 
 if __name__ == "__main__":
-    test_general()
+    args = sys.argv[1:]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--record", action="store_true", help="Enable recording")
+    parsed_args = parser.parse_args(args)
+
+    Config.logging_enabled = True
+    if parsed_args.record:
+        Recording.setup("expected")
+    with contextlib.suppress(PromptEnd):
+        result = prompt_builder().run()
+        print(f"Selections: {result.selections}")

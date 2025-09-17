@@ -12,7 +12,7 @@ R = TypeVar("R")
 
 class LoggingSetup:
     def __init__(self, log_subdir: Path):
-        self.__log_file_path = log_subdir / f"{datetime.now().isoformat(timespec='milliseconds')}.log"
+        self.__path = log_subdir / f"{datetime.now().isoformat(timespec='milliseconds')}.log"
         self.__logging_set_up = False
         self.handler_id: int
 
@@ -21,7 +21,7 @@ class LoggingSetup:
         def with_logging_set_up(*args: P.args, **kwargs: P.kwargs) -> R:
             if Config.logging_enabled and not self.__logging_set_up:
                 Logger.remove_preset_handlers()
-                self.handler_id = Logger.add_file_handler(self.__log_file_path, serialize=True)
+                self.handler_id = Logger.add_file_handler(self.__path, serialize=True)
                 self.__logging_set_up = True
                 try:
                     return func(*args, **kwargs)
@@ -32,3 +32,9 @@ class LoggingSetup:
             return func(*args, **kwargs)
 
         return with_logging_set_up
+
+    @property
+    def path(self) -> Path:
+        return self.__path
+
+

@@ -132,6 +132,6 @@ dmypy.json
 **/.DS_Store
 
 _logs/
-!tests/recordings/TestPrompt.log
+!tests/recordings/expected.log
 tests/example-filesystem
 .personal
