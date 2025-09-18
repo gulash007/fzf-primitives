@@ -2,7 +2,7 @@ from ..options import BaseAction, ParametrizedActionType, ShellCommandActionType
 
 
 class ParametrizedAction:
-    def __init__(self, action_value: str, action_type: ParametrizedActionType) -> None:
+    def __init__(self, action_value: str, action_type: ParametrizedActionType = "put") -> None:
         self.action_value = action_value
         self._action_type: ParametrizedActionType = action_type
 
