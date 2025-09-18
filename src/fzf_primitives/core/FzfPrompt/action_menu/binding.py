@@ -9,14 +9,16 @@ from . import transform as t
 from .parametrized_actions import Action, CompositeAction, ParametrizedAction
 
 
-class Binding(LoggedComponent):
+class Binding[T, S](LoggedComponent):
     @overload
-    def __init__(self, name: None, /, *, action_groups: Iterable[ActionGroup]): ...
+    def __init__(self, name: None, /, *, action_groups: Iterable[ActionGroup[T, S]]): ...
     @overload
-    def __init__(self, name: str | None, /, *actions: Action): ...
-    def __init__(self, name: str | None, /, *actions: Action, action_groups: Iterable[ActionGroup] | None = None):
+    def __init__(self, name: str | None, /, *actions: Action[T, S]): ...
+    def __init__(
+        self, name: str | None, /, *actions: Action[T, S], action_groups: Iterable[ActionGroup[T, S]] | None = None
+    ):
         super().__init__()
-        self._action_groups: dict[int, ActionGroup] = {}
+        self._action_groups: dict[int, ActionGroup[T, S]] = {}
         if not action_groups:
             self._action_groups[ag.id] = (ag := ActionGroup(name, *actions))
         else:
@@ -28,7 +30,7 @@ class Binding(LoggedComponent):
                 )
             for action_group in action_groups:
                 self._action_groups[action_group.id] = action_group
-        self.actions: list[Action]
+        self.actions: list[Action[T, S]]
         if len(self._action_groups) > 1:
             if any(ag.final_action for ag in self._action_groups.values()):
                 raise NotImplementedError("Binding with multiple action groups can't have final action")
@@ -97,10 +99,10 @@ class PromptEndingActionNotLast(ValueError):
 
 
 # ❗ Not named ActionSequence because I'm not sure whether they actually will execute in sequence ('execute-silent' might be done in background, etc.)
-class ActionGroup:
-    def __init__(self, name: str | None = None, *actions: Action):
+class ActionGroup[T, S]:
+    def __init__(self, name: str | None = None, *actions: Action[T, S]):
         self.id = id(self)
-        self._actions: list[Action] = []
+        self._actions: list[Action[T, S]] = []
         self.description = self._create_description(*actions)
         self.name = name or self.description
         self.final_action: PromptEndingAction | None = None
@@ -112,11 +114,11 @@ class ActionGroup:
                 self.final_action = action
 
     @property
-    def actions(self) -> list[Action]:
+    def actions(self) -> list[Action[T, S]]:
         return self._actions
 
-    def _create_description(self, *actions: Action) -> str:
+    def _create_description(self, *actions: Action[T, S]) -> str:
         return "->".join([f"{str(action)}" for action in actions])
 
-    def __add__(self, other: ActionGroup) -> ActionGroup:
+    def __add__(self, other: ActionGroup[T, S]) -> ActionGroup[T, S]:
         return ActionGroup(" -> ".join(n for n in (self.name, other.name) if n), *(self._actions + other._actions))

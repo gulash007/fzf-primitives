@@ -17,13 +17,13 @@ from .parametrized_actions import Action
 class ActionMenu[T, S](LoggedComponent):
     def __init__(self) -> None:
         super().__init__()
-        self.bindings: dict[Hotkey | Event, Binding] = {}
+        self.bindings: dict[Hotkey | Event, Binding[T, S]] = {}
 
     @property
-    def actions(self) -> list[Action]:
+    def actions(self) -> list[Action[T, S]]:
         return [action for binding in self.bindings.values() for action in binding.actions]
 
-    def add(self, trigger: Hotkey | Event, binding: Binding, *, on_conflict: ConflictResolution = "raise error"):
+    def add(self, trigger: Hotkey | Event, binding: Binding[T, S], *, on_conflict: ConflictResolution = "raise error"):
         self.logger.debug(
             f"🔗 Adding binding for '{trigger}': {binding} ({on_conflict} on conflict)",
             trace_point="adding_binding_to_action_menu",

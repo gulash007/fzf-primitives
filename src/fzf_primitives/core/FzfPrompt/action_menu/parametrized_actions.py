@@ -1,7 +1,7 @@
 from ..options import BaseAction, ParametrizedActionType, ShellCommandActionType
 
 
-class ParametrizedAction:
+class ParametrizedAction[T, S]:
     def __init__(self, action_value: str, action_type: ParametrizedActionType = "put") -> None:
         self.action_value = action_value
         self._action_type: ParametrizedActionType = action_type
@@ -17,8 +17,8 @@ class ParametrizedAction:
         return f"[PA]{self.action_type}({self.action_value if len(self.action_value) < 20 else f'{self.action_value[:20]}...'})"
 
 
-class CompositeAction:
-    def __init__(self, *actions: BaseAction | ParametrizedAction) -> None:
+class CompositeAction[T, S]:
+    def __init__(self, *actions: BaseAction | ParametrizedAction[T, S]) -> None:
         self.actions = actions
 
     def action_string(self) -> str:
@@ -28,7 +28,7 @@ class CompositeAction:
         return f"[CA]({'+'.join(str(action) for action in self.actions)})"
 
 
-class ShellCommand(ParametrizedAction):
+class ShellCommand[T, S](ParametrizedAction[T, S]):
     def __init__(self, command: str, command_type: ShellCommandActionType = "execute") -> None:
         self._command_type: ShellCommandActionType = command_type
         super().__init__(command, command_type)
@@ -117,4 +117,4 @@ class ToggleUpAt(CompositeAction):
 
 
 # Action can just be a string if you know what you're doing (look in `man fzf` for what can be assigned to '--bind')
-Action = BaseAction | ParametrizedAction | CompositeAction
+type Action[T, S] = BaseAction | ParametrizedAction[T, S] | CompositeAction[T, S]
