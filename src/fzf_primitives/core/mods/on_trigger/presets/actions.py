@@ -19,9 +19,14 @@ class SelectBy[T, S](Transform[T, S], LoggedComponent):
                 if original_position is None:
                     return []
                 actions: list[Action] = []
-                for i, choice in enumerate(prompt_data.entries):
-                    if predicate(choice):
-                        self.logger.debug(f"Selecting choice at index {i} with value: {choice}")
+                for i, entry in enumerate(prompt_data.entries):
+                    try:
+                        should_select = predicate(entry)
+                    except Exception as e:
+                        self.logger.warning(f"{e.__class__.__name__}: {e}", trace_point="error_in_select_by_predicate")
+                        continue
+                    if should_select:
+                        self.logger.debug(f"Selecting choice at index {i} with value: {entry}")
                         actions.append(SelectAt(i))
                 actions.append(MovePointer(original_position))
                 return actions

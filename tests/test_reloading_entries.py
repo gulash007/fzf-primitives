@@ -1,6 +1,9 @@
+import pytest
+
 from fzf_primitives import Prompt, PromptData
 from fzf_primitives.actions import MovePointer, ParametrizedAction
 from fzf_primitives.config import Config
+from fzf_primitives.core.FzfPrompt.action_menu.parametrized_actions import SelectAt
 from fzf_primitives.core.monitoring import INTERNAL_LOG_DIR
 from tests.LoggingSetup import LoggingSetup
 
@@ -38,42 +41,39 @@ def get_prompt_for_reloading_entries():
 INITIAL_PEOPLE = [{"name": "Alice", "id": 0}, {"name": "Bob", "id": 1}, {"name": "Charlie", "id": 2}]
 
 
+@pytest.mark.parametrize("query", ["", "Alice", "Bob", "Nobody"])
 @logging_setup.attach
-def test_remembering_selections_after_reload():
+def test_remembering_selections_after_reload(query):
     prompt = get_prompt_for_remembering_selections_after_reload()
-    queries = ["", "Alice", "Bob", "Nobody"]
-
-    for q in queries:
-        prompt.mod.automate_actions(MovePointer(1))
-        prompt.mod.automate_actions("select")
-        prompt.mod.automate_actions(MovePointer(2))
-        prompt.mod.automate_actions("select")
-        prompt.mod.automate_actions(ParametrizedAction(q, "put"))
-        prompt.mod.automate("ctrl-x")
-        prompt.mod.automate("ctrl-6")
-        prompt.mod.automate("ctrl-y")
-        prompt.mod.automate_actions("clear-query")
-        prompt.mod.automate_actions("clear-multi")
+    prompt.mod.automate_actions(SelectAt(1))
+    prompt.mod.automate_actions(SelectAt(2))
+    prompt.mod.automate_actions(ParametrizedAction(query, "put"))
+    prompt.mod.automate("ctrl-x")
+    prompt.mod.automate("ctrl-6")
+    prompt.mod.automate("ctrl-y")
+    prompt.mod.automate_actions("clear-query")
     prompt.mod.automate(Config.default_accept_hotkey)
 
     result = prompt.run()
-    for q in queries:
-        assert result.obj[q]["indices_before"] == result.obj[q]["indices_after"]
+    assert result.obj["indices_before"] == result.obj["indices_after"]
 
 
 @logging_setup.attach
 def get_prompt_for_remembering_selections_after_reload():
     prompt = Prompt(INITIAL_PEOPLE, obj={})
     prompt.mod.on_hotkey().CTRL_X.run_function(
-        "record selections before reload",
-        lambda pd: pd.obj.setdefault(pd.query, {}).update({"indices_before": pd.selected_indices.copy()}),
+        "record selections before reload", lambda pd: pd.obj.update({"indices_before": pd.selected_indices.copy()})
     )
     prompt.mod.on_hotkey().CTRL_6.reload_entries(
-        lambda pd: INITIAL_PEOPLE + [{"name": "David", "id": 3}], preserve_selections_by_key=lambda x: x["id"]
+        lambda pd: INITIAL_PEOPLE
+        + [
+            {"name": "David", "id": 3},
+            {"name": "Person with missing id"},  # should produce error in getting key
+        ],
+        preserve_selections_by_key=lambda x: x["id"],
     )
     prompt.mod.on_hotkey().CTRL_Y.run_function(
-        "record selections after reload",
-        lambda pd: pd.obj.setdefault(pd.query, {}).update({"indices_after": pd.selected_indices.copy()}),
+        "record selections after reload", lambda pd: pd.obj.update({"indices_after": pd.selected_indices.copy()})
     )
     prompt.mod.options.multiselect
     return prompt
