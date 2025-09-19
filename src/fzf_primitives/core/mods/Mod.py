@@ -65,7 +65,7 @@ class Mod[T, S](LoggedComponent):
         """Currently can only automate hotkeys that have been explicitly bound"""
         self._mods.append(lambda pd: pd.automator.automate(*to_execute))
 
-    def automate_actions(self, *actions: Action):
+    def automate_actions(self, *actions: Action[T, S]):
         self._mods.append(lambda pd: pd.automator.automate_actions(*actions))
 
     # other options

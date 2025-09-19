@@ -105,7 +105,7 @@ class ActionGroup[T, S]:
         self._actions: list[Action[T, S]] = []
         self.description = self._create_description(*actions)
         self.name = name or self.description
-        self.final_action: PromptEndingAction | None = None
+        self.final_action: PromptEndingAction[T, S] | None = None
         for action in actions:
             if self.final_action is not None:
                 raise PromptEndingActionNotLast(self._create_description(*actions))

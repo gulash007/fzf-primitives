@@ -36,7 +36,7 @@ class PromptData[T, S](LoggedComponent):
         self.action_menu = action_menu or ActionMenu()
         self.server = Server(self)
         self.previewer = previewer or Previewer()
-        self._automator: Automator | None = None
+        self._automator: Automator[T, S] | None = None
         self._controller: Controller | None = None
         self.options = options or Options()
         self.post_processors: list[PostProcessor] = []
@@ -130,7 +130,7 @@ class PromptData[T, S](LoggedComponent):
         return self.previewer.current_preview.output
 
     @property
-    def automator(self) -> Automator:
+    def automator(self) -> Automator[T, S]:
         if not self._automator:
             from ..FzfPrompt.automator import Automator
 

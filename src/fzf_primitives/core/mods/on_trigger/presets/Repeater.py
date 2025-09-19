@@ -13,7 +13,7 @@ from ....monitoring import LoggedComponent
 class Repeater[T, S]:
     def __init__(
         self,
-        *actions: Action,
+        *actions: Action[T, S],
         repeat_interval: float = 0.5,
         repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
     ) -> None:
@@ -45,7 +45,7 @@ class AutomatingThread[T, S](Thread, LoggedComponent):
         self,
         prompt_data: PromptData[T, S],
         port: int,
-        *actions: Action,
+        *actions: Action[T, S],
         repeat_interval: float = 0.5,
         repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
     ) -> None:

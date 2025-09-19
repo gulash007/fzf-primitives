@@ -42,7 +42,7 @@ class OnTriggerBase[T, S](ABC):
         if len(triggers) != len(set(triggers)):
             raise ValueError(f"Duplicate triggers for this mod: {triggers}")
         self._on_conflict: ConflictResolution = on_conflict
-        self._bindings: dict[Trigger, Binding] = {trigger: Binding("") for trigger in triggers}
+        self._bindings: dict[Trigger, Binding[T, S]] = {trigger: Binding("") for trigger in triggers}
         self._additional_mods: list[Callable[[PromptData[T, S]], None]] = []
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
@@ -51,7 +51,7 @@ class OnTriggerBase[T, S](ABC):
         for mod in self._additional_mods:
             mod(prompt_data)
 
-    def run_binding(self, binding: Binding) -> Self:
+    def run_binding(self, binding: Binding[T, S]) -> Self:
         for trigger in self._bindings.keys():
             self._bindings[trigger] += binding
         return self
@@ -59,7 +59,7 @@ class OnTriggerBase[T, S](ABC):
 
 # TODO: run should accept a binding instead of actions (create run_actions method?)
 class OnTrigger[T, S](OnTriggerBase[T, S]):
-    def run(self, name: str, *actions: Action) -> Self:
+    def run(self, name: str, *actions: Action[T, S]) -> Self:
         return self.run_binding(Binding(name, *actions))
 
     def run_function(
@@ -146,7 +146,7 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
     def auto_repeat_run(
         self,
         name: str,
-        *actions: Action,
+        *actions: Action[T, S],
         repeat_interval: float = 0.5,
         repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
     ) -> Self:

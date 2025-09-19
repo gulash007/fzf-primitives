@@ -16,8 +16,8 @@ from .decorators import single_use_method
 from .server import ServerCall
 
 
-class Automator(Thread, LoggedComponent):
-    def __init__(self, prompt_data: PromptData) -> None:
+class Automator[T, S](Thread, LoggedComponent):
+    def __init__(self, prompt_data: PromptData[T, S]) -> None:
         LoggedComponent.__init__(self)
         self._prompt_data = prompt_data
         self._controller = Controller()
@@ -79,5 +79,5 @@ class Automator(Thread, LoggedComponent):
     def automate(self, *to_automate: Hotkey):
         self._bindings.extend(self._prompt_data.action_menu.bindings[hotkey] for hotkey in to_automate)
 
-    def automate_actions(self, *actions: Action, name: str | None = None):
+    def automate_actions(self, *actions: Action[T, S], name: str | None = None):
         self._bindings.append(Binding(name or "anonymous actions", *actions))
