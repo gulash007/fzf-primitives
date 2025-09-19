@@ -5,10 +5,10 @@ DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMen
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMenu.add|adding_binding_to_action_menu
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMenu.add|adding_binding_to_action_menu
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.previewer.previewer.add|adding_preview
-DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMenu.add|adding_binding_to_action_menu
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.previewer.previewer.add|adding_preview
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMenu.add|adding_binding_to_action_menu
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.previewer.previewer.add|adding_preview
+DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMenu.add|adding_binding_to_action_menu
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.server.server.add_endpoint|adding_server_endpoint
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.previewer.previewer.resolve_main_preview|resolved_main_preview
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMenu.add|adding_binding_to_action_menu

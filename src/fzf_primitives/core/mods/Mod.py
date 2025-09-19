@@ -33,21 +33,21 @@ class Mod[T, S](LoggedComponent):
 
     # on trigger
     @attach_hotkey_adder
-    def on_hotkey(self, *hotkeys: Hotkey, on_conflict: ConflictResolution = "raise error") -> OnTrigger[T, S]:
-        return self.on_trigger(*hotkeys, on_conflict=on_conflict)
+    def on_hotkey(self, hotkey: Hotkey, on_conflict: ConflictResolution = "raise error") -> OnTrigger[T, S]:
+        return self.on_trigger(hotkey, on_conflict=on_conflict)
 
     @attach_event_adder
-    def on_event(self, *events: Event, on_conflict: ConflictResolution = "raise error") -> OnTrigger[T, S]:
-        return self.on_trigger(*events, on_conflict=on_conflict)
+    def on_event(self, event: Event, on_conflict: ConflictResolution = "raise error") -> OnTrigger[T, S]:
+        return self.on_trigger(event, on_conflict=on_conflict)
 
-    def on_trigger(self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error"):
-        on_trigger_mod = OnTrigger[T, S](*triggers, on_conflict=on_conflict)
+    def on_trigger(self, trigger: Hotkey | Event, on_conflict: ConflictResolution = "raise error"):
+        on_trigger_mod = OnTrigger[T, S](trigger, on_conflict=on_conflict)
         self._mods.append(on_trigger_mod)
         return on_trigger_mod
 
     # preview
-    def preview(self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error", main: bool = False):
-        preview_mod = PreviewMod[T, S](*triggers, on_conflict=on_conflict, main=main)
+    def preview(self, trigger: Hotkey | Event | None = None, on_conflict: ConflictResolution = "raise error", main: bool = False):
+        preview_mod = PreviewMod[T, S](trigger, on_conflict=on_conflict, main=main)
         self._mods.append(preview_mod)
         return preview_mod
 

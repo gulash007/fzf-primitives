@@ -4,6 +4,7 @@ import itertools
 from pathlib import Path
 from typing import Callable, Iterable, Unpack
 
+from ....core.monitoring import LoggedComponent
 from ...FzfPrompt import (
     Binding,
     ConflictResolution,
@@ -16,7 +17,7 @@ from ...FzfPrompt import (
     ServerCall,
 )
 from ...FzfPrompt.action_menu.transform import Transform
-from ...FzfPrompt.options import Event, Hotkey, RelativeWindowSize, WindowPosition
+from ...FzfPrompt.options import Event, Hotkey, RelativeWindowSize, Trigger, WindowPosition
 from ...FzfPrompt.previewer.Preview import (
     DEFAULT_BEFORE_CHANGE_DO,
     DEFAULT_LABEL,
@@ -27,7 +28,6 @@ from ...FzfPrompt.previewer.Preview import (
     DEFAULT_WINDOW_SIZE,
     PreviewStyleMutationArgs,
 )
-from ...monitoring import LoggedComponent
 from ..on_trigger import OnTriggerBase
 from ..trigger_adder import attach_event_adder, attach_hotkey_adder
 from .presets import CodeTheme, CyclicalPreview, FileViewer, get_fzf_env_vars, get_fzf_json, preview_basic
@@ -42,13 +42,15 @@ class preview_preset:
         return obj.custom(self._name, **self._kwargs)
 
 
-class PreviewMod[T, S](OnTriggerBase[T, S], LoggedComponent):
-    def __init__(self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error", main: bool = False):
-        super().__init__(*triggers, on_conflict=on_conflict)
-        LoggedComponent.__init__(self)
+class PreviewMod[T, S](LoggedComponent):
+    def __init__(
+        self, trigger: Trigger | None = None, on_conflict: ConflictResolution = "raise error", main: bool = False
+    ):
+        self._trigger: Trigger | None = trigger
+        self._on_conflict: ConflictResolution = on_conflict
         self._preview: Preview[T, S]
         self._main = main
-        self._additional_mods.append(lambda pd: pd.previewer.add(self._preview, main=self._main))
+        self._additional_mods = []
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         try:
@@ -56,8 +58,13 @@ class PreviewMod[T, S](OnTriggerBase[T, S], LoggedComponent):
         except AttributeError:
             self.logger.warning("PreviewMod has no effect as its Preview has not been set")
             return
-        self.run_binding(self._preview.preview_change_binding)
-        return super().__call__(prompt_data)
+        prompt_data.previewer.add(self._preview, main=self._main)
+        if self._trigger is not None:
+            prompt_data.action_menu.add(
+                self._trigger, self._preview.preview_change_binding, on_conflict=self._on_conflict
+            )
+        for mod in self._additional_mods:
+            mod(prompt_data)
 
     def custom(
         self,
@@ -132,27 +139,25 @@ class SpecificPreviewMod[T, S]:
 
     @attach_hotkey_adder
     def on_hotkey(
-        self, *hotkeys: Hotkey, on_conflict: ConflictResolution = "raise error"
+        self, hotkey: Hotkey, on_conflict: ConflictResolution = "raise error"
     ) -> SpecificPreviewOnTrigger[T, S]:
-        return self.on_trigger(*hotkeys, on_conflict=on_conflict)
+        return self.on_trigger(hotkey, on_conflict=on_conflict)
 
     @attach_event_adder
-    def on_event(
-        self, *events: Event, on_conflict: ConflictResolution = "raise error"
-    ) -> SpecificPreviewOnTrigger[T, S]:
-        return self.on_trigger(*events, on_conflict=on_conflict)
+    def on_event(self, event: Event, on_conflict: ConflictResolution = "raise error") -> SpecificPreviewOnTrigger[T, S]:
+        return self.on_trigger(event, on_conflict=on_conflict)
 
-    def on_trigger(self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error"):
-        on_trigger_mod = SpecificPreviewOnTrigger[T, S](*triggers, preview=self._preview, on_conflict=on_conflict)
+    def on_trigger(self, trigger: Hotkey | Event, on_conflict: ConflictResolution = "raise error"):
+        on_trigger_mod = SpecificPreviewOnTrigger[T, S](trigger, preview=self._preview, on_conflict=on_conflict)
         self._mods.append(on_trigger_mod)
         return on_trigger_mod
 
 
 class SpecificPreviewOnTrigger[T, S](OnTriggerBase[T, S]):
     def __init__(
-        self, *triggers: Hotkey | Event, preview: Preview[T, S], on_conflict: ConflictResolution = "raise error"
+        self, trigger: Hotkey | Event, preview: Preview[T, S], on_conflict: ConflictResolution = "raise error"
     ):
-        super().__init__(*triggers, on_conflict=on_conflict)
+        super().__init__(trigger, on_conflict=on_conflict)
         self._preview = preview
 
     def mutate(

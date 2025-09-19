@@ -23,7 +23,7 @@ from ...FzfPrompt import (
 from ...FzfPrompt.action_menu.parametrized_actions import MovePointer, ParametrizedAction
 from ...FzfPrompt.constants import SHELL_COMMAND
 from ...FzfPrompt.options.actions import BaseAction, ShellCommandActionType
-from ...FzfPrompt.options.triggers import Event, Hotkey, Trigger
+from ...FzfPrompt.options.triggers import Trigger
 from ...monitoring import LoggedComponent
 from .presets import (
     FILE_EDITORS,
@@ -39,22 +39,19 @@ from .presets import (
 
 
 class OnTriggerBase[T, S](ABC, LoggedComponent):
-    def __init__(self, *triggers: Hotkey | Event, on_conflict: ConflictResolution = "raise error"):
-        if len(triggers) != len(set(triggers)):
-            raise ValueError(f"Duplicate triggers for this mod: {triggers}")
+    def __init__(self, trigger: Trigger, on_conflict: ConflictResolution = "raise error"):
         self._on_conflict: ConflictResolution = on_conflict
-        self._bindings: dict[Trigger, Binding[T, S]] = {trigger: Binding("") for trigger in triggers}
+        self._trigger: Trigger = trigger
+        self._binding: Binding[T, S] = Binding("")
         self._additional_mods: list[Callable[[PromptData[T, S]], None]] = []
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
-        for trigger, binding in self._bindings.items():
-            prompt_data.action_menu.add(trigger, binding, on_conflict=self._on_conflict)
+        prompt_data.action_menu.add(self._trigger, self._binding, on_conflict=self._on_conflict)
         for mod in self._additional_mods:
             mod(prompt_data)
 
     def run_binding(self, binding: Binding[T, S]) -> Self:
-        for trigger in self._bindings.keys():
-            self._bindings[trigger] += binding
+        self._binding += binding
         return self
 
 
@@ -173,10 +170,7 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         allow_empty: bool = True,
     ):
         """Post-processor is called after the prompt has ended and before common post-processors are applied"""
-        for trigger in self._bindings.keys():
-            self._bindings[trigger] += Binding(
-                name, PromptEndingAction(end_status, trigger, post_processor, allow_empty=allow_empty)
-            )
+        self.run(name, PromptEndingAction(end_status, self._trigger, post_processor, allow_empty=allow_empty))
 
     # presets
     @property
