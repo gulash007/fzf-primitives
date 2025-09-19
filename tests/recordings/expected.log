@@ -4,6 +4,7 @@ DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMen
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMenu.add|adding_binding_to_action_menu
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMenu.add|adding_binding_to_action_menu
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMenu.add|adding_binding_to_action_menu
+DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.previewer.previewer.add|adding_preview
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMenu.add|adding_binding_to_action_menu
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.previewer.previewer.add|adding_preview
 DEBUG|MainProcess|MainThread|fzf_primitives.core.FzfPrompt.action_menu.ActionMenu.add|adding_binding_to_action_menu
@@ -24,7 +25,9 @@ TRACE|MainProcess|Server|fzf_primitives.core.FzfPrompt.previewer.actions.preview
 TRACE|MainProcess|Server|fzf_primitives.core.FzfPrompt.previewer.actions.preview_call|showing_preview
 DEBUG|MainProcess|Server|fzf_primitives.core.FzfPrompt.action_menu.transform.get_transform_string|transform_created
 DEBUG|MainProcess|Server|fzf_primitives.core.FzfPrompt.server.server.add_endpoint|adding_server_endpoint
+DEBUG|MainProcess|Server|fzf_primitives.core.FzfPrompt.server.server.add_endpoint|adding_server_endpoint
 TRACE|MainProcess|Server|fzf_primitives.core.FzfPrompt.previewer.actions.change_current_preview|changing_preview
+TRACE|MainProcess|Server|fzf_primitives.core.FzfPrompt.previewer.actions.preview_call|showing_preview
 DEBUG|MainProcess|Server|fzf_primitives.core.FzfPrompt.action_menu.transform.get_transform_string|transform_created
 DEBUG|MainProcess|Server|fzf_primitives.core.FzfPrompt.server.server.add_endpoint|adding_server_endpoint
 DEBUG|MainProcess|Server|fzf_primitives.core.FzfPrompt.server.server.add_endpoint|adding_server_endpoint

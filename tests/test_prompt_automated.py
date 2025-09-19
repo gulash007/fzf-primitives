@@ -42,6 +42,7 @@ def prompt_builder():
     prompt.mod.options.multiselect.listen()
     prompt.mod.on_hotkey().CTRL_A.toggle_all
     prompt.mod.on_hotkey().CTRL_Q.quit
+    prompt.mod.preview().basic
     prompt.mod.preview("ctrl-y").fzf_json
     prompt.mod.preview("ctrl-6").custom("Hello World", "echo 'Hello World'")
 
