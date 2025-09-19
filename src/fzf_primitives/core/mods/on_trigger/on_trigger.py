@@ -259,11 +259,15 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         self._additional_mods.append(add_conditional_result_action)
 
         def save_current_index(pd: PromptData[T, S]):
-            if pd.current_index is not None and pd.query != "":
-                pd.run_vars["saved_current_index"] = pd.current_index
-                pd.run_vars["running_clear_and_refocus"] = True
+            pd.run_vars["saved_current_index"] = pd.current_index
+            pd.run_vars["running_clear_and_refocus"] = True
 
-        return self.run_function("clear and refocus", save_current_index, "clear-query", silent=True)
+        return self.run_transform(
+            "clear and refocus",
+            lambda pd: [ServerCall(save_current_index, command_type="execute-silent"), "clear-query"]
+            if pd.current_index is not None and pd.query != ""
+            else ["offset-middle"],
+        )
 
     def become(self, command_getter: Callable[[PromptData[T, S]], str]) -> Self:
         return self.run(
