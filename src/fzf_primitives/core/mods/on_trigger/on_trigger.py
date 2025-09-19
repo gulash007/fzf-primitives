@@ -123,7 +123,7 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
                 pd.run_vars[saved_query_key] = pd.query
                 pd.run_vars[condition_key] = True
 
-            self.run_function("save selections", save_selection_keys, "clear-query")
+            self.run_function("save selections", save_selection_keys, "clear-query", silent=True)
 
             def add_conditional_result_action(pd: PromptData[T, S]):
                 def reselect_conditionally(pd: PromptData[T, S]) -> list[Action]:
