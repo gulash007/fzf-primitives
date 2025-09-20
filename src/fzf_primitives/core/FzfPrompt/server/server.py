@@ -91,12 +91,12 @@ class Server[T, S](Thread, LoggedComponent):
             finally:
                 client_socket.close()
 
-    def add_endpoints(self, binding: Binding, trigger: Trigger):
+    def add_endpoints(self, binding: Binding[T, S], trigger: Trigger):
         for action in binding.actions:
             if isinstance(action, ServerCall):
                 self.add_endpoint(action, trigger)
 
-    def add_endpoint(self, action: ServerCall, trigger: Trigger):
+    def add_endpoint(self, action: ServerCall[T, S], trigger: Trigger):
         if action.id in self.endpoints:
             raise ReusedServerCall(
                 f"ServerCall ({action.name}) already resolved as endpoint. Please use unique ServerCall instances."

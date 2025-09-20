@@ -9,7 +9,6 @@ if TYPE_CHECKING:
     from .prompt_data import PromptData
 from ...config import Config
 from ..monitoring import LoggedComponent
-from . import action_menu as am
 from .action_menu import Action, Binding
 from .controller import Controller
 from .decorators import single_use_method
@@ -22,7 +21,7 @@ class Automator[T, S](Thread, LoggedComponent):
         self._prompt_data = prompt_data
         self._controller = Controller()
         self.__port: int | None = None
-        self._bindings: list[am.Binding] = []
+        self._bindings: list[Binding] = []
         self._binding_executed = Event()
         self.move_to_next_binding_server_call = ServerCall(self._move_to_next_binding)
         super().__init__(daemon=True)
@@ -47,11 +46,11 @@ class Automator[T, S](Thread, LoggedComponent):
         self._prompt_data.server.add_endpoint(self.move_to_next_binding_server_call, "start")
         self._prompt_data.options.listen()
 
-    def execute_binding(self, binding: am.Binding):
+    def execute_binding(self, binding: Binding):
         time.sleep(Config.automator_delay)
         self.logger.debug(f">>>>> Automating {binding}", trace_point="automating_binding", binding=binding.name)
         if not binding.final_action:
-            binding += am.Binding("move to next automated binding", self.move_to_next_binding_server_call)
+            binding += Binding("move to next automated binding", self.move_to_next_binding_server_call)
         self._binding_executed.clear()
         self._controller.execute(self.port, binding)
         if binding.final_action:
