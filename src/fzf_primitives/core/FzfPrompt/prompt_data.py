@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 from ..monitoring import LoggedComponent
 from .action_menu import ActionMenu
 from .controller import Controller
-from .options import Event, Hotkey, Options
+from .options import Options, Trigger
 from .previewer import Previewer
 from .server import EndStatus, PostProcessor, PromptState, Server
 from .server.make_server_call import make_server_call
@@ -41,6 +41,7 @@ class PromptData[T, S](LoggedComponent):
         self.options = options or Options()
         self.post_processors: list[PostProcessor] = []
         self._state: PromptState | None = None
+        self._trigger: Trigger | None = None
         self._result: Result[T, S]
         self.id = datetime.now().isoformat()  # TODO: Use it?
         self.run_vars: dict[str, Any] = {"env": os.environ.copy()}
@@ -56,12 +57,24 @@ class PromptData[T, S](LoggedComponent):
             )
         return self._state
 
-    def set_state(self, prompt_state: PromptState):
+    def set_state(self, prompt_state: PromptState, trigger: Trigger):
         self._state = prompt_state
+        self._trigger = trigger
 
     @property
     def query(self) -> str:
         return self.state.query
+
+    @property
+    def trigger(self) -> Trigger:
+        """Trigger of the last ServerCall. For preview functions it's the trigger that made the switch to the preview.
+
+        Returns: Trigger: None means ServerCall was automated."""
+        if not self._trigger:
+            raise RuntimeError(
+                "Current trigger not set (you're probably accessing current trigger before prompt has started)"
+            )
+        return self._trigger
 
     @property
     def current(self) -> T | None:
@@ -109,10 +122,10 @@ class PromptData[T, S](LoggedComponent):
     def set_stage(self, stage: PromptStage):
         self._stage = stage
 
-    def finish(self, trigger: Hotkey | Event, end_status: EndStatus):
+    def finish(self, end_status: EndStatus):
         self._result = Result(
             end_status=end_status,
-            trigger=trigger,
+            trigger=self.trigger,
             entries=self.entries,
             query=self.state.query,
             current_index=self.state.current_index,
@@ -164,7 +177,7 @@ class Result[T, S](list[T]):
     def __init__(
         self,
         end_status: EndStatus,
-        trigger: Hotkey | Event,
+        trigger: Trigger,
         entries: list[T],
         query: str,
         current_index: int | None,
@@ -174,7 +187,7 @@ class Result[T, S](list[T]):
         obj: S,
     ):
         self.end_status: EndStatus = end_status
-        self.trigger: Hotkey | Event = trigger
+        self.trigger: Trigger = trigger
         self.query = query
         self.current_index = current_index  # of pointer starting from 0
         self.current = entries[current_index] if current_index is not None else None

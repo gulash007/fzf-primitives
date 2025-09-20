@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 from ...monitoring import LoggedComponent
 from ..action_menu import ParametrizedAction
 from ..options import RelativeWindowSize, WindowPosition
-from ..server import CommandOutput, Request, ServerCall, ServerCallFunctionGeneric
+from ..server import CommandOutput, ServerCall, ServerCallFunctionGeneric
 
 type PreviewFunction[T, S] = ServerCallFunctionGeneric[T, S, str]
 type PreviewChangePreProcessor[T, S] = Callable[[PromptData[T, S], Preview[T, S]], Any]
@@ -52,7 +52,7 @@ class PreviewServerCall[T, S](ServerCall[T, S], LoggedComponent):
             return output
 
         # HACK
-        self.endpoint.function = preview_call
+        self.function = preview_call
 
     @property
     @override

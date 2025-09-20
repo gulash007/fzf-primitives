@@ -37,7 +37,7 @@ class SelectBy[T, S](Transform[T, S], LoggedComponent):
         super().__init__(get_select_actions, f"Selecting by: {predicate.__name__}")
 
     def __str__(self) -> str:
-        return f"[SB]({self._get_function_name(self.endpoint.function)})"
+        return f"[SB]({self._get_function_name(self.function)})"
 
 
 class ReloadEntries[T, S](ServerCall[T, S], LoggedComponent):
@@ -56,7 +56,7 @@ class ReloadEntries[T, S](ServerCall[T, S], LoggedComponent):
         super().__init__(reload_entries, command_type="reload-sync" if sync else "reload")
 
     def __str__(self) -> str:
-        return f"[RC]({self._get_function_name(self.endpoint.function)})"
+        return f"[RC]({self._get_function_name(self.function)})"
 
 
 class ShowInPreview[T, S](ServerCall[T, S]):

@@ -6,18 +6,18 @@ from pathlib import Path
 import pytest
 
 from fzf_primitives import Prompt, PromptData
-from fzf_primitives.core.FzfPrompt.server.actions import CommandOutput, ServerCall, ServerEndpoint
+from fzf_primitives.core.FzfPrompt.server import CommandOutput, ServerCall, ServerEndpoint
 
 CORRECT_COMMAND_PATH = Path(__file__).parent.joinpath("test_request/correct_command.txt")
 CREATED_COMMAND_PATH = Path(__file__).parent.joinpath("test_request/created_command.txt")
-COMMAND_CREATION_TEST_ENDPOINT = ServerEndpoint(lambda pd: None, "ID with 'quotes'")
+COMMAND_CREATION_TEST_ENDPOINT = ServerEndpoint(lambda pd: None, "ID with 'quotes'", "ctrl-n")
 
 
 def test_create_command():
     with open(CORRECT_COMMAND_PATH, "r", encoding="utf-8") as f:
         expected_command = f.read()
-
-    created_command = ServerCall._create_command(COMMAND_CREATION_TEST_ENDPOINT)  # noqa: SLF001
+    create_command = ServerCall._create_command  # noqa: SLF001
+    created_command = create_command(COMMAND_CREATION_TEST_ENDPOINT.id, COMMAND_CREATION_TEST_ENDPOINT.function)
     Path(os.path.dirname(CREATED_COMMAND_PATH)).mkdir(parents=True, exist_ok=True)
     with open(CREATED_COMMAND_PATH, "w", encoding="utf-8") as f:
         f.write(created_command)

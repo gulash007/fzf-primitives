@@ -40,7 +40,8 @@ class Previewer[T, S](LoggedComponent):
         if self._current_preview:
             change_preview_output = self._current_preview.change_preview_output
             if isinstance(change_preview_output, ServerCall):
-                prompt_data.server.add_endpoint(change_preview_output.endpoint)
+                # HACK: Injected trigger (endpoint wasn't actually triggered by 'start' event)
+                prompt_data.server.add_endpoint(change_preview_output, "start")
             prompt_data.options.preview(change_preview_output.action_value)
             prompt_data.options.add("--preview-window", self._current_preview.change_preview_window.action_value)
             prompt_data.options.preview_label(self._current_preview.change_preview_label.action_value)

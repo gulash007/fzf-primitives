@@ -170,7 +170,7 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         allow_empty: bool = True,
     ):
         """Post-processor is called after the prompt has ended and before common post-processors are applied"""
-        self.run(name, PromptEndingAction(end_status, self._trigger, post_processor, allow_empty=allow_empty))
+        self.run(name, PromptEndingAction(end_status, post_processor, allow_empty=allow_empty))
 
     # presets
     @property

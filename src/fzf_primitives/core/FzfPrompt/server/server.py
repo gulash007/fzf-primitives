@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..action_menu import Binding
+    from ..options import Trigger
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
 from . import make_server_call
@@ -90,12 +91,20 @@ class Server[T, S](Thread, LoggedComponent):
             finally:
                 client_socket.close()
 
-    def add_endpoints(self, binding: Binding):
+    def add_endpoints(self, binding: Binding, trigger: Trigger):
         for action in binding.actions:
             if isinstance(action, ServerCall):
-                self.add_endpoint(action.endpoint)
+                self.add_endpoint(action, trigger)
 
-    def add_endpoint(self, endpoint: ServerEndpoint):
-        if endpoint.id not in self.endpoints:
-            self.logger.debug(f"🤙 Adding server endpoint: {endpoint.id}", trace_point="adding_server_endpoint")
-            self.endpoints[endpoint.id] = endpoint
+    def add_endpoint(self, action: ServerCall, trigger: Trigger):
+        if action.id in self.endpoints:
+            raise ReusedServerCall(
+                f"ServerCall ({action.name}) already resolved as endpoint. Please use unique ServerCall instances."
+            )
+        endpoint = ServerEndpoint(action.function, action.id, trigger)
+        self.logger.debug(f"🤙 Adding server endpoint: {endpoint.id}", trace_point="adding_server_endpoint")
+        self.endpoints[endpoint.id] = endpoint
+
+
+class ReusedServerCall(Exception):
+    pass

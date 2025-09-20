@@ -4,18 +4,20 @@ import json
 from typing import TYPE_CHECKING, Any, Self
 
 if TYPE_CHECKING:
+    from ..options import Trigger
     from ..prompt_data import PromptData
     from .actions import ServerCallFunction
 
 
 class ServerEndpoint:
-    def __init__(self, function: ServerCallFunction, id: str):
+    def __init__(self, function: ServerCallFunction, id: str, trigger: Trigger) -> None:
         self.function = function
         self.id = id
+        self.trigger: Trigger = trigger
 
     def run(self, prompt_data: PromptData, request: Request) -> Any:
         if request.prompt_state:
-            prompt_data.set_state(request.prompt_state)
+            prompt_data.set_state(request.prompt_state, self.trigger)
         return self.function(prompt_data, **request.kwargs)
 
 

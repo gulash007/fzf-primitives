@@ -23,7 +23,7 @@ class Repeater[T, S]:
         self.thread: AutomatingThread[T, S] | None = None
 
     def __call__(self, prompt_data: PromptData, FZF_PORT: str):
-        prompt_data.server.add_endpoints(Binding("", *self.actions))
+        prompt_data.server.add_endpoints(Binding("", *self.actions), prompt_data.trigger)
         if not self.thread:
             self.thread = self.create_automating_thread(prompt_data, int(FZF_PORT))
             self.thread.start()

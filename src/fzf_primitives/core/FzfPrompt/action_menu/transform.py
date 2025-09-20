@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from ..prompt_data import PromptData
     from . import Action
 from ...monitoring import LoggedComponent
-from ..server import ServerCall
+from ..server import PromptEndingAction, ServerCall
 from . import binding as b
 
 type ActionsBuilder[T, S] = Callable[Concatenate[PromptData[T, S], ...], Iterable[Action]]
@@ -39,8 +39,10 @@ class Transform[T, S](ServerCall[T, S], LoggedComponent):
             self._created_endpoints.clear()
             for action in binding.actions:
                 if isinstance(action, ServerCall):
-                    prompt_data.server.add_endpoint(action.endpoint)
-                    self._created_endpoints.append(action.endpoint.id)
+                    prompt_data.server.add_endpoint(action, prompt_data.trigger)
+                    self._created_endpoints.append(action.id)
+                    if isinstance(action, PromptEndingAction):
+                        prompt_data.action_menu.add(prompt_data.trigger, b.Binding("", action), on_conflict="append")
 
             return binding.action_string()
 

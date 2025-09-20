@@ -74,8 +74,8 @@ class Prompt[T, S]:
             Binding("On startup success", ServerCall(on_startup_success, command_type="execute-silent")),
             on_conflict="prepend",
         )
-        for binding in self._prompt_data.action_menu.bindings.values():
-            self._prompt_data.server.add_endpoints(binding)
+        for trigger, binding in self._prompt_data.action_menu.bindings.items():
+            self._prompt_data.server.add_endpoints(binding, trigger)
         self._prompt_data.options += self._prompt_data.action_menu.resolve_options()
         self._prompt_data.options.listen()  # for ServerCalls with FZF_PORT parameter
         self._stage = "ready to run"

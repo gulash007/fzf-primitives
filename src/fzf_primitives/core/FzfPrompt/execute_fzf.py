@@ -113,7 +113,7 @@ def execute_fzf[T, S](
             err_message = "Prompt not finished (you aborted prompt without finishing PromptData)"
             logger.error(err_message, **{"trace_point": "prompt_not_finished_properly"})
             raise RuntimeError(err_message)
-        trigger = prompt_data.result.trigger
+        trigger = prompt_data.trigger
         if not (final_action := prompt_data.action_menu.bindings[trigger].final_action):
             err_message = "Prompt ended on trigger that doesn't have final action. How did we get here?"
             logger.error(
