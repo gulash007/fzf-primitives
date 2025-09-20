@@ -1,16 +1,23 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING, Callable, Concatenate, Iterable
+from typing import TYPE_CHECKING, Any, Callable, Concatenate, Iterable, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from ..prompt_data import PromptData
     from . import Action
 from ...monitoring import LoggedComponent
-from ..server import PromptEndingAction, ServerCall
+from ..server import PromptEndingAction, ServerCall, ServerCallFunction
 from . import binding as b
 
-type ActionsBuilder[T, S] = Callable[Concatenate[PromptData[T, S], ...], Iterable[Action[T, S]]]
+type ActionsBuilder[T, S] = Callable[
+    Concatenate[PromptData[T, S], ...], Iterable[Action[T, S] | ServerCallFunction[T, S]]
+]
+
+
+@runtime_checkable
+class _ServerCallFunction(Protocol):
+    def __call__(self, prompt_data: PromptData, *args, **kwargs) -> Any: ...
 
 
 class Transform[T, S](ServerCall[T, S], LoggedComponent):
@@ -30,7 +37,12 @@ class Transform[T, S](ServerCall[T, S], LoggedComponent):
         @functools.wraps(actions_builder)
         def get_transform_string(prompt_data: PromptData[T, S], *args, **kwargs) -> str:
             actions: list[Action[T, S]] = [
-                a.copy() if isinstance(a, ServerCall) else a for a in actions_builder(prompt_data, *args, **kwargs)
+                a.copy()
+                if isinstance(a, ServerCall)
+                else ServerCall(a, command_type="execute-silent")
+                if isinstance(a, _ServerCallFunction)
+                else a
+                for a in actions_builder(prompt_data, *args, **kwargs)
             ]
             binding = b.Binding(None, *actions)
             self.logger.debug(f"{self}: Created {binding}", trace_point="transform_created", binding=binding.name)
