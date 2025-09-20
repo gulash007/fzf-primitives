@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 import functools
 from typing import TYPE_CHECKING, Callable, Concatenate, Iterable
 
@@ -11,7 +10,7 @@ from ...monitoring import LoggedComponent
 from ..server import PromptEndingAction, ServerCall
 from . import binding as b
 
-type ActionsBuilder[T, S] = Callable[Concatenate[PromptData[T, S], ...], Iterable[Action]]
+type ActionsBuilder[T, S] = Callable[Concatenate[PromptData[T, S], ...], Iterable[Action[T, S]]]
 
 
 class Transform[T, S](ServerCall[T, S], LoggedComponent):
@@ -30,12 +29,14 @@ class Transform[T, S](ServerCall[T, S], LoggedComponent):
     def getting_transform_string(self, actions_builder: ActionsBuilder[T, S]):
         @functools.wraps(actions_builder)
         def get_transform_string(prompt_data: PromptData[T, S], *args, **kwargs) -> str:
-            binding = b.Binding(None, *actions_builder(prompt_data, *args, **kwargs))
+            actions: list[Action[T, S]] = [
+                a.copy() if isinstance(a, ServerCall) else a for a in actions_builder(prompt_data, *args, **kwargs)
+            ]
+            binding = b.Binding(None, *actions)
             self.logger.debug(f"{self}: Created {binding}", trace_point="transform_created", binding=binding.name)
 
             for server_call_id in self._created_endpoints:
-                with contextlib.suppress(KeyError):
-                    prompt_data.server.endpoints.pop(server_call_id)
+                prompt_data.server.endpoints.pop(server_call_id, None)
             self._created_endpoints.clear()
             for action in binding.actions:
                 if isinstance(action, ServerCall):

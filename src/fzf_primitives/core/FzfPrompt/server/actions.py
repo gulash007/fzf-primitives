@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 import inspect
 import shlex
-from typing import TYPE_CHECKING, Any, Callable, Concatenate, override
+from typing import TYPE_CHECKING, Any, Callable, Concatenate, Self, Type, override
 
 if TYPE_CHECKING:
     from ..prompt_data import PromptData
@@ -24,7 +24,14 @@ class CommandOutput(str):
     """
 
 
-class ServerCall[T, S](ShellCommand[T, S]):
+class RemembersHowItWasConstructed[T](type):
+    def __call__(cls: Type[T], *args, **kwargs) -> T:
+        instance = super().__call__(*args, **kwargs)
+        setattr(instance, "_new_copy", lambda: cls(*args, **kwargs))
+        return instance
+
+
+class ServerCall[T, S](ShellCommand[T, S], metaclass=RemembersHowItWasConstructed):
     """
     ❗ Don't reuse the same ServerCall instance in multiple bindings as created endpoints inherit .id but are
     also themselves parametrized by trigger so they're unique and ServerCall.id needs to find them
@@ -77,6 +84,9 @@ class ServerCall[T, S](ShellCommand[T, S]):
 
     def __str__(self) -> str:
         return f"[SC]{self.command_type}({self.id})"
+
+    def copy(self) -> Self:
+        return getattr(self, "_new_copy")()
 
 
 type PostProcessor[T, S] = Callable[[PromptData[T, S]], Any]
