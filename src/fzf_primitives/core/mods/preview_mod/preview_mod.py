@@ -56,7 +56,9 @@ class PreviewMod[T, S](LoggedComponent):
         try:
             self._preview
         except AttributeError:
-            self.logger.warning("PreviewMod has no effect as its Preview has not been set")
+            self.logger.warning(
+                "PreviewMod has no effect as its Preview has not been set", trace_point="preview_mod_no_preview"
+            )
             return
         prompt_data.previewer.add(self._preview, main=self._main)
         if self._trigger is not None:

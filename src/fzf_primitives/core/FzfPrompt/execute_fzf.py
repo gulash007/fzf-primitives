@@ -68,13 +68,13 @@ def execute_fzf[T, S](
                 def keep_piping():
                     for entry in entries_stream:
                         # TODO: better name than line
-                        line = prompt_data.converter(entry)
+                        item = prompt_data.converter(entry)
                         prompt_data.entries.append(entry)
                         try:
-                            fzf_stdin.write(f"{line}{delimiter}")
+                            fzf_stdin.write(f"{item}{delimiter}")
                             fzf_stdin.flush()
                         except Exception as e:
-                            logger.exception(str(e), trace_point="error_writing_line_to_fzf_process")
+                            logger.exception(str(e), trace_point="error_writing_item_to_fzf_process")
                             prompt_data.entries.pop()
                             pass
 

@@ -69,7 +69,7 @@ class AutomatingThread[T, S](Thread, LoggedComponent):
                     continue
                 self.prompt_data.controller.execute(self.port, Binding("", *self.actions))
             except Exception as err:
-                self.logger.exception(err)
+                self.logger.exception(str(err), trace_point="error_in_automating_thread")
                 self.should_stop = True
                 continue
             finally:

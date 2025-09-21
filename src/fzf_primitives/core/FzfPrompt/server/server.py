@@ -56,7 +56,7 @@ class Server[T, S](Thread, LoggedComponent):
                         continue
                     self._handle_request(client_socket, self.prompt_data)
         except Exception as e:
-            self.logger.exception(e)
+            self.logger.exception(str(e), trace_point="error_in_server")
             raise
         finally:
             self.setup_finished.set()
@@ -74,20 +74,22 @@ class Server[T, S](Thread, LoggedComponent):
             )
             response = self.endpoints[request.endpoint_id].run(prompt_data, request) or response
         except Exception as err:
-            self.logger.error(trb := traceback.format_exc())
-            payload_info = f"Payload contents:\n{payload}"
-            self.logger.error(payload_info)
-            response = f"{trb}\n{payload_info}"
+            trb = traceback.format_exc()
+            error_message = f"{trb}\nPayload contents:\n{payload}"
+            self.logger.error(error_message, trace_point="error_handling_request")
+            response = error_message
             if isinstance(err, KeyError):
                 response = f"{trb}\n{list(self.endpoints.keys())}"
-                self.logger.error(f"Available server calls:\n{list(self.endpoints.keys())}")
+                self.logger.error(
+                    f"Available server calls:\n{list(self.endpoints.keys())}", trace_point="missing_server_call"
+                )
         finally:
             response_bytes = str(response).encode("utf-8")
             try:
                 client_socket.send(len(response_bytes).to_bytes(4))
                 client_socket.sendall(response_bytes)
             except Exception as e:
-                self.logger.exception(f"Error sending response: {e}")
+                self.logger.exception(f"Error sending response: {e}", trace_point="error_sending_response")
             finally:
                 client_socket.close()
 

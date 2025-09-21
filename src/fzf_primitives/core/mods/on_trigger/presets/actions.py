@@ -26,12 +26,14 @@ class SelectBy[T, S](Transform[T, S], LoggedComponent):
                         self.logger.warning(f"{e.__class__.__name__}: {e}", trace_point="error_in_select_by_predicate")
                         continue
                     if should_select:
-                        self.logger.debug(f"Selecting choice at index {i} with value: {entry}")
+                        self.logger.debug(
+                            f"Selecting choice at index {i} with value: {entry}", trace_point="selecting_choice"
+                        )
                         actions.append(SelectAt(i))
                 actions.append(MovePointer(original_position))
                 return actions
             except Exception as e:
-                self.logger.error(f"Error in get_select_actions: {e}")
+                self.logger.error(f"Error in get_select_actions: {e}", trace_point="error_in_get_select_actions")
                 return ["bell"]
 
         super().__init__(get_select_actions, f"Selecting by: {predicate.__name__}")
@@ -50,7 +52,7 @@ class ReloadEntries[T, S](ServerCall[T, S], LoggedComponent):
                 prompt_data.entries = entries
                 return "\n".join([prompt_data.converter(entry) for entry in entries])
             except Exception as e:
-                self.logger.error(f"Error in reload_choices: {e}")
+                self.logger.error(f"Error in reload_entries: {e}", trace_point="error_in_reload_entries")
                 return None
 
         super().__init__(reload_entries, command_type="reload-sync" if sync else "reload")

@@ -29,4 +29,4 @@ def run_in_loop[T, S](
                 break
             result_processor(result)
         except Aborted as e:
-            logger.info(f"ExitRound: {e}")
+            logger.info(f"ExitRound: {e}", trace_point="exiting_round")

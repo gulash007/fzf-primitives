@@ -77,7 +77,7 @@ class Automator[T, S](Thread, LoggedComponent):
                 break
             except RuntimeError:
                 if total_sleep_time >= log_every_n_seconds:
-                    self.logger.warning("Waiting for port to be resolved…")
+                    self.logger.warning("Waiting for port to be resolved…", trace_point="waiting_for_port")
                     total_sleep_time = 0
                 time.sleep(sleep_period)
                 total_sleep_time += sleep_period
