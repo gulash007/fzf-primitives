@@ -44,7 +44,7 @@ class Automator[T, S](Thread, LoggedComponent):
     @single_use_method
     def prepare(self):
         # HACK: Injected trigger (endpoint wasn't actually triggered by 'start' event)
-        self._prompt_data.server.add_endpoint(self.automator_transform, "start")
+        self._prompt_data.server.add_endpoint(self.automator_transform, "<<automated>>")  # type: ignore
         self._prompt_data.options.listen()
 
     def execute_binding(self, binding: Binding):
