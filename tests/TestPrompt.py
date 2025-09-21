@@ -19,7 +19,6 @@ from fzf_primitives.core.mods.vector_generator import VectorGenerator
 from fzf_primitives.core.monitoring import Logger
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
 from tests.LoggingSetup import LoggingSetup
-from tests.Recording import Recording
 
 print(f"Imports: {perf_counter() - start} seconds")
 # TEST ALL KINDS OF STUFF

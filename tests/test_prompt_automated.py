@@ -1,18 +1,17 @@
 from __future__ import annotations
 
-import argparse
-import contextlib
-import sys
+import functools
+from dataclasses import dataclass, field
 from enum import Enum, auto
 
 import pytest
 
 from fzf_primitives.config import Config
 from fzf_primitives.core import Prompt
-from fzf_primitives.core.FzfPrompt.exceptions import Aborted, PromptEnd
+from fzf_primitives.core.FzfPrompt.exceptions import Aborted
+from fzf_primitives.core.mods.preview_mod.presets import get_fzf_json, preview_basic
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
 from tests.LoggingSetup import LoggingSetup
-from tests.Recording import Recording
 
 # TODO: test resolved options (need to control for variables)
 
@@ -36,36 +35,81 @@ tuesday = DayOfTheWeek(2)
 TEST_CHOICES = list(DayOfTheWeek)
 
 
+@dataclass
+class Recording:
+    selections: list[DayOfTheWeek] = field(default_factory=list)
+    previews: list[str] = field(default_factory=list)
+
+
+n = 0
+
+
+def hello_world(prompt_data):
+    global n
+    n += 1
+    return f"{n}: Hello World"
+
+
+EXPECTED_RECORDING = Recording(
+    selections=TEST_CHOICES,
+    # cursor movement and changing selections refreshes preview (unless done simultaneously, then it just counts as one)
+    previews=[
+        *[preview_basic.__name__] * 3,
+        get_fzf_json.__name__,
+        *[hello_world.__name__] * 7,
+    ],
+)
+
+
+def show_and_record_preview(preview_function):
+    @functools.wraps(preview_function)
+    def wrapper(prompt_data, *args, **kwargs):
+        prompt_data.obj.previews.append(preview_function.__name__)
+        return preview_function(prompt_data, *args, **kwargs)
+
+    return wrapper
+
+
 @logging_setup.attach
 def prompt_builder():
-    prompt = Prompt(TEST_CHOICES, lambda day: day.name)
+    prompt = Prompt(TEST_CHOICES, lambda day: day.name, obj=Recording())
     prompt.mod.options.multiselect.listen()
     prompt.mod.on_hotkey().CTRL_A.toggle_all
+    prompt.mod.on_hotkey().CTRL_N.run_function(
+        "record selections", lambda pd: pd.obj.selections.extend(pd.selections), silent=True
+    )
+    prompt.mod.on_hotkey().TAB.run("select next", "down", "select")
     prompt.mod.on_hotkey().CTRL_Q.quit
-    prompt.mod.preview().basic
-    prompt.mod.preview("ctrl-y").fzf_json
-    prompt.mod.preview("ctrl-6").custom("Hello World", "echo 'Hello World'")
+    prompt.mod.preview().custom("basic", show_and_record_preview(preview_basic))
+    prompt.mod.preview("ctrl-y").custom("fzf json", show_and_record_preview(get_fzf_json))
+    prompt.mod.preview("ctrl-6").custom("Hello World", show_and_record_preview(hello_world))
 
     return prompt
 
 
-# ❗ Checking recording might be non-deterministic. Try running this test multiple times
 @logging_setup.attach
 def test_general():
-    Recording.setup("TestPromptAutomated")
-
     prompt = prompt_builder()
     prompt.mod.automate_actions("up")
     prompt.mod.automate_actions("down")
     prompt.mod.automate("ctrl-y")
     prompt.mod.automate("ctrl-6")
     prompt.mod.automate("ctrl-a")
+    prompt.mod.automate("ctrl-n")
+    prompt.mod.automate("ctrl-a")
+    prompt.mod.automate("tab", "tab", "tab")
+    prompt.mod.automate_actions("down")
     prompt.mod.automate(Config.default_accept_hotkey)
-    prompt.run()
+    result = prompt.run()
 
-    recording = Recording.load("TestPromptAutomated")
-    expected = Recording.load("expected")
-    assert recording.text == expected.text
+    assert result.selections == TEST_CHOICES[1:4], f"Unexpected selections: {result.selections}"
+    assert result.end_status == "accept"
+    assert result.current == TEST_CHOICES[4]
+    assert prompt.current_preview == "7: Hello World"
+    assert prompt.obj == EXPECTED_RECORDING, f"Unexpected recording: {prompt.obj}"
+
+    # currently doesn't work because automated hotkeys use endpoint with hardcoded 'start' trigger
+    # assert result.trigger == Config.default_accept_hotkey
 
 
 @logging_setup.attach
@@ -85,14 +129,5 @@ def test_abort():
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--record", action="store_true", help="Enable recording")
-    parsed_args = parser.parse_args(args)
-
-    Config.logging_enabled = True
-    if parsed_args.record:
-        Recording.setup("expected")
-    with contextlib.suppress(PromptEnd):
-        result = prompt_builder().run()
-        print(f"Selections: {result.selections}")
+    prompt = prompt_builder()
+    logging_setup.attach(prompt.run)()
