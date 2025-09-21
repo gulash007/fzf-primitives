@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from .prompt_data import PromptData
 from ...config import Config
 from ..monitoring import LoggedComponent
-from .action_menu import Action, Binding
+from .action_menu import Action, Binding, Transform
 from .controller import Controller
 from .decorators import single_use_method
 from .server import ServerCall
@@ -23,7 +23,8 @@ class Automator[T, S](Thread, LoggedComponent):
         self.__port: int | None = None
         self._bindings: list[Binding] = []
         self._binding_executed = Event()
-        self.move_to_next_binding_server_call = ServerCall(self._move_to_next_binding)
+        self.automator_transform = Transform(self._actions_builder)
+        self._current_actions_to_automate: list[Action[T, S]]
         super().__init__(daemon=True)
 
     @property
@@ -38,24 +39,30 @@ class Automator[T, S](Thread, LoggedComponent):
             for binding_to_automate in self._bindings:
                 self.execute_binding(binding_to_automate)
         except Exception as e:
-            self.logger.exception(e)
+            self.logger.exception(str(e), trace_point="error_in_automator")
 
     @single_use_method
     def prepare(self):
         # HACK: Injected trigger (endpoint wasn't actually triggered by 'start' event)
-        self._prompt_data.server.add_endpoint(self.move_to_next_binding_server_call, "start")
+        self._prompt_data.server.add_endpoint(self.automator_transform, "start")
         self._prompt_data.options.listen()
 
     def execute_binding(self, binding: Binding):
         time.sleep(Config.automator_delay)
         self.logger.debug(f">>>>> Automating {binding}", trace_point="automating_binding", binding=binding.name)
         if not binding.final_action:
-            binding += Binding("move to next automated binding", self.move_to_next_binding_server_call)
+            binding += Binding(
+                "move to next automated binding", ServerCall(self._move_to_next_binding, command_type="execute-silent")
+            )
+        self._current_actions_to_automate = binding.actions
         self._binding_executed.clear()
-        self._controller.execute(self.port, binding)
+        self._controller.execute(self.port, Binding("automated binding", self.automator_transform))
         if binding.final_action:
             return
         self._binding_executed.wait()
+
+    def _actions_builder(self, prompt_data: PromptData) -> list[Action[T, S]]:
+        return self._current_actions_to_automate
 
     def _move_to_next_binding(self, prompt_data: PromptData):
         self._binding_executed.set()
