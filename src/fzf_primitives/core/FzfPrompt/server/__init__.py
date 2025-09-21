@@ -12,20 +12,21 @@ from .actions import (
     ServerCallFunctionGeneric,
 )
 from .request import PromptState, Request, ServerEndpoint
-from .server import Server
+from .server import ReusedServerCall, Server
 
 __all__ = [
-    "Request",
-    "Server",
-    "ServerEndpoint",
-    "ServerCall",
-    "ServerCallFunction",
-    "ServerCallFunctionGeneric",
-    "PostProcessor",
-    "PromptEndingAction",
-    "PromptState",
     "CommandOutput",
     "EndStatus",
     "MAKE_SERVER_CALL_ENV_VAR_NAME",
+    "PostProcessor",
+    "PromptEndingAction",
+    "PromptState",
+    "Request",
+    "ReusedServerCall",
+    "Server",
+    "ServerCall",
+    "ServerCallFunction",
+    "ServerCallFunctionGeneric",
+    "ServerEndpoint",
     "SOCKET_NUMBER_ENV_VAR",
 ]
