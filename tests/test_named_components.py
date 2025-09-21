@@ -47,7 +47,7 @@ def get_names_when_using_named_functions():
         ServerCall(get_output),
         Transform(get_become_echo_hello),
         *Preview("Some preview", output_generator=get_some_preview_output).preview_change_binding.actions,
-        PromptEndingAction("accept", "alt-0", post_processor_that_does_nothing),
+        PromptEndingAction("accept", post_processor_that_does_nothing),
     )
     print("----- test_names_when_using_named_functions -----")
     print("binding.name:", binding.name)
@@ -61,7 +61,7 @@ def get_names_when_assigning_custom_names():
         ServerCall(lambda pd: "output", "Getting server call output"),
         Transform(lambda pd: [ParametrizedAction("echo hello", "become")], "Become echo hello"),
         *Preview("Some preview", output_generator=lambda pd: "some preview output").preview_change_binding.actions,
-        PromptEndingAction("accept", "alt-0", lambda pd: None),
+        PromptEndingAction("accept"),
     )
     print("----- test_names_when_assigning_custom_names -----")
     print("binding.name:", binding.name)
