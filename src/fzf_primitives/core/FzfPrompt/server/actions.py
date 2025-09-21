@@ -10,18 +10,13 @@ if TYPE_CHECKING:
 from ...monitoring import LoggedComponent
 from ..action_menu.parametrized_actions import ShellCommand
 from ..options import EndStatus, ShellCommandActionType
+from .placeholders import CommandOutput, FzfPlaceholder, VarOutput
 
 # means it requires first parameter to be of type PromptData but other parameters can be anything
 type ServerCallFunctionGeneric[T, S, R] = Callable[Concatenate[PromptData[T, S], ...], R]
 type ServerCallFunction[T, S] = ServerCallFunctionGeneric[T, S, Any]
 SOCKET_NUMBER_ENV_VAR = "FZF_PRIMITIVES_SOCKET_NUMBER"
 MAKE_SERVER_CALL_ENV_VAR_NAME = "FZF_PRIMITIVES_REQUEST_CREATING_SCRIPT"
-
-
-class CommandOutput(str):
-    """A special type of string that when used as default value in ServerCallFunction parameters
-    will be executed as a shell command and the output will be passed to the parameter.
-    """
 
 
 class RemembersHowItWasConstructed[T](type):
@@ -65,9 +60,11 @@ class ServerCall[T, S](ShellCommand[T, S], metaclass=RemembersHowItWasConstructe
         ]
         for parameter in parameters:
             if isinstance(parameter.default, CommandOutput):
-                # HACK: when default value of a parameter of ServerCallFunction is of type CommandOutput
-                # then the parameter is going to be injected with the output of the value executed as shell command
                 command.extend([parameter.name, f'"$({parameter.default} 2>&1)"'])
+            elif isinstance(parameter.default, VarOutput):
+                command.extend([parameter.name, f'"${parameter.default}"'])
+            elif isinstance(parameter.default, FzfPlaceholder):
+                command.extend([parameter.name, parameter.default])
             else:
                 # otherwise it's going to be injected with a shell variable of the same name (mainly env vars)
                 command.extend([parameter.name, f'"${parameter.name}"'])

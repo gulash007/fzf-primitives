@@ -18,7 +18,7 @@ from .core.FzfPrompt.previewer.actions import (
     SetAsCurrentPreview,
     ShowAndStorePreviewOutput,
 )
-from .core.FzfPrompt.server import CommandOutput, PromptEndingAction, ServerCall
+from .core.FzfPrompt.server import CommandOutput, FzfPlaceholder, PromptEndingAction, ServerCall, VarOutput
 from .core.mods.on_trigger.presets import ReloadEntries, ShowInPreview
 
 __all__ = [
@@ -43,4 +43,6 @@ __all__ = [
     "PromptEndingAction",
     "ServerCall",
     "CommandOutput",
+    "VarOutput",
+    "FzfPlaceholder",
 ]

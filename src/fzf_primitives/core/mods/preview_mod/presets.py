@@ -11,6 +11,7 @@ from ....utils import CodeTheme, render_to_string, syntax_highlight
 from ...FzfPrompt import Binding, Preview, PromptData
 from ...FzfPrompt.action_menu.transform import Transform
 from ...FzfPrompt.options import Event, Hotkey
+from ...FzfPrompt.server import FzfPlaceholder
 from ...monitoring import LoggedComponent
 
 
@@ -126,6 +127,21 @@ def get_fzf_env_vars(
     FZF_PREVIEW_LEFT,
     FZF_PREVIEW_LINES,
     FZF_PREVIEW_COLUMNS,
+):
+    local_variables = locals().copy()
+    local_variables.pop("prompt_data", None)
+    return json.dumps(local_variables, indent=4, ensure_ascii=False, sort_keys=True)
+
+
+def get_fzf_placeholders(
+    prompt_data: PromptData,
+    query: FzfPlaceholder = FzfPlaceholder.preset.QUERY,
+    current_item: FzfPlaceholder = FzfPlaceholder.preset.CURRENT_ITEM,
+    current_index: FzfPlaceholder = FzfPlaceholder.preset.CURRENT_INDEX,
+    target_items: FzfPlaceholder = FzfPlaceholder.preset.TARGET_ITEMS,
+    target_indices: FzfPlaceholder = FzfPlaceholder.preset.TARGET_INDICES,
+    matched_items: FzfPlaceholder = FzfPlaceholder.preset.MATCHED_ITEMS,
+    matched_indices: FzfPlaceholder = FzfPlaceholder.preset.MATCHED_INDICES,
 ):
     local_variables = locals().copy()
     local_variables.pop("prompt_data", None)

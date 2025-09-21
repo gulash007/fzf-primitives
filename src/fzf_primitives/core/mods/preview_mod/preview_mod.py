@@ -30,7 +30,15 @@ from ...FzfPrompt.previewer.Preview import (
 )
 from ..on_trigger import OnTriggerBase
 from ..trigger_adder import attach_event_adder, attach_hotkey_adder
-from .presets import CodeTheme, CyclicalPreview, FileViewer, get_fzf_env_vars, get_fzf_json, preview_basic
+from .presets import (
+    CodeTheme,
+    CyclicalPreview,
+    FileViewer,
+    get_fzf_env_vars,
+    get_fzf_json,
+    get_fzf_placeholders,
+    preview_basic,
+)
 
 
 class preview_preset:
@@ -97,6 +105,9 @@ class PreviewMod[T, S](LoggedComponent):
     basic = preview_preset("basic", output_generator=preview_basic, label="PromptData state")
     fzf_json = preview_preset("fzf json", output_generator=get_fzf_json, label="fzf JSON")
     fzf_env_vars = preview_preset("fzf env vars", output_generator=get_fzf_env_vars, label="fzf env vars")
+    fzf_placeholders = preview_preset(
+        "fzf placeholders", output_generator=get_fzf_placeholders, label="fzf placeholders"
+    )
 
     def file(
         self,
