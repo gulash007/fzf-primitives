@@ -8,22 +8,22 @@ EndStatus = Literal["accept", "abort", "quit"]
 
 
 # SEARCH
-type Scheme = Literal["default", "path", "history"]
-type Algorithm = Literal["v1", "v2"]
-type Tiebreak = Literal["length", "chunk", "pathname", "begin", "end", "index"]
+Scheme = Literal["default", "path", "history"]
+Algorithm = Literal["v1", "v2"]
+Tiebreak = Literal["length", "chunk", "pathname", "begin", "end", "index"]
 
 
 # INPUT SECTION
-type Info = Literal["default", "right", "hidden", "inline", "inline-right"]
+Info = Literal["default", "right", "hidden", "inline", "inline-right"]
 
 
 # DIRECTORY TRAVERSAL
-type WalkerValue = Literal["file", "dir", "follow", "hidden"]
+WalkerValue = Literal["file", "dir", "follow", "hidden"]
 
 
 # UI
-type Layout = Literal["default", "reverse", "reverse-list"]
-type Border = Literal[
+Layout = Literal["default", "reverse", "reverse-list"]
+Border = Literal[
     "rounded",
     "sharp",
     "bold",
@@ -36,9 +36,9 @@ type Border = Literal[
     "right",
     "none",
 ]
-type LabelPosition = Literal["top", "bottom"]
-type WindowPosition = Literal["up", "down", "left", "right"]
-type RelativeWindowSize = Literal[
+LabelPosition = Literal["top", "bottom"]
+WindowPosition = Literal["up", "down", "left", "right"]
+RelativeWindowSize = Literal[
     "1%",
     "2%",
     "3%",
