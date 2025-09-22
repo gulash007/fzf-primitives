@@ -1,0 +1,53 @@
+   PREVIEW WINDOW
+       --preview=COMMAND
+	      Execute the given command for the current line and display the result on the preview window. {} in the command is the
+	      placeholder that is replaced to the single-quoted string of the current line. To transform the replacement string, specify
+	      field index expressions between the braces (See FIELD INDEX EXPRESSION for the details).
+
+	      e.g.
+		   fzf --preview='head -$LINES {}'
+		   ls -l | fzf --preview="echo user={3} when={-4..-2}; cat {-1}" --header-lines=1
+
+	      fzf exports $FZF_PREVIEW_LINES and $FZF_PREVIEW_COLUMNS so that they represent the exact size of the preview window. (It also
+	      overrides $LINES and $COLUMNS with the same values but they can be reset by the default shell, so prefer to refer to the ones
+	      with FZF_PREVIEW_ prefix.)
+
+	      fzf also exports $FZF_PREVIEW_TOP and $FZF_PREVIEW_LEFT so that the preview command can determine the position of the preview
+	      window.
+
+	      A placeholder expression starting with + flag will be replaced to the space-separated list of the selected items (or the
+	      current item if no selection was made) individually quoted.
+
+	      e.g.
+		   fzf --multi --preview='head -10 {+}'
+		   git log --oneline | fzf --multi --preview 'git show {+1}'
+
+	      Similarly, a placeholder expression starting with * flag will be replaced to the space-separated list of all matched items
+	      individually quoted.
+
+	      Each expression expands to a quoted string, so that it's safe to pass it as an argument to an external command. So you should
+	      not manually add quotes around the curly braces. But if you don't want this behavior, you can put r flag (raw) in the
+	      expression (e.g. {r}, {r1}, etc).  Use it with caution as unquoted output can lead to broken commands.
+
+	      When using a field index expression, leading and trailing whitespace is stripped from the replacement string. To preserve the
+	      whitespace, use the s flag.
+
+	      A placeholder expression with f flag is replaced to the path of a temporary file that holds the evaluated list. This is useful
+	      when you pass a large number of items and the length of the evaluated string may exceed ARG_MAX.
+
+	      e.g.
+		   # See the sum of all the matched numbers
+		   # This won't work properly without 'f' flag due to ARG_MAX limit.
+		   seq 100000 | fzf --preview "awk '{sum+=\$1} END {print sum}' {*f}"
+
+	      Also,
+
+	      * {q} is replaced to the current query string
+	      * {q} can contain field index expressions. e.g. {q:1}, {q:2..}, etc.
+	      * {n} is replaced to the zero-based ordinal index of the current item.
+		Use {+n} if you want all index numbers when multiple lines are selected.
+
+	      Note that you can escape a placeholder pattern by prepending a backslash.
+
+	      Preview window will be updated even when there is no match for the current query if any of the placeholder expressions
+	      evaluates to a non-empty string or {q} is in the command template.
