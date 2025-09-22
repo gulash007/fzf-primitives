@@ -1,4 +1,8 @@
+import subprocess
+from typing import get_args
+
 from fzf_primitives.core.FzfPrompt.options import Options
+from fzf_primitives.core.FzfPrompt.options.values import FzfOption
 
 
 def test_options_comparisons():
@@ -21,3 +25,20 @@ def test_options_type():
 
     assert_type_equality(Options().ansi, Options)
     assert_type_equality(Options().ansi + Options().multiselect, Options)
+
+
+def test_options_working():
+    unknown_options = []
+    for option in get_args(FzfOption):
+        try:
+            subprocess.run(["fzf", "--version", option], check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as err:
+            if "unknown option" in err.stderr:
+                unknown_options.append(option)
+
+    if unknown_options:
+        raise ValueError(f"Options {unknown_options} are not recognized by fzf")
+
+
+if __name__ == "__main__":
+    test_options_working()
