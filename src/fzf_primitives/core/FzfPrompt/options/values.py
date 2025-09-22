@@ -4,17 +4,26 @@ from __future__ import annotations
 from typing import Literal
 
 # custom end status for control flow
-EndStatus = Literal[
-    "accept",
-    "abort",
-    "quit",
-]
-Layout = Literal[
-    "default",
-    "reverse",
-    "reverse-list",
-]
-Border = Literal[
+EndStatus = Literal["accept", "abort", "quit"]
+
+
+# SEARCH
+type Scheme = Literal["default", "path", "history"]
+type Algorithm = Literal["v1", "v2"]
+type Tiebreak = Literal["length", "chunk", "pathname", "begin", "end", "index"]
+
+
+# INPUT SECTION
+type Info = Literal["default", "right", "hidden", "inline", "inline-right"]
+
+
+# DIRECTORY TRAVERSAL
+type WalkerValue = Literal["file", "dir", "follow", "hidden"]
+
+
+# UI
+type Layout = Literal["default", "reverse", "reverse-list"]
+type Border = Literal[
     "rounded",
     "sharp",
     "bold",
@@ -27,13 +36,9 @@ Border = Literal[
     "right",
     "none",
 ]
-WindowPosition = Literal[
-    "up",
-    "down",
-    "left",
-    "right",
-]
-RelativeWindowSize = Literal[
+type LabelPosition = Literal["top", "bottom"]
+type WindowPosition = Literal["up", "down", "left", "right"]
+type RelativeWindowSize = Literal[
     "1%",
     "2%",
     "3%",

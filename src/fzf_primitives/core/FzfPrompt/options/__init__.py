@@ -1,19 +1,37 @@
 from .actions import BaseAction, ParametrizedActionType, ShellCommandActionType
 from .Options import Options
 from .triggers import Event, Hotkey, Trigger
-from .values import Border, EndStatus, Layout, RelativeWindowSize, WindowPosition
+from .values import (
+    Algorithm,
+    Border,
+    EndStatus,
+    Info,
+    LabelPosition,
+    Layout,
+    RelativeWindowSize,
+    Scheme,
+    Tiebreak,
+    WalkerValue,
+    WindowPosition,
+)
 
 __all__ = [
-    "Options",
+    "Algorithm",
     "BaseAction",
-    "ParametrizedActionType",
-    "ShellCommandActionType",
-    "Hotkey",
-    "Event",
-    "Trigger",
-    "EndStatus",
-    "WindowPosition",
-    "RelativeWindowSize",
-    "Layout",
     "Border",
+    "EndStatus",
+    "Event",
+    "Hotkey",
+    "Info",
+    "LabelPosition",
+    "Layout",
+    "Options",
+    "ParametrizedActionType",
+    "RelativeWindowSize",
+    "Scheme",
+    "ShellCommandActionType",
+    "Tiebreak",
+    "Trigger",
+    "WalkerValue",
+    "WindowPosition",
 ]
