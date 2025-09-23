@@ -8,6 +8,7 @@ from .triggers import Event, Hotkey
 from .values import (
     Algorithm,
     Border,
+    FzfOption,
     Info,
     LabelPosition,
     Layout,
@@ -45,24 +46,37 @@ class OptionsAdder:
 class Options:
     defaults = OptionsAdder(*DEFAULT_OPTS)
 
-    # TODO: Make it a dict
-
-    def __init__(self, *fzf_options: str) -> None:
-        self.__options: list[str] = list(fzf_options)
+    def __init__(self, *fzf_options: FzfOption | str) -> None:
+        self._options: list[str] = list(fzf_options)
 
     @property
     def options(self) -> list[str]:
-        return self.__options
+        return self._options
 
-    def add(self, *fzf_options: str) -> Self:
+    def add(self, *fzf_options: FzfOption | str) -> Self:
         self.options.extend(fzf_options)
+        return self
+
+    def remove(self, fzf_option: FzfOption | str) -> Self:
+        i = 0
+        while i < len(self._options):
+            opt = self._options[i]
+            if opt == fzf_option:
+                # Remove flag + its value (if any, and not another flag)
+                del self._options[i]
+                if i < len(self._options) and not self._options[i].startswith("--"):
+                    del self._options[i]
+            elif opt.startswith(fzf_option + "="):
+                del self._options[i]
+            else:
+                i += 1
         return self
 
     def __str__(self) -> str:
         return shlex.join(self)
 
     def __iter__(self):
-        return iter(self.__options)
+        return iter(self._options)
 
     def pretty(self) -> str:
         return " \\\n".join([shlex.quote(option) for option in self])

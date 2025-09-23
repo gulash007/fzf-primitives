@@ -5,6 +5,30 @@ from fzf_primitives.core.FzfPrompt.options import Options
 from fzf_primitives.core.FzfPrompt.options.values import FzfOption
 
 
+def test_remove_simple_flag():
+    opts = Options("--sort", "--no-sort", "--cycle")
+    opts.remove("--no-sort")
+    assert opts.options == ["--sort", "--cycle"]
+
+
+def test_remove_flag_with_value():
+    opts = Options("--height", "40", "--cycle")
+    opts.remove("--height")
+    assert opts.options == ["--cycle"]
+
+
+def test_remove_flag_with_equals():
+    opts = Options("--height=40", "--cycle")
+    opts.remove("--height")
+    assert opts.options == ["--cycle"]
+
+
+def test_remove_multiple_occurrences():
+    opts = Options("--sort", "--sort", "--cycle")
+    opts.remove("--sort")
+    assert opts.options == ["--cycle"]
+
+
 def test_options_comparisons():
     assert Options("--ansi") == Options("--ansi")
     assert Options("--ansi", "--no-sort") == Options("--ansi", "--no-sort")
