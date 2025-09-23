@@ -49,8 +49,6 @@ class Options:
 
     def __init__(self, *fzf_options: str) -> None:
         self.__options: list[str] = list(fzf_options)
-        self._header_strings: list[str] = []
-        self._footer_strings: list[str] = []
 
     @property
     def options(self) -> list[str]:
@@ -59,6 +57,22 @@ class Options:
     def add(self, *fzf_options: str) -> Self:
         self.options.extend(fzf_options)
         return self
+
+    def __str__(self) -> str:
+        return shlex.join(self)
+
+    def __iter__(self):
+        return iter(self.__options)
+
+    def pretty(self) -> str:
+        return " \\\n".join([shlex.quote(option) for option in self])
+
+    def __add__(self, __other: Options) -> Self:
+        self.add(*__other.options)
+        return self
+
+    def __eq__(self, __other) -> bool:
+        return self.options == __other.options
 
     # SEARCH
     extended = OptionsAdder("--extended")
@@ -374,13 +388,17 @@ class Options:
     no_preview_label = OptionsAdder("--no-preview-label")
 
     # HEADER
-    def add_header(self, header: str) -> Self:
-        self._header_strings.append(header)
-        return self
+    def header(self, header: str) -> Self:
+        return self.add(f"--header={header}")
 
-    @property
-    def header_option(self) -> str:
-        return f"--header={'\n'.join(self._header_strings)}"
+    def add_header(self, extra: str, separator: str = "\n") -> Self:
+        for i in reversed(range(len(self.options))):
+            if self.options[i].startswith("--header="):
+                current_header = self.options[i].split("=", 1)[1]
+                self.options[i] = f"--header={current_header}{separator}{extra}"
+                return self
+        else:
+            return self.header(extra)
 
     def header_lines(self, count: int) -> Self:
         return self.add(f"--header-lines={count}")
@@ -406,13 +424,17 @@ class Options:
     no_header_lines = OptionsAdder("--no-header-lines")
 
     # FOOTER
-    def add_footer(self, footer: str) -> Self:
-        self._footer_strings.append(footer)
-        return self
+    def footer(self, footer: str) -> Self:
+        return self.add(f"--footer={footer}")
 
-    @property
-    def footer_option(self) -> str:
-        return f"--footer={'\n'.join(self._footer_strings)}"
+    def add_footer(self, extra: str, separator: str = "\n") -> Self:
+        for i in reversed(range(len(self.options))):
+            if self.options[i].startswith("--footer="):
+                current_footer = self.options[i].split("=", 1)[1]
+                self.options[i] = f"--footer={current_footer}{separator}{extra}"
+                return self
+        else:
+            return self.footer(extra)
 
     def footer_border(self, border: Border, label: str | None = None, position: LabelPosition = "bottom") -> Self:
         args = [f"--footer-border={border}"]
@@ -503,33 +525,3 @@ class Options:
 
     # HELP
     pass
-
-    # UTILITIES
-    def __str__(self) -> str:
-        return shlex.join(self)
-
-    def __iter__(self):
-        options = self.options.copy()
-        if self._header_strings:
-            options.append(self.header_option)
-        if self._footer_strings:
-            options.append(self.footer_option)
-        return iter(options)
-
-    def pretty(self) -> str:
-        return "\n".join([shlex.quote(option) for option in self])
-
-    def __add__(self, __other: Options) -> Self:
-        options = self.add(*__other.options)
-        options._header_strings += __other._header_strings
-        options._footer_strings += __other._footer_strings
-        return options
-
-    # TODO: __sub__ for removing options?
-
-    def __eq__(self, __other) -> bool:
-        return (
-            self.options == __other.options
-            and self._header_strings == __other._header_strings
-            and self._footer_strings == __other._footer_strings
-        )
