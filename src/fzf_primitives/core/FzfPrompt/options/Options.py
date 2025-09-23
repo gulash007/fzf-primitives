@@ -107,6 +107,7 @@ class Options:
     def accept_nth(self, field_index_expression: str) -> Self:
         return self.add(f"--accept-nth={field_index_expression}")
 
+    sort = OptionsAdder("--sort")
     no_sort = OptionsAdder("--no-sort")
 
     def delimiter(self, delimiter: str | None = None) -> Self:
@@ -118,7 +119,8 @@ class Options:
         return self.add(f"--tail={n}")
 
     no_tail = OptionsAdder("--no-tail")
-    disable_search = OptionsAdder("--disabled")
+    enabled = OptionsAdder("--enabled")
+    disabled = OptionsAdder("--disabled")
 
     def tiebreak(self, *tiebreaks: Tiebreak) -> Self:
         """Comma-separated list of sort criteria to apply when the scores are tied.
@@ -151,6 +153,10 @@ class Options:
     no_ansi = OptionsAdder("--no-ansi")
     sync = OptionsAdder("--sync")
     no_sync = OptionsAdder("--no-sync")
+
+    def tty_default(self, device_name: str) -> Self:
+        return self.add(f"--tty-default={device_name}")
+
     no_tty_default = OptionsAdder("--no-tty-default")
 
     # GLOBAL STYLE
@@ -161,6 +167,8 @@ class Options:
         return self.add(f"--color={color_options}")
 
     no_color = OptionsAdder("--no-color")
+    no_256 = OptionsAdder("--no-256")
+    bold = OptionsAdder("--bold")
     no_bold = OptionsAdder("--no-bold")
     black = OptionsAdder("--black")
     no_black = OptionsAdder("--no-black")
@@ -225,6 +233,7 @@ class Options:
     def wrap_sign(self, indicator: str) -> Self:
         return self.add(f"--wrap-sign={indicator}")
 
+    multi_line = OptionsAdder("--multi-line")
     no_multi_line = OptionsAdder("--no-multi-line")
     track = OptionsAdder("--track")
     no_track = OptionsAdder("--no-track")
@@ -253,9 +262,10 @@ class Options:
         """Number of screen lines to keep above or below when scrolling to the top or to the bottom (default: 3)."""
         return self.add(f"--scroll-off={lines}")
 
-    no_horizontal_scroll = OptionsAdder("--no-hscroll")
+    hscroll = OptionsAdder("--hscroll")
+    no_hscroll = OptionsAdder("--no-hscroll")
 
-    def horizontal_scroll_off(self, columns: int) -> Self:
+    def hscroll_off(self, columns: int) -> Self:
         """Number of screen columns to keep to the right of the highlighted substring (default: 10). Setting it to a large value will
         cause the text to be positioned on the center of the screen."""
         return self.add(f"--hscroll-off={columns}")
@@ -421,6 +431,7 @@ class Options:
         return self.add(f"--query={query}")
 
     select_1 = OptionsAdder("--select-1")
+    no_select_1 = OptionsAdder("--no-select-1")
     exit_0 = OptionsAdder("--exit-0")
     no_exit_0 = OptionsAdder("--no-exit-0")
 
@@ -434,6 +445,7 @@ class Options:
         return self.add(f"--expect={','.join(hotkeys)}")
 
     no_expect = OptionsAdder("--no-expect")
+    clear = OptionsAdder("--clear")
     no_clear = OptionsAdder("--no-clear")
 
     # KEY/EVENT BINDINGS
@@ -484,6 +496,7 @@ class Options:
 
     # OTHERS
     no_mouse = OptionsAdder("--no-mouse")
+    unicode = OptionsAdder("--unicode")
     no_unicode = OptionsAdder("--no-unicode")
     ambidouble = OptionsAdder("--ambidouble")
     no_ambidouble = OptionsAdder("--no-ambidouble")
