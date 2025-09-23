@@ -42,7 +42,8 @@ def test_fzf_placeholders():
         prompt_data.obj["current_index"] = current_index
 
     prompt = Prompt([1, 2, 3], obj={})
-    prompt.mod.on_event().START.run_function("set fzf placeholders", function_with_fzf_placeholders, silent=True).accept
+    prompt.mod.on_hotkey().CTRL_6.run_function("set placeholders", function_with_fzf_placeholders, silent=True).accept
+    prompt.mod.automate("ctrl-6")
     result = prompt.run()
     assert result.obj["current_index"] == str(result.current_index)
     assert result.obj["matched_items"] == ["1", "2", "3"]
