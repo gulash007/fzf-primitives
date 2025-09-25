@@ -57,6 +57,14 @@ class Options:
         self.options.extend(fzf_options)
         return self
 
+    def get_indices_of(self, fzf_option: FzfOption | str, reverse: bool = False):
+        for i, opt in reversed(list(enumerate(self._options))) if reverse else enumerate(self._options):
+            if opt == fzf_option or opt.startswith(fzf_option + "="):
+                yield i
+
+    def get_index_of_last(self, fzf_option: FzfOption | str) -> int | None:
+        return next(self.get_indices_of(fzf_option, reverse=True), None)
+
     def remove(self, fzf_option: FzfOption | str) -> Self:
         i = 0
         while i < len(self._options):
@@ -406,13 +414,17 @@ class Options:
         return self.add(f"--header={header}")
 
     def add_header(self, extra: str, separator: str = "\n") -> Self:
-        for i in reversed(range(len(self.options))):
-            if self.options[i].startswith("--header="):
-                current_header = self.options[i].split("=", 1)[1]
-                self.options[i] = f"--header={current_header}{separator}{extra}"
-                return self
-        else:
+        """Expects header to be assigned as --header=<value>, not separated into --header <value>"""
+        if (index := self.get_index_of_last("--header")) is None:
             return self.header(extra)
+        self.options[index] += f"{separator}{extra}"
+        return self
+
+    @property
+    def header_option(self) -> str:
+        if (index := self.get_index_of_last("--header")) is not None:
+            return self.options[index].split("=", 1)[1]
+        return ""
 
     def header_lines(self, count: int) -> Self:
         return self.add(f"--header-lines={count}")
@@ -442,13 +454,17 @@ class Options:
         return self.add(f"--footer={footer}")
 
     def add_footer(self, extra: str, separator: str = "\n") -> Self:
-        for i in reversed(range(len(self.options))):
-            if self.options[i].startswith("--footer="):
-                current_footer = self.options[i].split("=", 1)[1]
-                self.options[i] = f"--footer={current_footer}{separator}{extra}"
-                return self
-        else:
+        """Expects footer to be assigned as --footer=<value>, not separated into --footer <value>"""
+        if (index := self.get_index_of_last("--footer")) is None:
             return self.footer(extra)
+        self.options[index] += f"{separator}{extra}"
+        return self
+
+    @property
+    def footer_option(self) -> str:
+        if (index := self.get_index_of_last("--footer")) is not None:
+            return self.options[index].split("=", 1)[1]
+        return ""
 
     def footer_border(self, border: Border, label: str | None = None, position: LabelPosition = "bottom") -> Self:
         args = [f"--footer-border={border}"]
