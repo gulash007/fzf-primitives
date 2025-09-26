@@ -19,17 +19,6 @@ from .values import (
     WindowPosition,
 )
 
-# TODO: move to some config
-DEFAULT_OPTS = [
-    "--layout=reverse",
-    "--info=inline",
-    "--cycle",
-    "--no-mouse",
-    "--bind=alt-shift-up:preview-half-page-up,alt-shift-down:preview-half-page-down",
-    "--preview-window=wrap",
-]
-
-
 class OptionsAdder:
     """Does the same thing as a property. It exists to shorten code.
     It also signals that it might do something unexpected of a property."""
@@ -44,8 +33,6 @@ class OptionsAdder:
 # TODO: tips formatter
 # TODO: add options lookup
 class Options:
-    defaults = OptionsAdder(*DEFAULT_OPTS)
-
     def __init__(self, *fzf_options: FzfOption | str) -> None:
         self._options: list[str] = list(fzf_options)
 
