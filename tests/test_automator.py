@@ -9,8 +9,8 @@ logging_setup = LoggingSetup(INTERNAL_LOG_DIR / "test_automator")
 @logging_setup.attach
 def test_automating_hotkeys():
     prompt = Prompt([1, 2])
-    prompt.mod.options.multiselect
-    prompt.mod.on_hotkey("ctrl-a").select_all
+    prompt.mod.options.multiselect()
+    prompt.mod.on_hotkey("ctrl-a").select_all()
     prompt.mod.automate("ctrl-a")
     prompt.mod.automate(prompt.config.default_accept_hotkey)
 
@@ -21,7 +21,7 @@ def test_automating_hotkeys():
 @logging_setup.attach
 def test_automating_actions():
     prompt = Prompt([1, 2, 3, 4])
-    prompt.mod.options.multiselect
+    prompt.mod.options.multiselect()
     prompt.mod.automate_actions("select", "down", "select", "down", "select")
     prompt.mod.automate(prompt.config.default_accept_hotkey)
 

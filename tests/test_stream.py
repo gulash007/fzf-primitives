@@ -13,9 +13,9 @@ def delayed_gen():
 def test_stream():
     entries = [1, 2, 3]
     prompt = Prompt(entries, entries_stream=delayed_gen())
-    prompt.mod.options.multiselect
+    prompt.mod.options.multiselect()
 
-    prompt.mod.preview().fzf_json
+    prompt.mod.preview().fzf_json()
     prompt.mod.on_hotkey().CTRL_N.run_shell_command("get total entries count", "echo $FZF_TOTAL_COUNT && read -n")
     prompt.mod.on_hotkey().CTRL_X.run_function("wait", lambda pd: time.sleep(3)).accept
 

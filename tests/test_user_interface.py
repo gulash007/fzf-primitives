@@ -18,7 +18,7 @@ def test_mod_return_value_types():
     assert type(prompt.mod.on_hotkey().CTRL_O.open_files()) is OnTrigger
     ## except for .end_prompt
     assert prompt.mod.on_hotkey().CTRL_Q.end_prompt("accept", "accept") is None
-    assert prompt.mod.on_hotkey().CTRL_C.accept is None
+    assert prompt.mod.on_hotkey().CTRL_C.accept() is None
 
     # test preview modding
     assert type(prompt.mod.preview()) is PreviewMod
@@ -26,18 +26,18 @@ def test_mod_return_value_types():
     assert type(prompt.mod.preview().custom("some preview", "echo hello").on_hotkey("ctrl-c")) is SpecificPreviewOnTrigger
 
     # test chaining post_processing
-    assert type(prompt.mod.lastly) is PostProcessing
-    assert type(prompt.mod.lastly.custom(lambda pd: None)) is PostProcessing
-    assert type(prompt.mod.lastly.raise_aborted_on(lambda pd: True)) is PostProcessing
-    assert type(prompt.mod.lastly.raise_from_aborted_status("Aborted!")) is PostProcessing
+    assert type(prompt.mod.lastly()) is PostProcessing
+    assert type(prompt.mod.lastly().custom(lambda pd: None)) is PostProcessing
+    assert type(prompt.mod.lastly().raise_aborted_on(lambda pd: True)) is PostProcessing
+    assert type(prompt.mod.lastly().raise_from_aborted_status("Aborted!")) is PostProcessing
 
     # test chaining options
     assert type(prompt.mod.options) is Options
-    assert type(prompt.mod.options.multiselect) is Options
-    assert type(prompt.mod.options.multiselect.add_header("")) is Options
+    assert type(prompt.mod.options.multiselect()) is Options
+    assert type(prompt.mod.options.multiselect().add_header("")) is Options
 
     # test mod presets
-    assert type(prompt.mod.default) is Mod
+    assert type(prompt.mod.default()) is Mod
 
 
 def test_checking_for_trigger_conflicts():
@@ -53,9 +53,9 @@ def test_checking_for_trigger_conflicts():
 
     # no conflict
     ## override previous binding
-    prompt.mod.on_hotkey().CTRL_Y.toggle_all.accept
-    prompt.mod.on_hotkey(on_conflict="override").CTRL_Y.abort
-    prompt.mod.on_hotkey().CTRL_Z.abort
+    prompt.mod.on_hotkey().CTRL_Y.toggle_all().accept()
+    prompt.mod.on_hotkey(on_conflict="override").CTRL_Y.abort()
+    prompt.mod.on_hotkey().CTRL_Z.abort()
     prompt.mod.apply(prompt._prompt_data)
     assert (
         prompt._prompt_data.action_menu.bindings["ctrl-y"].name
@@ -63,9 +63,9 @@ def test_checking_for_trigger_conflicts():
     )
 
     ## append binding
-    prompt.mod.on_hotkey().CTRL_R.toggle
-    prompt.mod.on_hotkey(on_conflict="append").CTRL_R.select_all.accept
-    prompt.mod.on_hotkey().CTRL_S.toggle.select_all.accept
+    prompt.mod.on_hotkey().CTRL_R.toggle()
+    prompt.mod.on_hotkey(on_conflict="append").CTRL_R.select_all().accept()
+    prompt.mod.on_hotkey().CTRL_S.toggle().select_all().accept()
     prompt.mod.apply(prompt._prompt_data)
     assert (
         prompt._prompt_data.action_menu.bindings["ctrl-r"].name
@@ -73,9 +73,9 @@ def test_checking_for_trigger_conflicts():
     )
 
     ## prepend binding
-    prompt.mod.on_hotkey().CTRL_B.accept
-    prompt.mod.on_hotkey(on_conflict="prepend").CTRL_B.toggle_preview.toggle_all
-    prompt.mod.on_hotkey().CTRL_N.toggle_preview.toggle_all.accept
+    prompt.mod.on_hotkey().CTRL_B.accept()
+    prompt.mod.on_hotkey(on_conflict="prepend").CTRL_B.toggle_preview().toggle_all()
+    prompt.mod.on_hotkey().CTRL_N.toggle_preview().toggle_all().accept()
     prompt.mod.apply(prompt._prompt_data)
     assert (
         prompt._prompt_data.action_menu.bindings["ctrl-b"].name

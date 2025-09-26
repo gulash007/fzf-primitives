@@ -20,8 +20,8 @@ class DefaultMultiselectPrompt[T, S](DefaultPrompt.DefaultPrompt[T, S]):
         override_basic_hotkeys: bool = False,
     ):
         super().__init__(entries, converter, obj, use_basic_hotkeys=override_basic_hotkeys)
-        self.mod.options.multiselect
-        self.mod.on_hotkey().CTRL_A.toggle_all
+        self.mod.options.multi()
+        self.mod.on_hotkey().CTRL_A.toggle_all()
 
 
 @app.command()

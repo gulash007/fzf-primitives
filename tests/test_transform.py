@@ -14,7 +14,7 @@ def test_basic_transform():
     prompt.mod.on_hotkey("ctrl-a").run("test", Transform(lambda pd: ["select-all"]))
     prompt.mod.automate("ctrl-a")
     prompt.mod.automate(Config.default_accept_hotkey)
-    prompt.mod.options.multiselect
+    prompt.mod.options.multiselect()
 
     result = prompt.run()
     assert list(result) == [1, 2, 3]
@@ -56,7 +56,7 @@ def get_prompt_with_transform_with_additional_parameters_in_actions_builder():
         return ["select-all"]
 
     prompt = Prompt([1, 2, 3], obj=None)
-    prompt.mod.options.multiselect
+    prompt.mod.options.multiselect()
     prompt.mod.on_hotkey("ctrl-n").run("test", Transform(get_preview_change_actions, "extra"))
     return prompt
 
@@ -68,7 +68,7 @@ def test_transform_with_functions_in_actions_builder():
     def action_function(prompt_data: PromptData):
         prompt_data.obj = len(prompt_data.entries)
 
-    prompt.mod.options.multiselect
+    prompt.mod.options.multiselect()
     prompt.mod.on_hotkey("ctrl-n").run("test", Transform(lambda pd: [action_function, "select-all"]))
     prompt.mod.automate("ctrl-n")
     prompt.mod.automate(Config.default_accept_hotkey)

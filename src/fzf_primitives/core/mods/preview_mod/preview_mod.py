@@ -41,15 +41,6 @@ from .presets import (
 )
 
 
-class preview_preset:
-    def __init__(self, name: str, **kwargs: Unpack[PreviewMutationArgs]) -> None:
-        self._name = name
-        self._kwargs = kwargs
-
-    def __get__(self, obj: PreviewMod, objtype=None):
-        return obj.custom(self._name, **self._kwargs)
-
-
 class PreviewMod[T, S](LoggedComponent):
     def __init__(
         self, trigger: Trigger | None = None, on_conflict: ConflictResolution = "raise error", main: bool = False
@@ -102,12 +93,21 @@ class PreviewMod[T, S](LoggedComponent):
         return specific_preview_mod
 
     # presets
-    basic = preview_preset("basic", output_generator=preview_basic, label="PromptData state")
-    fzf_json = preview_preset("fzf json", output_generator=get_fzf_json, label="fzf JSON")
-    fzf_env_vars = preview_preset("fzf env vars", output_generator=get_fzf_env_vars, label="fzf env vars")
-    fzf_placeholders = preview_preset(
-        "fzf placeholders", output_generator=get_fzf_placeholders, label="fzf placeholders"
-    )
+    def basic(self) -> SpecificPreviewMod[T, S]:
+        """Preset for viewing PromptData state"""
+        return self.custom("Basic", output_generator=preview_basic, label="PromptData state")
+
+    def fzf_json(self) -> SpecificPreviewMod[T, S]:
+        """Preset for viewing fzf JSON"""
+        return self.custom("fzf json", output_generator=get_fzf_json, label="fzf JSON")
+
+    def fzf_env_vars(self) -> SpecificPreviewMod[T, S]:
+        """Preset for viewing fzf env vars"""
+        return self.custom("fzf env vars", output_generator=get_fzf_env_vars, label="fzf env vars")
+
+    def fzf_placeholders(self) -> SpecificPreviewMod[T, S]:
+        """Preset for viewing fzf placeholders"""
+        return self.custom("fzf placeholders", output_generator=get_fzf_placeholders, label="fzf placeholders")
 
     def file(
         self,

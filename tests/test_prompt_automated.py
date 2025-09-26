@@ -73,13 +73,13 @@ def show_and_record_preview(preview_function):
 @logging_setup.attach
 def prompt_builder():
     prompt = Prompt(TEST_CHOICES, lambda day: day.name, obj=Recording())
-    prompt.mod.options.multiselect.listen()
-    prompt.mod.on_hotkey().CTRL_A.toggle_all
+    prompt.mod.options.multiselect().listen()
+    prompt.mod.on_hotkey().CTRL_A.toggle_all()
     prompt.mod.on_hotkey().CTRL_N.run_function(
         "record selections", lambda pd: pd.obj.selections.extend(pd.selections), silent=True
     )
     prompt.mod.on_hotkey().TAB.run("select next", "down", "select")
-    prompt.mod.on_hotkey().CTRL_Q.quit
+    prompt.mod.on_hotkey().CTRL_Q.quit()
     prompt.mod.preview().custom("basic", show_and_record_preview(preview_basic))
     prompt.mod.preview("ctrl-y").custom("fzf json", show_and_record_preview(get_fzf_json))
     prompt.mod.preview("ctrl-6").custom("Hello World", show_and_record_preview(hello_world))
@@ -123,7 +123,7 @@ def test_quit():
 def test_abort():
     with pytest.raises(Aborted):
         prompt = prompt_builder()
-        prompt.mod.lastly.raise_from_aborted_status()
+        prompt.mod.lastly().raise_from_aborted_status()
         prompt.mod.automate(Config.default_abort_hotkey)
         prompt.run()
 

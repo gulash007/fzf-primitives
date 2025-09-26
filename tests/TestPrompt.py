@@ -56,17 +56,17 @@ def clip_socket_number(prompt_data, FZF_PRIMITIVES_SOCKET_NUMBER):
 @logging_setup.attach
 def prompt_builder():
     prompt = Prompt(TEST_CHOICES, lambda day: day.name)
-    prompt.mod.options.multiselect.listen()
+    prompt.mod.options.multiselect().listen()
     prompt.mod.on_event().BACKWARD_EOF.run_function("clip socket number", clip_socket_number)
-    prompt.mod.on_hotkey().CTRL_A.toggle_all
-    prompt.mod.on_hotkey().CTRL_Q.quit
-    prompt.mod.on_hotkey().CTRL_C.clip_current_preview.accept
-    prompt.mod.on_hotkey().CTRL_O.clip_options
+    prompt.mod.on_hotkey().CTRL_A.toggle_all()
+    prompt.mod.on_hotkey().CTRL_Q.quit()
+    prompt.mod.on_hotkey().CTRL_C.clip_current_preview().accept()
+    prompt.mod.on_hotkey().CTRL_O.clip_options()
     prompt.mod.on_hotkey().CTRL_N.run_function("wait", wait_for_input)
     prompt.mod.on_hotkey().CTRL_ALT_N.run_function("wait", lambda pd: input("Press Enter to continue..."))
     prompt.mod.on_hotkey().CTRL_L.view_logs_in_terminal(logging_setup.path)
     # prompt.mod.on_hotkey().CTRL_X.run_function("wait", bad_server_call_function) # uncomment to reveal error
-    prompt.mod.preview("ctrl-y").fzf_json
+    prompt.mod.preview("ctrl-y").fzf_json()
     mutation_dict = {
         "is hello": [False, True],
         "has world": [True, False],
@@ -95,7 +95,7 @@ def prompt_builder():
         "measure startup time", lambda pd: print(f"Startup time: {perf_counter() - start} seconds")
     )
 
-    prompt.mod.on_hotkey().CTRL_ALT_H.show_bindings_help_in_preview
+    prompt.mod.on_hotkey().CTRL_ALT_H.show_bindings_help_in_preview()
     return prompt
 
 

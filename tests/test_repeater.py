@@ -18,9 +18,9 @@ def get_repeater():
     prompt.mod.on_hotkey().CTRL_6.auto_repeat_run(
         "Repeat typing 'a'", ParametrizedAction("a", "put"), repeat_interval=0.1
     )
-    prompt.mod.on_event().ZERO.abort
-    prompt.mod.options.multiselect
-    prompt.mod.on_event().MULTI.accept
+    prompt.mod.on_event().ZERO.abort()
+    prompt.mod.options.multiselect()
+    prompt.mod.on_event().MULTI.accept()
 
     prompt.mod.automate("ctrl-6")
     return prompt
@@ -35,7 +35,7 @@ def test_repeater():
     def stop_prompt_after_delay():
         if thread_should_exit.wait(2):
             return
-        control_port = prompt._prompt_data._control_port
+        control_port = prompt._prompt_data._control_port  # noqa: SLF001
         if not control_port:
             print("❗ No control port found")
             return

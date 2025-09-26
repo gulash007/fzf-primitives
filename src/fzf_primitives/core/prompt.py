@@ -26,8 +26,8 @@ class Prompt[T, S]:
         if use_basic_hotkeys is None:
             use_basic_hotkeys = Config.use_basic_hotkeys
         if use_basic_hotkeys:
-            self._mod.on_hotkey(Config.default_accept_hotkey).accept
-            self._mod.on_hotkey(Config.default_abort_hotkey).abort
+            self._mod.on_hotkey(Config.default_accept_hotkey).accept()
+            self._mod.on_hotkey(Config.default_abort_hotkey).abort()
 
     @property
     def mod(self) -> Mod[T, S]:

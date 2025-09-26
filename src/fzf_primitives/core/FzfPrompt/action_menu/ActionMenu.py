@@ -56,7 +56,7 @@ class ActionMenu[T, S](LoggedComponent):
         options = Options()
         for trigger, binding in self.bindings.items():
             options.bind(trigger, binding.action_string())
-        options.add_header(self.get_bindings_help()).header_first
+        options.add_header(self.get_bindings_help()).header_first()
         return options
 
 

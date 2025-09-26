@@ -22,8 +22,8 @@ class DefaultPrompt[T, S](Prompt[T, S]):
         use_basic_hotkeys: bool | None = None,
     ):
         super().__init__(entries, converter, obj, use_basic_hotkeys=use_basic_hotkeys)
-        self.mod.preview().basic
-        self.mod.default
+        self.mod.preview().basic()
+        self.mod.default()
 
 
 class LineInterpretation(Enum):

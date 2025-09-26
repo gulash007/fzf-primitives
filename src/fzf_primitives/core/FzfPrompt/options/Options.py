@@ -19,19 +19,7 @@ from .values import (
     WindowPosition,
 )
 
-class OptionsAdder:
-    """Does the same thing as a property. It exists to shorten code.
-    It also signals that it might do something unexpected of a property."""
 
-    def __init__(self, *fzf_options: str):
-        self._fzf_options = fzf_options
-
-    def __get__(self, obj: Options, objtype: type[Options] | None = None) -> Options:
-        return obj.add(*self._fzf_options)
-
-
-# TODO: tips formatter
-# TODO: add options lookup
 class Options:
     def __init__(self, *fzf_options: FzfOption | str) -> None:
         self._options: list[str] = list(fzf_options)
@@ -84,15 +72,32 @@ class Options:
         return self.options == __other.options
 
     # SEARCH
-    extended = OptionsAdder("--extended")
-    no_extended = OptionsAdder("--no-extended")
-    exact = OptionsAdder("--exact")
-    no_exact = OptionsAdder("--no-exact")
-    ignore_case = OptionsAdder("--ignore-case")
-    no_ignore_case = OptionsAdder("--no-ignore-case")
-    smart_case = OptionsAdder("--smart-case")
-    literal = OptionsAdder("--literal")
-    no_literal = OptionsAdder("--no-literal")
+    def extended(self) -> Self:
+        return self.add("--extended")
+
+    def no_extended(self) -> Self:
+        return self.add("--no-extended")
+
+    def exact(self) -> Self:
+        return self.add("--exact")
+
+    def no_exact(self) -> Self:
+        return self.add("--no-exact")
+
+    def ignore_case(self) -> Self:
+        return self.add("--ignore-case")
+
+    def no_ignore_case(self) -> Self:
+        return self.add("--no-ignore-case")
+
+    def smart_case(self) -> Self:
+        return self.add("--smart-case")
+
+    def literal(self) -> Self:
+        return self.add("--literal")
+
+    def no_literal(self) -> Self:
+        return self.add("--no-literal")
 
     def scheme(self, scheme: Scheme) -> Self:
         """Choose scoring scheme tailored for different types of input.
@@ -130,8 +135,11 @@ class Options:
     def accept_nth(self, field_index_expression: str) -> Self:
         return self.add(f"--accept-nth={field_index_expression}")
 
-    sort = OptionsAdder("--sort")
-    no_sort = OptionsAdder("--no-sort")
+    def sort(self) -> Self:
+        return self.add("--sort")
+
+    def no_sort(self) -> Self:
+        return self.add("--no-sort")
 
     def delimiter(self, delimiter: str | None = None) -> Self:
         return self.add(f"--delimiter={delimiter}")
@@ -141,9 +149,14 @@ class Options:
         with fzf while limiting memory usage."""
         return self.add(f"--tail={n}")
 
-    no_tail = OptionsAdder("--no-tail")
-    enabled = OptionsAdder("--enabled")
-    disabled = OptionsAdder("--disabled")
+    def no_tail(self) -> Self:
+        return self.add("--no-tail")
+
+    def enabled(self) -> Self:
+        return self.add("--enabled")
+
+    def disabled(self) -> Self:
+        return self.add("--disabled")
 
     def tiebreak(self, *tiebreaks: Tiebreak) -> Self:
         """Comma-separated list of sort criteria to apply when the scores are tied.
@@ -159,28 +172,38 @@ class Options:
         return self.add(f"--tiebreak={', '.join(tiebreaks)}")
 
     # INPUT/OUTPUT
-    @property
     def read0(self) -> Self:
         """Read input delimited by ASCII NUL characters instead of newline characters.
         💡 Useful for multiline entries"""
         return self.add("--read0")
 
-    @property
     def print0(self) -> Self:
         """Print output delimited by ASCII NUL characters instead of newline characters"""
         return self.add("--print0")
 
-    no_read0 = OptionsAdder("--no-read0")
-    no_print0 = OptionsAdder("--no-print0")
-    ansi = OptionsAdder("--ansi")
-    no_ansi = OptionsAdder("--no-ansi")
-    sync = OptionsAdder("--sync")
-    no_sync = OptionsAdder("--no-sync")
+    def no_read0(self) -> Self:
+        return self.add("--no-read0")
+
+    def no_print0(self) -> Self:
+        return self.add("--no-print0")
+
+    def ansi(self) -> Self:
+        return self.add("--ansi")
+
+    def no_ansi(self) -> Self:
+        return self.add("--no-ansi")
+
+    def sync(self) -> Self:
+        return self.add("--sync")
+
+    def no_sync(self) -> Self:
+        return self.add("--no-sync")
 
     def tty_default(self, device_name: str) -> Self:
         return self.add(f"--tty-default={device_name}")
 
-    no_tty_default = OptionsAdder("--no-tty-default")
+    def no_tty_default(self) -> Self:
+        return self.add("--no-tty-default")
 
     # GLOBAL STYLE
     def style(self, preset: str) -> Self:
@@ -189,18 +212,30 @@ class Options:
     def color(self, color_options: str) -> Self:
         return self.add(f"--color={color_options}")
 
-    no_color = OptionsAdder("--no-color")
-    no_256 = OptionsAdder("--no-256")
-    bold = OptionsAdder("--bold")
-    no_bold = OptionsAdder("--no-bold")
-    black = OptionsAdder("--black")
-    no_black = OptionsAdder("--no-black")
+    def no_color(self) -> Self:
+        return self.add("--no-color")
+
+    def no_256(self) -> Self:
+        return self.add("--no-256")
+
+    def bold(self) -> Self:
+        return self.add("--bold")
+
+    def no_bold(self) -> Self:
+        return self.add("--no-bold")
+
+    def black(self) -> Self:
+        return self.add("--black")
+
+    def no_black(self) -> Self:
+        return self.add("--no-black")
 
     # DISPLAY MODE
     def height(self, height_option: str) -> Self:
         return self.add(f"--height={height_option}")
 
-    no_height = OptionsAdder("--no-height")
+    def no_height(self) -> Self:
+        return self.add("--no-height")
 
     def min_height(self, min_height_option: str) -> Self:
         return self.add(f"--min-height={min_height_option}")
@@ -208,7 +243,8 @@ class Options:
     def tmux(self, tmux_option: str | None = None) -> Self:
         return self.add(f"--tmux={tmux_option}" if tmux_option is not None else "--tmux")
 
-    no_tmux = OptionsAdder("--no-tmux")
+    def no_tmux(self) -> Self:
+        return self.add("--no-tmux")
 
     def layout(self, layout: Layout) -> Self:
         """
@@ -225,8 +261,11 @@ class Options:
     def padding(self, padding_option: str) -> Self:
         return self.add(f"--padding={padding_option}")
 
-    no_margin = OptionsAdder("--no-margin")
-    no_padding = OptionsAdder("--no-padding")
+    def no_margin(self) -> Self:
+        return self.add("--no-margin")
+
+    def no_padding(self) -> Self:
+        return self.add("--no-padding")
 
     def border(self, border: Border, label: str | None = None) -> Self:
         args = [f"--border={border}"]
@@ -237,36 +276,61 @@ class Options:
     def border_label_pos(self, position: LabelPosition) -> Self:
         return self.add(f"--border-label-pos={position}")
 
-    no_border = OptionsAdder("--no-border")
-    no_border_label = OptionsAdder("--no-border-label")
+    def no_border(self) -> Self:
+        return self.add("--no-border")
+
+    def no_border_label(self) -> Self:
+        return self.add("--no-border-label")
 
     # LIST SECTION
     def multi(self, limit: int | None = None) -> Self:
         return self.add(f"--multi={limit}" if limit is not None else "--multi")
 
-    no_multi = OptionsAdder("--no-multi")
-    multiselect = OptionsAdder("--multi")
-    highlight_line = OptionsAdder("--highlight-line")
-    no_highlight_line = OptionsAdder("--no-highlight-line")
-    cycle = OptionsAdder("--cycle")
-    no_cycle = OptionsAdder("--no-cycle")
-    wrap = OptionsAdder("--wrap")
-    no_wrap = OptionsAdder("--no-wrap")
+    def no_multi(self) -> Self:
+        return self.add("--no-multi")
+
+    def multiselect(self) -> Self:
+        return self.add("--multi")
+
+    def highlight_line(self) -> Self:
+        return self.add("--highlight-line")
+
+    def no_highlight_line(self) -> Self:
+        return self.add("--no-highlight-line")
+
+    def cycle(self) -> Self:
+        return self.add("--cycle")
+
+    def no_cycle(self) -> Self:
+        return self.add("--no-cycle")
+
+    def wrap(self) -> Self:
+        return self.add("--wrap")
+
+    def no_wrap(self) -> Self:
+        return self.add("--no-wrap")
 
     def wrap_sign(self, indicator: str) -> Self:
         return self.add(f"--wrap-sign={indicator}")
 
-    multi_line = OptionsAdder("--multi-line")
-    no_multi_line = OptionsAdder("--no-multi-line")
-    track = OptionsAdder("--track")
-    no_track = OptionsAdder("--no-track")
+    def multi_line(self) -> Self:
+        return self.add("--multi-line")
 
-    @property
+    def no_multi_line(self) -> Self:
+        return self.add("--no-multi-line")
+
+    def track(self) -> Self:
+        return self.add("--track")
+
+    def no_track(self) -> Self:
+        return self.add("--no-track")
+
     def tac(self) -> Self:
         """Reverse the order of the input"""
         return self.add("--tac")
 
-    no_tac = OptionsAdder("--no-tac")
+    def no_tac(self) -> Self:
+        return self.add("--no-tac")
 
     def gap(self, lines: int) -> Self:
         """Render empty lines between each item"""
@@ -276,17 +340,27 @@ class Options:
         """The given string will be repeated to draw a horizontal line on each gap (default: '┈' or '-' depending on --no-unicode)."""
         return self.add(f"--gap-line={line}")
 
-    no_gap = OptionsAdder("--no-gap")
-    no_gap_line = OptionsAdder("--no-gap-line")
-    keep_right = OptionsAdder("--keep-right")
-    no_keep_right = OptionsAdder("--no-keep-right")
+    def no_gap(self) -> Self:
+        return self.add("--no-gap")
+
+    def no_gap_line(self) -> Self:
+        return self.add("--no-gap-line")
+
+    def keep_right(self) -> Self:
+        return self.add("--keep-right")
+
+    def no_keep_right(self) -> Self:
+        return self.add("--no-keep-right")
 
     def scroll_off(self, lines: int) -> Self:
         """Number of screen lines to keep above or below when scrolling to the top or to the bottom (default: 3)."""
         return self.add(f"--scroll-off={lines}")
 
-    hscroll = OptionsAdder("--hscroll")
-    no_hscroll = OptionsAdder("--no-hscroll")
+    def hscroll(self) -> Self:
+        return self.add("--hscroll")
+
+    def no_hscroll(self) -> Self:
+        return self.add("--no-hscroll")
 
     def hscroll_off(self, columns: int) -> Self:
         """Number of screen columns to keep to the right of the highlighted substring (default: 10). Setting it to a large value will
@@ -319,7 +393,8 @@ class Options:
     def scrollbar(self, scrollbar_char: str, preview_scrollbar_char: str) -> Self:
         return self.add(f"--scrollbar={scrollbar_char}{preview_scrollbar_char}")
 
-    no_scrollbar = OptionsAdder("--no-scrollbar")
+    def no_scrollbar(self) -> Self:
+        return self.add("--no-scrollbar")
 
     def list_border(self, border: Border, label: str | None = None) -> Self:
         args = [f"--list-border={border}"]
@@ -330,11 +405,15 @@ class Options:
     def list_label_pos(self, position: LabelPosition) -> Self:
         return self.add(f"--list-label-pos={position}")
 
-    no_list_border = OptionsAdder("--no-list-border")
-    no_list_label = OptionsAdder("--no-list-label")
+    def no_list_border(self) -> Self:
+        return self.add("--no-list-border")
+
+    def no_list_label(self) -> Self:
+        return self.add("--no-list-label")
 
     # INPUT SECTION
-    no_input = OptionsAdder("--no-input")
+    def no_input(self) -> Self:
+        return self.add("--no-input")
 
     def prompt(self, prompt: str) -> Self:
         return self.add(f"--prompt={prompt}")
@@ -345,19 +424,26 @@ class Options:
     def info_command(self, command: str) -> Self:
         return self.add(f"--info-command={command}")
 
-    no_info = OptionsAdder("--no-info")
-    no_info_command = OptionsAdder("--no-info-command")
+    def no_info(self) -> Self:
+        return self.add("--no-info")
+
+    def no_info_command(self) -> Self:
+        return self.add("--no-info-command")
 
     def separator(self, separator: str) -> Self:
         return self.add(f"--separator={separator}")
 
-    no_separator = OptionsAdder("--no-separator")
+    def no_separator(self) -> Self:
+        return self.add("--no-separator")
 
     def ghost(self, ghost_text: str) -> Self:
         return self.add(f"--ghost={ghost_text}")
 
-    filepath_word = OptionsAdder("--filepath-word")
-    no_filepath_word = OptionsAdder("--no-filepath-word")
+    def filepath_word(self) -> Self:
+        return self.add("--filepath-word")
+
+    def no_filepath_word(self) -> Self:
+        return self.add("--no-filepath-word")
 
     def input_border(self, border: Border, label: str | None = None) -> Self:
         args = [f"--input-border={border}"]
@@ -368,8 +454,11 @@ class Options:
     def input_label_pos(self, position: LabelPosition) -> Self:
         return self.add(f"--input-label-pos={position}")
 
-    no_input_border = OptionsAdder("--no-input-border")
-    no_input_label = OptionsAdder("--no-input-label")
+    def no_input_border(self) -> Self:
+        return self.add("--no-input-border")
+
+    def no_input_label(self) -> Self:
+        return self.add("--no-input-label")
 
     # PREVIEW WINDOW
     def preview(self, command: str) -> Self:
@@ -392,9 +481,14 @@ class Options:
     ) -> Self:
         return self.add(f"--preview-window={position},{size}:{'wrap' if line_wrap else 'nowrap'}")
 
-    no_preview = OptionsAdder("--no-preview")
-    no_preview_border = OptionsAdder("--no-preview-border")
-    no_preview_label = OptionsAdder("--no-preview-label")
+    def no_preview(self) -> Self:
+        return self.add("--no-preview")
+
+    def no_preview_border(self) -> Self:
+        return self.add("--no-preview-border")
+
+    def no_preview_label(self) -> Self:
+        return self.add("--no-preview-label")
 
     # HEADER
     def header(self, header: str) -> Self:
@@ -416,8 +510,11 @@ class Options:
     def header_lines(self, count: int) -> Self:
         return self.add(f"--header-lines={count}")
 
-    header_first = OptionsAdder("--header-first")
-    no_header_first = OptionsAdder("--no-header-first")
+    def header_first(self) -> Self:
+        return self.add("--header-first")
+
+    def no_header_first(self) -> Self:
+        return self.add("--no-header-first")
 
     def header_border(self, border: Border, label: str | None = None, position: LabelPosition = "top") -> Self:
         args = [f"--header-border={border}"]
@@ -430,11 +527,20 @@ class Options:
     def header_lines_border(self, border: Border) -> Self:
         return self.add(f"--header-lines-border={border}")
 
-    no_header = OptionsAdder("--no-header")
-    no_header_border = OptionsAdder("--no-header-border")
-    no_header_label = OptionsAdder("--no-header-label")
-    no_header_lines_border = OptionsAdder("--no-header-lines-border")
-    no_header_lines = OptionsAdder("--no-header-lines")
+    def no_header(self) -> Self:
+        return self.add("--no-header")
+
+    def no_header_border(self) -> Self:
+        return self.add("--no-header-border")
+
+    def no_header_label(self) -> Self:
+        return self.add("--no-header-label")
+
+    def no_header_lines_border(self) -> Self:
+        return self.add("--no-header-lines-border")
+
+    def no_header_lines(self) -> Self:
+        return self.add("--no-header-lines")
 
     # FOOTER
     def footer(self, footer: str) -> Self:
@@ -461,31 +567,51 @@ class Options:
                 args.append(f"--footer-label-pos={position}")
         return self.add(*args)
 
-    no_footer = OptionsAdder("--no-footer")
-    no_footer_border = OptionsAdder("--no-footer-border")
-    no_footer_label = OptionsAdder("--no-footer-label")
+    def no_footer(self) -> Self:
+        return self.add("--no-footer")
+
+    def no_footer_border(self) -> Self:
+        return self.add("--no-footer-border")
+
+    def no_footer_label(self) -> Self:
+        return self.add("--no-footer-label")
 
     # SCRIPTING
-    def initial_query(self, query: str) -> Self:
+    def query(self, query: str) -> Self:
         return self.add(f"--query={query}")
 
-    select_1 = OptionsAdder("--select-1")
-    no_select_1 = OptionsAdder("--no-select-1")
-    exit_0 = OptionsAdder("--exit-0")
-    no_exit_0 = OptionsAdder("--no-exit-0")
+    def select_1(self) -> Self:
+        return self.add("--select-1")
+
+    def no_select_1(self) -> Self:
+        return self.add("--no-select-1")
+
+    def exit_0(self) -> Self:
+        return self.add("--exit-0")
+
+    def no_exit_0(self) -> Self:
+        return self.add("--no-exit-0")
 
     def filter(self, query: str) -> Self:
         return self.add(f"--filter={query}")
 
-    print_query = OptionsAdder("--print-query")
-    no_print_query = OptionsAdder("--no-print-query")
+    def print_query(self) -> Self:
+        return self.add("--print-query")
+
+    def no_print_query(self) -> Self:
+        return self.add("--no-print-query")
 
     def expect(self, *hotkeys: Hotkey) -> Self:
         return self.add(f"--expect={','.join(hotkeys)}")
 
-    no_expect = OptionsAdder("--no-expect")
-    clear = OptionsAdder("--clear")
-    no_clear = OptionsAdder("--no-clear")
+    def no_expect(self) -> Self:
+        return self.add("--no-expect")
+
+    def clear(self) -> Self:
+        return self.add("--clear")
+
+    def no_clear(self) -> Self:
+        return self.add("--no-clear")
 
     # KEY/EVENT BINDINGS
     def bind(self, trigger: Hotkey | Event, action: str) -> Self:
@@ -509,7 +635,8 @@ class Options:
     def listen(self, port_number: int = 0, unsafe: bool = False) -> Self:
         return self.add(f"--listen{'-unsafe' if unsafe else ''}={port_number}")
 
-    no_listen = OptionsAdder("--no-listen")
+    def no_listen(self) -> Self:
+        return self.add("--no-listen")
 
     # DIRECTORY TRAVERSAL
     def walker(self, *walker_values: WalkerValue) -> Self:
@@ -522,23 +649,33 @@ class Options:
         return self.add(f"--walker-skip={','.join(paths)}")
 
     # HISTORY
-    def history_file(self, path: str) -> Self:
+    def history(self, path: str) -> Self:
         return self.add(f"--history={path}")
 
     def history_size(self, size: int) -> Self:
         return self.add(f"--history-size={size}")
 
-    no_history = OptionsAdder("--no-history")
+    def no_history(self) -> Self:
+        return self.add("--no-history")
 
     # SHELL INTEGRATION
     pass
 
     # OTHERS
-    no_mouse = OptionsAdder("--no-mouse")
-    unicode = OptionsAdder("--unicode")
-    no_unicode = OptionsAdder("--no-unicode")
-    ambidouble = OptionsAdder("--ambidouble")
-    no_ambidouble = OptionsAdder("--no-ambidouble")
+    def no_mouse(self) -> Self:
+        return self.add("--no-mouse")
+
+    def unicode(self) -> Self:
+        return self.add("--unicode")
+
+    def no_unicode(self) -> Self:
+        return self.add("--no-unicode")
+
+    def ambidouble(self) -> Self:
+        return self.add("--ambidouble")
+
+    def no_ambidouble(self) -> Self:
+        return self.add("--no-ambidouble")
 
     # HELP
     pass

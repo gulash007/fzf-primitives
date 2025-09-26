@@ -21,8 +21,8 @@ def run_in_loop[T, S](
     while True:
         try:
             prompt = prompt_builder()
-            prompt.mod.on_hotkey(quit_hotkey).quit
-            prompt.mod.lastly.raise_from_aborted_status()
+            prompt.mod.on_hotkey(quit_hotkey).quit()
+            prompt.mod.lastly().raise_from_aborted_status()
             result = prompt.run()
             if result.end_status == "quit":
                 print("Exiting loop...")

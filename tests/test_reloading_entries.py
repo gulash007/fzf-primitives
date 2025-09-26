@@ -33,8 +33,8 @@ def test_reloading_entries():
 def get_prompt_for_reloading_entries():
     prompt = Prompt([0, 1, 2, 3])
     prompt.mod.on_hotkey().CTRL_R.reload_entries(add_number)
-    prompt.mod.on_hotkey().CTRL_A.toggle_all
-    prompt.mod.options.multiselect
+    prompt.mod.on_hotkey().CTRL_A.toggle_all()
+    prompt.mod.options.multiselect()
     return prompt
 
 
@@ -75,7 +75,7 @@ def get_prompt_for_remembering_selections_after_reload():
     prompt.mod.on_hotkey().CTRL_Y.run_function(
         "record selections after reload", lambda pd: pd.obj.update({"indices_after": pd.selected_indices.copy()})
     )
-    prompt.mod.options.multiselect
+    prompt.mod.options.multiselect()
     return prompt
 
 

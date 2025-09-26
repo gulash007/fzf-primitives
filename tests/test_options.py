@@ -36,20 +36,20 @@ def test_options_comparisons():
 
     assert Options("--ansi") + Options("--no-sort") == Options("--ansi", "--no-sort")
 
-    assert Options("--ansi") == Options().ansi
+    assert Options("--ansi") == Options().ansi()
 
-    assert Options().add("--ansi", "--no-sort") == Options().ansi.no_sort
+    assert Options().add("--ansi", "--no-sort") == Options().ansi().no_sort()
 
-    assert str(Options().ansi.no_sort) == "--ansi --no-sort"
-    assert Options().ansi.no_sort != Options().no_sort.ansi
+    assert str(Options().ansi().no_sort()) == "--ansi --no-sort"
+    assert Options().ansi().no_sort() != Options().no_sort().ansi()
 
 
 def test_options_type():
     def assert_type_equality(x, t):
         assert isinstance(x, t), f"{type(x)}: {x}"
 
-    assert_type_equality(Options().ansi, Options)
-    assert_type_equality(Options().ansi + Options().multiselect, Options)
+    assert_type_equality(Options().ansi(), Options)
+    assert_type_equality(Options().ansi() + Options().multiselect(), Options)
 
 
 def test_options_working():

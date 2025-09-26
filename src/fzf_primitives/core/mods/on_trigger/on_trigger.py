@@ -173,59 +173,46 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         self.run(name, PromptEndingAction(end_status, post_processor, allow_empty=allow_empty))
 
     # presets
-    @property
     def accept(self):
         """Ends prompt with status 'accept'"""
         return self.end_prompt("accept", "accept")
 
-    @property
     def accept_non_empty(self):
         """Ends prompt with status 'accept' if there are any selections"""
         return self.end_prompt("accept non-empty", "accept", allow_empty=False)
 
-    @property
     def abort(self):
         """Ends prompt with status 'abort'"""
         return self.end_prompt("abort", "abort")
 
-    @property
     def quit(self):
         """Ends prompt with status 'quit'"""
         return self.end_prompt("quit", "quit")
 
-    @property
     def clip(self):
         return self.run_shell_command("clip", SHELL_COMMAND.clip_selections)
 
-    @property
     def select(self):
         return self.run("select", "select")
 
-    @property
     def select_all(self):
         return self.run("select all", "select-all")
 
-    @property
     def toggle(self):
         return self.run("toggle", "toggle")
 
-    @property
     def toggle_all(self):
         return self.run("toggle all", "toggle-all")
 
-    @property
     def refresh_preview(self):
         return self.run("refresh preview", "refresh-preview")
 
-    @property
     def toggle_preview(self):
         return self.run("toggle preview", "toggle-preview")
 
-    @property
     def jump(self):
         return self.run("jump", "jump")
 
-    @property
     def jump_accept(self):
         return self.run("jump and accept", "jump-accept")
 
@@ -268,18 +255,15 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
             "clear query and focus line", Transform[T, S](lambda pd: [ParametrizedAction(command_getter(pd), "become")])
         )
 
-    @property
     def clip_current_preview(self):
         return self.run_function("clip current preview", clip_current_preview)
 
     def clip_current_preview_with_converter(self, converter: Callable[[str], str]):
         return self.run_function("clip current preview", lambda pd: clip_current_preview(pd, converter))
 
-    @property
     def clip_options(self):
         return self.run_function("clip options", clip_options)
 
-    @property
     def show_bindings_help_in_preview(self):
         return self.run_binding(
             Binding("Show bindings help in preview", ShowInPreview(lambda pd: pd.action_menu.get_bindings_help()))
@@ -299,7 +283,6 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         command = FILE_EDITORS[app]
         return self.run_function(f"open files in {app}", lambda pd: subprocess.run([command, "--", *file_getter(pd)]))
 
-    @property
     def ring_bell(self):
         """Rings the terminal bell"""
         return self.run("ring bell", "bell")

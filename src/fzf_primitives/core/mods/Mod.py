@@ -52,7 +52,6 @@ class Mod[T, S](LoggedComponent):
         return preview_mod
 
     # post processing
-    @property
     def lastly(self) -> PostProcessing[T, S]:
         """Applied from left to right"""
         post_processing_mod = PostProcessing[T, S]()
@@ -74,7 +73,6 @@ class Mod[T, S](LoggedComponent):
         return self._options
 
     # presets
-    @property
     def default(self) -> Self:
         """Some default useful preset"""
         self.on_hotkey().CTRL_C.clip
