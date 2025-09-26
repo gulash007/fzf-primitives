@@ -141,7 +141,7 @@ class Options:
     def no_sort(self) -> Self:
         return self.add("--no-sort")
 
-    def delimiter(self, delimiter: str | None = None) -> Self:
+    def delimiter(self, delimiter: str) -> Self:
         return self.add(f"--delimiter={delimiter}")
 
     def tail(self, n: int) -> Self:
