@@ -33,7 +33,8 @@ def execute_fzf[T, S](
                 "Running fzf with options",
                 **{
                     "trace_point": "running_fzf_with_final_options",
-                    "options": str(options),
+                    "options": list(options),
+                    "str options": options.pretty(),
                 },
             )
             # TODO: what happens if the output is too large?
