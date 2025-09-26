@@ -289,9 +289,6 @@ class Options:
     def no_multi(self) -> Self:
         return self.add("--no-multi")
 
-    def multiselect(self) -> Self:
-        return self.add("--multi")
-
     def highlight_line(self) -> Self:
         return self.add("--highlight-line")
 

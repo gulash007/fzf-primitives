@@ -49,7 +49,7 @@ def test_options_type():
         assert isinstance(x, t), f"{type(x)}: {x}"
 
     assert_type_equality(Options().ansi(), Options)
-    assert_type_equality(Options().ansi() + Options().multiselect(), Options)
+    assert_type_equality(Options().ansi() + Options().multi(), Options)
 
 
 def test_options_working():

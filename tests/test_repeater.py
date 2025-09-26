@@ -19,7 +19,7 @@ def get_repeater():
         "Repeat typing 'a'", ParametrizedAction("a", "put"), repeat_interval=0.1
     )
     prompt.mod.on_event().ZERO.abort()
-    prompt.mod.options.multiselect()
+    prompt.mod.options.multi()
     prompt.mod.on_event().MULTI.accept()
 
     prompt.mod.automate("ctrl-6")

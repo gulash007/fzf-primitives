@@ -18,7 +18,7 @@ def test_var_output():
         return action
 
     prompt = Prompt([1, 2, 3], obj=[])
-    prompt.mod.options.multiselect()
+    prompt.mod.options.multi()
     prompt.mod.preview().custom("set var output", function_with_var_output)
     prompt.mod.on_hotkey().CTRL_Q.accept()
     prompt.mod.automate_actions("up")

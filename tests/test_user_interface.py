@@ -33,8 +33,8 @@ def test_mod_return_value_types():
 
     # test chaining options
     assert type(prompt.mod.options) is Options
-    assert type(prompt.mod.options.multiselect()) is Options
-    assert type(prompt.mod.options.multiselect().add_header("")) is Options
+    assert type(prompt.mod.options.multi()) is Options
+    assert type(prompt.mod.options.multi().add_header("")) is Options
 
     # test mod presets
     assert type(prompt.mod.default()) is Mod

@@ -18,7 +18,7 @@ def test_current():
 
 def test_selections():
     prompt = Prompt(ENTRIES, lambda x: x["name"])
-    prompt.mod.options.multiselect().query("a")  # matches Alice and Charlie
+    prompt.mod.options.multi().query("a")  # matches Alice and Charlie
     prompt.mod.automate_actions("select-all")
     prompt.mod.automate(prompt.config.default_accept_hotkey)
 
@@ -30,7 +30,7 @@ def test_selections():
 
 def test_targets():
     prompt = Prompt(ENTRIES, lambda x: x["name"])
-    prompt.mod.options.multiselect().query("o")  # matches Bob
+    prompt.mod.options.multi().query("o")  # matches Bob
     prompt.mod.automate(prompt.config.default_accept_hotkey)
     result = prompt.run()
 
@@ -39,7 +39,7 @@ def test_targets():
     assert targets == expected_targets, f"Expected {expected_targets}, got {targets}"
 
     prompt = Prompt(ENTRIES, lambda x: x["name"])
-    prompt.mod.options.multiselect().query("a")  # matches Alice and Charlie
+    prompt.mod.options.multi().query("a")  # matches Alice and Charlie
     prompt.mod.automate_actions("select-all")
     prompt.mod.automate(prompt.config.default_accept_hotkey)
     result = prompt.run()
