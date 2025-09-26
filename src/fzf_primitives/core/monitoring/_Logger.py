@@ -8,7 +8,7 @@ import loguru
 from loguru import logger
 from loguru._handler import Handler
 
-from .constants import LOG_FORMATS, MAIN_LOG_FILE_PATH, LogFormat
+from .constants import LOG_FORMATS, MAIN_LOG_FILE_PATH, SERIALIZED_MAIN_LOG_FILE_PATH, LogFormat
 
 __all__ = ["get_logger", "remove_preset_handlers", "add_file_handler"]
 
@@ -32,8 +32,11 @@ def add_file_handler(
 HandlerName = Literal["STDERR", "MAIN_LOG_FILE", "SERIALIZED_MAIN_LOG_FILE"]
 
 PRESET_HANDLERS: dict[HandlerName, int] = {
-    "STDERR": logger.add(sys.stderr, level="DEBUG", format=LOG_FORMATS["default"], colorize=True),
+    # "STDERR": logger.add(sys.stderr, level="DEBUG", format=LOG_FORMATS["default"], colorize=True),
     "MAIN_LOG_FILE": add_file_handler(MAIN_LOG_FILE_PATH, "DEBUG", format="default", colorize=True),
+    "SERIALIZED_MAIN_LOG_FILE": add_file_handler(
+        SERIALIZED_MAIN_LOG_FILE_PATH, "DEBUG", format="default", colorize=True, serialize=True
+    ),
 }
 
 logger.level("WEIRDNESS", no=42, icon="🤖", color="<MAGENTA><bold>")

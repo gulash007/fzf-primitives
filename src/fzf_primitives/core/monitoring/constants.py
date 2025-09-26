@@ -39,3 +39,4 @@ LOG_FORMATS: dict[LogFormat, str | FormatFunction] = {
 
 INTERNAL_LOG_DIR = Path(__file__).parents[4].joinpath("_logs/").absolute()
 MAIN_LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath("main.log")
+SERIALIZED_MAIN_LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath("main_serialized.log")
