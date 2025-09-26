@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import subprocess
 from abc import ABC
 from pathlib import Path
@@ -255,11 +256,8 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
             "clear query and focus line", Transform[T, S](lambda pd: [ParametrizedAction(command_getter(pd), "become")])
         )
 
-    def clip_current_preview(self):
-        return self.run_function("clip current preview", clip_current_preview)
-
-    def clip_current_preview_with_converter(self, converter: Callable[[str], str]):
-        return self.run_function("clip current preview", lambda pd: clip_current_preview(pd, converter))
+    def clip_current_preview(self, converter: Callable[[str], str] | None = None):
+        return self.run_function("clip current preview", functools.partial(clip_current_preview, converter=converter))
 
     def clip_options(self):
         return self.run_function("clip options", clip_options)
