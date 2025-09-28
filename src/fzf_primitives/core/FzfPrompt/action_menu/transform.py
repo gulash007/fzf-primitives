@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import functools
-from typing import TYPE_CHECKING, Any, Callable, Concatenate, Iterable, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Callable, Concatenate, Iterable
 
 if TYPE_CHECKING:
     from ..prompt_data import PromptData
@@ -13,11 +13,6 @@ from . import binding as b
 type ActionsBuilder[T, S] = Callable[
     Concatenate[PromptData[T, S], ...], Iterable[Action[T, S] | ServerCallFunction[T, S]]
 ]
-
-
-@runtime_checkable
-class _ServerCallFunction(Protocol):
-    def __call__(self, prompt_data: PromptData, *args, **kwargs) -> Any: ...
 
 
 class Transform[T, S](ServerCall[T, S], LoggedComponent):
@@ -40,7 +35,7 @@ class Transform[T, S](ServerCall[T, S], LoggedComponent):
                 a.copy()
                 if isinstance(a, ServerCall)
                 else ServerCall(a, command_type="execute-silent")
-                if isinstance(a, _ServerCallFunction)
+                if callable(a)
                 else a
                 for a in actions_builder(prompt_data, *args, **kwargs)
             ]
