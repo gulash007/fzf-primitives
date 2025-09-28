@@ -67,9 +67,7 @@ class PromptData[T, S](LoggedComponent):
 
     @property
     def trigger(self) -> Trigger:
-        """Trigger of the last ServerCall. For preview functions it's the trigger that made the switch to the preview.
-
-        Returns: Trigger: None means ServerCall was automated."""
+        """Trigger of the last ServerCall. For preview functions it's the trigger that made the switch to the preview."""
         if not self._trigger:
             raise RuntimeError(
                 "Current trigger not set (you're probably accessing current trigger before prompt has started)"
