@@ -134,8 +134,12 @@ class PromptData[T, S](LoggedComponent):
         )
         self._stage = "finished"
 
-    def fzf_input(self, delimiter: str = "\n") -> str:
-        return "".join(f"{self.converter(entry)}{delimiter}" for entry in self.entries)
+    @property
+    def entries_delimiter(self) -> str:
+        return "\0" if self.options.get_index_of_last("--read0") is not None else "\n"
+
+    def fzf_input(self) -> str:
+        return "".join(f"{self.converter(entry)}{self.entries_delimiter}" for entry in self.entries)
 
     def get_current_preview(self) -> str:
         return self.previewer.current_preview.output

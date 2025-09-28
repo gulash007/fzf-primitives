@@ -50,7 +50,7 @@ class ReloadEntries[T, S](ServerCall[T, S], LoggedComponent):
             try:
                 entries = entries_getter(prompt_data)
                 prompt_data.entries = entries
-                return "\n".join([prompt_data.converter(entry) for entry in entries])
+                return prompt_data.fzf_input()
             except Exception as e:
                 self.logger.error(f"Error in reload_entries: {e}", trace_point="error_in_reload_entries")
                 return None

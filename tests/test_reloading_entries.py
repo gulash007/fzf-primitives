@@ -79,6 +79,21 @@ def get_prompt_for_remembering_selections_after_reload():
     return prompt
 
 
+@pytest.mark.parametrize("delimiter", ["\n", "\0"])
+@logging_setup.attach
+def test_reloading_entries_with_various_delimiters(delimiter):
+    prompt = Prompt([0, 1, 2, 3])
+    prompt.mod.on_hotkey().CTRL_6.reload_entries(lambda pd: [0, 1, 2, 3, 4])
+    prompt.mod.options.multi()
+    if delimiter == "\0":
+        prompt.mod.options.read0()
+    prompt.mod.automate("ctrl-6")
+    prompt.mod.automate_actions("select-all")
+    prompt.mod.automate(prompt.config.default_accept_hotkey)
+    result = prompt.run()
+    assert list(result) == [0, 1, 2, 3, 4]
+
+
 if __name__ == "__main__":
     get_prompt_for_reloading_entries().run()
     get_prompt_for_remembering_selections_after_reload().run()

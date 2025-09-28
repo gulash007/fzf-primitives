@@ -38,12 +38,11 @@ def execute_fzf[T, S](
                 },
             )
             # TODO: what happens if the output is too large?
-            delimiter = "\n" if "--read0" not in options else "\0"
             if entries_stream is None:
                 subprocess.run(
                     [executable_path, *options],  # TODO: don't make options iterable; use method
                     shell=False,
-                    input=prompt_data.fzf_input(delimiter),
+                    input=prompt_data.fzf_input(),
                     check=True,
                     env=prompt_data.run_vars["env"],
                     capture_output=True,
@@ -63,7 +62,7 @@ def execute_fzf[T, S](
                 )
                 if (fzf_stdin := fzf_process.stdin) is None:
                     raise FzfExecutionError("STDIN of fzf process is None")
-                fzf_stdin.write(prompt_data.fzf_input(delimiter))
+                fzf_stdin.write(prompt_data.fzf_input())
                 fzf_stdin.flush()
 
                 def keep_piping():
@@ -72,7 +71,7 @@ def execute_fzf[T, S](
                         item = prompt_data.converter(entry)
                         prompt_data.entries.append(entry)
                         try:
-                            fzf_stdin.write(f"{item}{delimiter}")
+                            fzf_stdin.write(f"{item}{prompt_data.entries_delimiter}")
                             fzf_stdin.flush()
                         except Exception as e:
                             logger.exception(str(e), trace_point="error_writing_item_to_fzf_process")

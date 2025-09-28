@@ -50,4 +50,4 @@ def parse_args():
 if __name__ == "__main__":
     port, endpoint_id, prompt_state, kwargs = parse_args()
     if response := make_server_call(port, endpoint_id, prompt_state, kwargs):
-        print(response)
+        sys.stdout.write(response)
