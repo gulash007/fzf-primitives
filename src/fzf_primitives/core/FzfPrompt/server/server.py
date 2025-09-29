@@ -68,11 +68,13 @@ class Server[T, S](Thread, LoggedComponent):
         response = ""
         try:
             request = Request.from_json(json.loads(payload))
+            endpoint = self.endpoints[request.endpoint_id]
             self.logger.debug(
-                f"Resolving '{request.endpoint_id}' ({len(self.endpoints)} endpoints registered)",
+                f"Resolving {endpoint.trigger}:'{request.endpoint_id}' ({len(self.endpoints)} endpoints registered)",
                 trace_point="resolving_server_call",
+                trigger=endpoint.trigger,
             )
-            response = self.endpoints[request.endpoint_id].run(prompt_data, request) or response
+            response = endpoint.run(prompt_data, request) or response
         except Exception as err:
             trb = traceback.format_exc()
             error_message = f"{trb}\nPayload contents:\n{payload}"
