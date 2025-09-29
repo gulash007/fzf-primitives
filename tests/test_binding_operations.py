@@ -3,10 +3,10 @@ import pytest
 from fzf_primitives.actions import ShellCommand
 from fzf_primitives.core.FzfPrompt.action_menu.binding import Binding
 
-binding1 = Binding("Some binding", ShellCommand("echo -n first && read"))
-binding2 = Binding("Some other binding", ShellCommand("echo -n second && read"))
-binding3 = Binding("Some third binding", ShellCommand("echo -n third && read"))
-binding4 = Binding("Some fourth binding", ShellCommand("echo -n fourth && read"))
+BINDING1 = Binding("Some binding", ShellCommand("echo -n first && read"))
+BINDING2 = Binding("Some other binding", ShellCommand("echo -n second && read"))
+BINDING3 = Binding("Some third binding", ShellCommand("echo -n third && read"))
+BINDING4 = Binding("Some fourth binding", ShellCommand("echo -n fourth && read"))
 
 
 @pytest.mark.parametrize(
@@ -25,8 +25,8 @@ def test_names_after_binding_addition(self: Binding, other: Binding, expected_na
 
 
 def test_binding_addition_associative():
-    binding12_3 = (binding1 + binding2) + binding3
-    binding1_23 = binding1 + (binding2 + binding3)
+    binding12_3 = (BINDING1 + BINDING2) + BINDING3
+    binding1_23 = BINDING1 + (BINDING2 + BINDING3)
 
     assert binding12_3.name == binding1_23.name
     assert binding12_3.description == binding1_23.description
@@ -36,11 +36,11 @@ def test_binding_addition_associative():
 
 
 def test_binding_cycling_closed_in_cycling():
-    binding12 = binding1 | binding2
-    binding34 = binding3 | binding4
+    binding12 = BINDING1 | BINDING2
+    binding34 = BINDING3 | BINDING4
     binding1234 = binding12 | binding34
 
-    assert binding1234.name == (ex := (binding1 | binding2 | binding3 | binding4)).name
+    assert binding1234.name == (ex := (BINDING1 | BINDING2 | BINDING3 | BINDING4)).name
     assert binding1234.description == ex.description
     assert [action for ag in binding1234._action_groups.values() for action in ag.actions] == [
         action for ag in ex._action_groups.values() for action in ag.actions
@@ -52,8 +52,8 @@ def test_binding_cycling_closed_in_cycling():
 
 
 def test_binding_cycling_associative():
-    binding12or3 = (binding1 | binding2) | binding3
-    binding1or23 = binding1 | (binding2 | binding3)
+    binding12or3 = (BINDING1 | BINDING2) | BINDING3
+    binding1or23 = BINDING1 | (BINDING2 | BINDING3)
 
     assert binding12or3.name == binding1or23.name
     assert binding12or3.description == binding1or23.description
@@ -66,8 +66,8 @@ def test_addition_distributive_over_cycling():
     """a + (b | c) == (a + b) | (a + c)"""
 
     # distributive from left
-    binding_1_2or3 = binding1 + (binding2 | binding3)
-    binding_1_2or1_3 = (binding1 + binding2) | (binding1 + binding3)
+    binding_1_2or3 = BINDING1 + (BINDING2 | BINDING3)
+    binding_1_2or1_3 = (BINDING1 + BINDING2) | (BINDING1 + BINDING3)
 
     assert binding_1_2or3.name == binding_1_2or1_3.name
     assert binding_1_2or3.description == binding_1_2or1_3.description
@@ -76,8 +76,8 @@ def test_addition_distributive_over_cycling():
     ]
 
     # distributive from right
-    binding_1or2_3 = (binding1 | binding2) + binding3
-    binding_1_3or2_3 = (binding1 + binding3) | (binding2 + binding3)
+    binding_1or2_3 = (BINDING1 | BINDING2) + BINDING3
+    binding_1_3or2_3 = (BINDING1 + BINDING3) | (BINDING2 + BINDING3)
 
     assert binding_1or2_3.name == binding_1_3or2_3.name
     assert binding_1or2_3.description == binding_1_3or2_3.description
@@ -89,14 +89,14 @@ def test_addition_distributive_over_cycling():
 def test_binding_addition_closed():
     """if a . b is ok, then (a + c) . (b + c) is also ok (. can be + or |)"""
 
-    binding1or2 = binding1 | binding2
-    binding1or2_3 = binding1or2 + binding3
-    binding1or2_3 | binding4
+    binding1or2 = BINDING1 | BINDING2
+    binding1or2_3 = binding1or2 + BINDING3
+    binding1or2_3 | BINDING4
 
 
 def test_addition_precedence_over_cycling():
-    binding1_2or3_4 = binding1 + binding2 | binding3 + binding4
-    binding12or34 = (binding1 + binding2) | (binding3 + binding4)
+    binding1_2or3_4 = BINDING1 + BINDING2 | BINDING3 + BINDING4
+    binding12or34 = (BINDING1 + BINDING2) | (BINDING3 + BINDING4)
 
     assert binding1_2or3_4.name == binding12or34.name
     assert binding1_2or3_4.description == binding12or34.description
@@ -106,7 +106,7 @@ def test_addition_precedence_over_cycling():
 
 
 def get_binding_cycling():
-    return (binding1 | binding2) | binding3
+    return (BINDING1 | BINDING2) | BINDING3
 
 
 if __name__ == "__main__":

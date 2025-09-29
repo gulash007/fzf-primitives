@@ -34,7 +34,7 @@ def test_transform_with_server_calls():
     prompt.mod.automate(Config.default_accept_hotkey)
 
     prompt.run()
-    assert prompt._prompt_data.previewer.current_preview == TEST_PREVIEW
+    assert prompt._prompt_data.previewer.current_preview == TEST_PREVIEW  # noqa: SLF001
 
 
 @logging_setup.attach

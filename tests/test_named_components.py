@@ -1,17 +1,17 @@
-from fzf_primitives.core.FzfPrompt.action_menu.parametrized_actions import ParametrizedAction
-from fzf_primitives.core.FzfPrompt.action_menu.binding import Binding
-from fzf_primitives.core.FzfPrompt.action_menu.transform import Transform
-from fzf_primitives.core.FzfPrompt.server import ServerCall, PromptEndingAction
-from fzf_primitives.core.FzfPrompt.previewer.Preview import Preview
 from fzf_primitives.actions import (
-    ShellCommand,
     ChangeBorderLabel,
     ChangePreviewLabel,
     ChangePreviewWindow,
-    ShowAndStorePreviewOutput,
-    SetAsCurrentPreview,
     ReloadEntries,
+    SetAsCurrentPreview,
+    ShellCommand,
+    ShowAndStorePreviewOutput,
 )
+from fzf_primitives.core.FzfPrompt.action_menu.binding import Binding
+from fzf_primitives.core.FzfPrompt.action_menu.parametrized_actions import ParametrizedAction
+from fzf_primitives.core.FzfPrompt.action_menu.transform import Transform
+from fzf_primitives.core.FzfPrompt.previewer.Preview import Preview
+from fzf_primitives.core.FzfPrompt.server import PromptEndingAction, ServerCall
 
 
 def get_names_when_using_lambdas():
@@ -21,7 +21,7 @@ def get_names_when_using_lambdas():
         ServerCall(lambda pd: "output"),
         Transform(lambda pd: [ParametrizedAction("echo hello", "become")]),
         *Preview("Some preview", output_generator=lambda pd: "some preview output").preview_change_binding.actions,
-        PromptEndingAction("accept", "alt-0", lambda pd: None),
+        PromptEndingAction("accept", lambda pd: None),
     )
     print("----- test_names_when_using_lambdas -----")
     print("binding.name:", binding.name)
