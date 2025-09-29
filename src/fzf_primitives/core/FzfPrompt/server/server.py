@@ -78,7 +78,7 @@ class Server[T, S](Thread, LoggedComponent):
         except Exception as err:
             trb = traceback.format_exc()
             error_message = f"{trb}\nPayload contents:\n{payload}"
-            self.logger.error(error_message, trace_point="error_handling_request")
+            self.logger.error("{}", error_message, trace_point="error_handling_request")
             response = error_message
             if isinstance(err, KeyError):
                 response = f"{trb}\n{list(self.endpoints.keys())}"
