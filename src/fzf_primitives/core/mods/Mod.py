@@ -7,7 +7,6 @@ from ..FzfPrompt import Action, ConflictResolution, PromptData
 from ..FzfPrompt.options import Event, Hotkey, Options
 from ..monitoring import LoggedComponent
 from .on_trigger import OnTrigger
-from .post_processing import PostProcessing
 from .preview_mod import PreviewMod
 from .trigger_adder import attach_event_adder, attach_hotkey_adder
 
@@ -50,13 +49,6 @@ class Mod[T, S](LoggedComponent):
         preview_mod = PreviewMod[T, S](trigger, on_conflict=on_conflict, main=main)
         self._mods.append(preview_mod)
         return preview_mod
-
-    # post processing
-    def lastly(self) -> PostProcessing[T, S]:
-        """Applied from left to right"""
-        post_processing_mod = PostProcessing[T, S]()
-        self._mods.append(post_processing_mod)
-        return post_processing_mod
 
     # automations
     # TODO: custom (accepts function acting on PromptData)?

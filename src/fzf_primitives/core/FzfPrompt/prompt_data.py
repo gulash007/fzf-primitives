@@ -107,32 +107,11 @@ class PromptData[T, S](LoggedComponent):
         return self.state.target_indices
 
     @property
-    def result(self) -> Result[T, S]:
-        try:
-            return self._result
-        except AttributeError as err:
-            raise RuntimeError("Result not set") from err
-
-    @property
     def stage(self) -> PromptStage:
         return self._stage
 
     def set_stage(self, stage: PromptStage):
         self._stage = stage
-
-    def finish(self, end_status: EndStatus):
-        self._result = Result(
-            end_status=end_status,
-            trigger=self.trigger,
-            entries=self.entries,
-            query=self.state.query,
-            current_index=self.state.current_index,
-            selected_indices=self.selected_indices,
-            selections=self.selections,
-            target_indices=self.target_indices,
-            obj=self.obj,
-        )
-        self._stage = "finished"
 
     @property
     def entries_delimiter(self) -> str:
@@ -178,8 +157,8 @@ class PromptData[T, S](LoggedComponent):
 class Result[T, S](list[T]):
     def __init__(
         self,
-        end_status: EndStatus,
-        trigger: Trigger,
+        end_status: EndStatus | None,
+        trigger: Trigger | None,
         entries: list[T],
         query: str,
         current_index: int | None,
@@ -188,8 +167,8 @@ class Result[T, S](list[T]):
         target_indices: list[int],
         obj: S,
     ):
-        self.end_status: EndStatus = end_status
-        self.trigger: Trigger = trigger
+        self.end_status: EndStatus | None = end_status
+        self.trigger: Trigger | None = trigger
         self.query = query
         self.current_index = current_index  # of pointer starting from 0
         self.current = entries[current_index] if current_index is not None else None

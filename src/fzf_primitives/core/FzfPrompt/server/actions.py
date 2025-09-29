@@ -103,13 +103,13 @@ class PromptEndingAction[T, S](ServerCall, LoggedComponent):
         self.end_status: EndStatus = end_status
         self.post_processor = post_processor
         self.allow_empty = allow_empty
-        super().__init__(self._pipe_results, command_type="execute-silent")
+        super().__init__(self._finish_prompt, command_type="execute-silent")
 
-    def _pipe_results(self, prompt_data: PromptData[T, S]):
-        if not self.allow_empty and not prompt_data.targets:
-            return
-        prompt_data.finish(self.end_status)
-        self.logger.trace("Piping results", trace_point="piping_results", result=prompt_data.result.to_dict())
+    def _finish_prompt(self, prompt_data: PromptData[T, S]):
+        prompt_data.set_stage("finished")
+        if self.post_processor:
+            self.post_processor(prompt_data)
+        self.logger.trace("Finishing prompt", trace_point="finishing_prompt")
 
     def __str__(self) -> str:
         return (

@@ -4,11 +4,8 @@ import functools
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
-import pytest
-
 from fzf_primitives.config import Config
 from fzf_primitives.core import Prompt
-from fzf_primitives.core.FzfPrompt.exceptions import Aborted
 from fzf_primitives.core.mods.preview_mod.presets import get_fzf_json, preview_basic
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
 from tests.LoggingSetup import LoggingSetup
@@ -117,15 +114,6 @@ def test_quit():
     prompt = prompt_builder()
     prompt.mod.automate("ctrl-q")
     assert prompt.run().end_status == "quit"
-
-
-@logging_setup.attach
-def test_abort():
-    with pytest.raises(Aborted):
-        prompt = prompt_builder()
-        prompt.mod.lastly().raise_from_aborted_status()
-        prompt.mod.automate(Config.default_abort_hotkey)
-        prompt.run()
 
 
 if __name__ == "__main__":

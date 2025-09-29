@@ -3,11 +3,12 @@ import pytest
 from fzf_primitives import Prompt
 from fzf_primitives.core.FzfPrompt import BindingConflict
 from fzf_primitives.core.FzfPrompt.options import Options
-from fzf_primitives.core.mods import Mod, OnTrigger, PostProcessing, PreviewMod
-from fzf_primitives.core.mods.trigger_adder.TriggerAdder import HotkeyAdder, EventAdder
+from fzf_primitives.core.mods import Mod, OnTrigger, PreviewMod
 from fzf_primitives.core.mods.preview_mod import SpecificPreviewMod, SpecificPreviewOnTrigger
+from fzf_primitives.core.mods.trigger_adder.TriggerAdder import EventAdder, HotkeyAdder
 
 # ruff: noqa: SLF001
+
 
 def test_mod_return_value_types():
     prompt = Prompt()
@@ -23,13 +24,9 @@ def test_mod_return_value_types():
     # test preview modding
     assert type(prompt.mod.preview()) is PreviewMod
     assert type(prompt.mod.preview().custom("some preview", "echo hello")) is SpecificPreviewMod
-    assert type(prompt.mod.preview().custom("some preview", "echo hello").on_hotkey("ctrl-c")) is SpecificPreviewOnTrigger
-
-    # test chaining post_processing
-    assert type(prompt.mod.lastly()) is PostProcessing
-    assert type(prompt.mod.lastly().custom(lambda pd: None)) is PostProcessing
-    assert type(prompt.mod.lastly().raise_aborted_on(lambda pd: True)) is PostProcessing
-    assert type(prompt.mod.lastly().raise_from_aborted_status("Aborted!")) is PostProcessing
+    assert (
+        type(prompt.mod.preview().custom("some preview", "echo hello").on_hotkey("ctrl-c")) is SpecificPreviewOnTrigger
+    )
 
     # test chaining options
     assert type(prompt.mod.options) is Options
