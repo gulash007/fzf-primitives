@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import itertools
 import json
+import subprocess
 from pathlib import Path
 
 from rich import box
 from rich.panel import Panel
 
-from ....utils import CodeTheme, render_to_string, syntax_highlight
+from ....utils import CodeTheme, render_to_string
 from ...FzfPrompt import Binding, Preview, PromptData
 from ...FzfPrompt.action_menu.transform import Transform
 from ...FzfPrompt.options import Event, Hotkey
@@ -29,23 +30,25 @@ class FileViewer:
         for path in proper_paths:
             if path.is_file():
                 try:
-                    content = path.read_text(encoding="utf-8")
+                    path.read_text(encoding="utf-8")
                 except UnicodeDecodeError:
                     outputs.append("Cannot preview binary file...")
                 else:
-                    outputs.append(
-                        syntax_highlight(
-                            content,
-                            theme=self.theme,
-                            width=width,
-                            line_numbers=not self.plain,
-                            language=self.language,
-                            filename=str(path),
-                        )
-                    )
+                    command = ["pygmentize", "-O", f"style={self.theme}", "-f", "terminal256", str(path), "-g"]
+                    if self.language:
+                        command.extend(["-l", self.language])
+                    else:
+                        command.extend(["-O", f"path={str(path)}"])
+                    if not self.plain:
+                        command.extend(["-P", "linenos=1"])
+                    proc = subprocess.run(command, capture_output=True, text=True, encoding="utf-8")
+                    outputs.append(proc.stdout or proc.stderr)
             elif path.is_dir():
-                # TODO: maybe implement directory listing with tree command or similar
-                outputs.append("Cannot preview directory...")
+                proc = subprocess.run(["tree", "-aC", str(path)], capture_output=True, text=True, encoding="utf-8")
+                if proc.returncode == 0:
+                    outputs.append(proc.stdout)
+                else:
+                    outputs.append("Cannot preview directory...")
             else:
                 return f"Cannot preview: {path} (not a file or directory)"
 
