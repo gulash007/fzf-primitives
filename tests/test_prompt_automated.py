@@ -4,6 +4,8 @@ import functools
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
+import pytest
+
 from fzf_primitives.config import Config
 from fzf_primitives.core import Prompt
 from fzf_primitives.core.mods.preview_mod.presets import get_fzf_json, preview_basic
@@ -114,6 +116,14 @@ def test_quit():
     prompt = prompt_builder()
     prompt.mod.automate("ctrl-q")
     assert prompt.run().end_status == "quit"
+
+
+@pytest.mark.parametrize(["action", "end_status"], [("accept", "accept"), ("abort", "abort")])
+@logging_setup.attach
+def test_ending_prompt_with_base_action(action, end_status):
+    prompt = prompt_builder()
+    prompt.mod.automate_actions(action)
+    assert prompt.run().end_status == end_status
 
 
 if __name__ == "__main__":
