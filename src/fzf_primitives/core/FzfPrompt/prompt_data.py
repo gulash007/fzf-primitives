@@ -197,6 +197,3 @@ class Result[T, S](list[T]):
 
 
 PromptStage = Literal["created", "ready to run", "running", "finished"]
-
-
-class ChoicesAndLinesMismatch(ValueError): ...

@@ -19,7 +19,7 @@ from .previewer import (
     PreviewMutator,
     PreviewStyleMutationArgs,
 )
-from .prompt_data import ChoicesAndLinesMismatch, PromptData, Result
+from .prompt_data import PromptData, Result
 from .server import (
     EndStatus,
     PostProcessor,
@@ -52,6 +52,5 @@ __all__ = [
     "PreviewStyleMutationArgs",
     "Transform",
     "ActionsBuilder",
-    "ChoicesAndLinesMismatch",
     "Controller",
 ]
