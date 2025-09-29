@@ -16,21 +16,19 @@ class ServerEndpoint:
         self.trigger: Trigger = trigger
 
     def run(self, prompt_data: PromptData, request: Request) -> Any:
-        if request.prompt_state:
-            prompt_data.set_state(request.prompt_state, self.trigger)
+        prompt_data.set_state(request.prompt_state, self.trigger)
         return self.function(prompt_data, **request.kwargs)
 
 
 class Request:
-    def __init__(self, endpoint_id: str, prompt_state: PromptState | None, kwargs: dict):
+    def __init__(self, endpoint_id: str, prompt_state: PromptState, kwargs: dict):
         self.endpoint_id = endpoint_id
         self.prompt_state = prompt_state
         self.kwargs = kwargs
 
     @classmethod
     def from_json(cls, data: dict) -> Self:
-        prompt_state = PromptState.from_json(data["prompt_state"]) if data["prompt_state"] else None
-        return cls(data["endpoint_id"], prompt_state, data["kwargs"])
+        return cls(data["endpoint_id"], PromptState.from_json(data["prompt_state"]), data["kwargs"])
 
 
 class PromptState:

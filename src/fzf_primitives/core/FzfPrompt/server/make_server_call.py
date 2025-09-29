@@ -7,14 +7,14 @@ import sys
 from typing import TypedDict
 
 
-class PromptState(TypedDict):
+class PromptStateDict(TypedDict):
     query: str
     current_index: int | None
     selected_count: int
     target_indices: list[int]
 
 
-def make_server_call(port: int, endpoint_id: str, prompt_state: PromptState | None, /, kwargs):
+def make_server_call(port: int, endpoint_id: str, prompt_state: PromptStateDict, /, kwargs):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
         client.connect(("localhost", port))
         try:
@@ -37,7 +37,7 @@ def parse_args():
     n_placeholder = sys.argv[4]  # {n} fzf placeholder
     fzf_select_count = int(sys.argv[5])  # FZF_SELECT_COUNT fzf env var
     nplus_placeholder_indices = [int(x) for x in sys.argv[6].split() if x.isdigit()]  # {+n} fzf placeholder
-    prompt_state: PromptState = {
+    prompt_state: PromptStateDict = {
         "query": query,
         "current_index": int(n_placeholder) if n_placeholder.isdigit() else None,  # empty string if no shown entries
         "selected_count": fzf_select_count,
