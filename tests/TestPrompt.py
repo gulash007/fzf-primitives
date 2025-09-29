@@ -56,7 +56,7 @@ def clip_socket_number(prompt_data, FZF_PRIMITIVES_SOCKET_NUMBER):
 @logging_setup.attach
 def prompt_builder():
     prompt = Prompt(TEST_CHOICES, lambda day: day.name)
-    prompt.mod.options.multi().listen()
+    prompt.mod.options.multi()
     prompt.mod.on_event().BACKWARD_EOF.run_function("clip socket number", clip_socket_number)
     prompt.mod.on_hotkey().CTRL_A.toggle_all()
     prompt.mod.on_hotkey().CTRL_Q.quit()

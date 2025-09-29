@@ -72,7 +72,7 @@ def show_and_record_preview(preview_function):
 @logging_setup.attach
 def prompt_builder():
     prompt = Prompt(TEST_CHOICES, lambda day: day.name, obj=Recording())
-    prompt.mod.options.multi().listen()
+    prompt.mod.options.multi()
     prompt.mod.on_hotkey().CTRL_A.toggle_all()
     prompt.mod.on_hotkey().CTRL_N.run_function(
         "record selections", lambda pd: pd.obj.selections.extend(pd.selections), silent=True

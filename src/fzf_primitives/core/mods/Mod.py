@@ -53,7 +53,7 @@ class Mod[T, S](LoggedComponent):
     # automations
     # TODO: custom (accepts function acting on PromptData)?
     def automate(self, *to_execute: Hotkey):
-        """Currently can only automate hotkeys that have been explicitly bound"""
+        """Currently can only automate hotkeys that have been explicitly bound in ActionMenu"""
         self._mods.append(lambda pd: pd.automator.automate(*to_execute))
 
     def automate_actions(self, *actions: Action[T, S]):

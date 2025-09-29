@@ -44,7 +44,7 @@ class OnTriggerBase[T, S](ABC, LoggedComponent):
         self._on_conflict: ConflictResolution = on_conflict
         self._trigger: Trigger = trigger
         self._binding: Binding[T, S] = Binding("")
-        self._additional_mods: list[Callable[[PromptData[T, S]], None]] = []
+        self._additional_mods: list[Callable[[PromptData[T, S]], Any]] = []
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         prompt_data.action_menu.add(self._trigger, self._binding, on_conflict=self._on_conflict)
@@ -158,8 +158,9 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         repeat_interval: float = 0.5,
         repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
     ) -> Self:
-        """❗Requires Options.listen()"""
+        """Automatically adds Options.listen()"""
         repeater = Repeater(*actions, repeat_interval=repeat_interval, repeat_when=repeat_when)
+        self._additional_mods.append(lambda pd: pd.options.listen())
         return self.run_function(f"Every {repeat_interval:.2f}s {name}", repeater)
 
     def end_prompt(

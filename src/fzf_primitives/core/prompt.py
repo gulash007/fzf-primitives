@@ -19,6 +19,7 @@ class Prompt[T, S]:
         entries_stream: Iterable[T] | None = None,
         use_basic_hotkeys: bool | None = None,
     ):
+        """If entries_stream is provided, reloading actions (reload and reload-sync) are disabled"""
         self._entries_stream = entries_stream
         self._converter = converter
         self._prompt_data = PromptData(entries=entries, converter=converter, obj=obj)
@@ -77,5 +78,4 @@ class Prompt[T, S]:
         for trigger, binding in self._prompt_data.action_menu.bindings.items():
             self._prompt_data.server.add_endpoints(binding, trigger)
         self._prompt_data.options += self._prompt_data.action_menu.resolve_options()
-        self._prompt_data.options.listen()  # for ServerCalls with FZF_PORT parameter
         self._stage = "ready to run"
