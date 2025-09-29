@@ -78,7 +78,7 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
     ) -> Self:
         return self.run(name, Transform(get_actions, bg=bg), *base_actions)
 
-    def select_by(self, name: str, predicate: Callable[[T], bool]) -> Self:
+    def select_by(self, name: str, predicate: Callable[[PromptData[T, S], T], bool]) -> Self:
         """Selects items by the given predicate acting on an entry"""
         return self.run(name, SelectBy(predicate))
 
@@ -129,7 +129,7 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
                         saved_keys = pd.run_vars.pop(saved_selection_keys_key, None)
                         if saved_keys is not None:
                             return [
-                                SelectBy[T, S](lambda item: preserve_selections_by_key(item) in saved_keys),
+                                SelectBy[T, S](lambda pd, item: preserve_selections_by_key(item) in saved_keys),
                                 ParametrizedAction(pd.run_vars[saved_query_key], "put"),
                             ]
                     return []

@@ -10,7 +10,7 @@ type EntriesGetter[T, S] = Callable[[PromptData[T, S]], list[T]]
 
 
 class SelectBy[T, S](Transform[T, S], LoggedComponent):
-    def __init__(self, predicate: Callable[[T], bool]):
+    def __init__(self, predicate: Callable[[PromptData[T, S], T], bool]):
         LoggedComponent.__init__(self)
 
         def get_select_actions(prompt_data: PromptData[T, S]) -> list[Action]:
@@ -21,7 +21,7 @@ class SelectBy[T, S](Transform[T, S], LoggedComponent):
                 actions: list[Action] = []
                 for i, entry in enumerate(prompt_data.entries):
                     try:
-                        should_select = predicate(entry)
+                        should_select = predicate(prompt_data, entry)
                     except Exception as e:
                         self.logger.warning(f"{e.__class__.__name__}: {e}", trace_point="error_in_select_by_predicate")
                         continue
