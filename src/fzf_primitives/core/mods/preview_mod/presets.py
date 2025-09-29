@@ -16,7 +16,7 @@ from ...monitoring import LoggedComponent
 
 
 class FileViewer:
-    def __init__(self, language: str = "", theme: CodeTheme = "dracula", plain: bool = True):
+    def __init__(self, language: str | None = None, theme: CodeTheme = "dracula", plain: bool = True):
         self.language = language
         self.theme: CodeTheme = theme
         self.plain = plain
@@ -35,7 +35,12 @@ class FileViewer:
                 else:
                     outputs.append(
                         syntax_highlight(
-                            content, theme=self.theme, width=width, line_numbers=not self.plain, language=self.language
+                            content,
+                            theme=self.theme,
+                            width=width,
+                            line_numbers=not self.plain,
+                            language=self.language,
+                            filename=str(path),
                         )
                     )
             elif path.is_dir():

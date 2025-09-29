@@ -111,7 +111,7 @@ class PreviewMod[T, S](LoggedComponent):
 
     def file(
         self,
-        language: str = "",
+        language: str | None = None,
         theme: CodeTheme = "dracula",
         plain: bool = True,
         converter: Callable[[T], str | Path] | None = None,
