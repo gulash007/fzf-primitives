@@ -107,8 +107,6 @@ class PromptEndingAction[T, S](ServerCall, LoggedComponent):
 
     def _finish_prompt(self, prompt_data: PromptData[T, S]):
         prompt_data.set_stage("finished")
-        if self.post_processor:
-            self.post_processor(prompt_data)
         self.logger.trace("Finishing prompt", trace_point="finishing_prompt")
 
     def __str__(self) -> str:

@@ -125,6 +125,8 @@ def execute_fzf[T, S](
                 **{"trace_point": "prompt_ended_on_trigger_without_final_action"},
             )
             raise RuntimeError(err_message)
+        if final_action.post_processor:
+            final_action.post_processor(prompt_data)
         end_status = final_action.end_status
         trigger = prompt_data.trigger
     return Result(
