@@ -51,7 +51,7 @@ def execute_fzf[T, S](
             fzf_process = subprocess.Popen(
                 [executable_path, *options],
                 shell=False,
-                stdin=subprocess.PIPE,
+                stdin=subprocess.PIPE,  # ❗ this prevents reload actions from working
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=prompt_data.run_vars["env"],
