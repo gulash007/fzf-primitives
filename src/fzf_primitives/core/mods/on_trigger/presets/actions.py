@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Callable, Literal
 
+from ....FzfPrompt.server import FzfPlaceholder, VarOutput
 from ....FzfPrompt import Action, PreviewFunction, PromptData, ServerCall, Transform
 from ....FzfPrompt.action_menu import DeselectAt, MovePointer, SelectAt, ToggleAt
 from ....monitoring import LoggedComponent
@@ -14,14 +15,20 @@ class SelectBy[T, S](Transform[T, S], LoggedComponent):
     def __init__(self, predicate: Callable[[PromptData[T, S], T], bool], action: SelectionAction = "select"):
         LoggedComponent.__init__(self)
 
-        def get_select_actions(prompt_data: PromptData[T, S]) -> list[Action]:
+        def get_select_actions(
+            prompt_data: PromptData[T, S],
+            current_position=VarOutput.preset.FZF_POS,
+            matched_indices=FzfPlaceholder.preset.MATCHED_INDICES,
+        ) -> list[Action]:
             try:
-                original_position = prompt_data.state.current_index
+                original_position = int(current_position) - 1
+                matched_indices = [int(i) for i in matched_indices.split() if i.strip().isdigit()]
                 if original_position is None:
                     return []
                 action_type = SelectAt if action == "select" else DeselectAt if action == "deselect" else ToggleAt
                 actions: list[Action] = []
-                for i, entry in enumerate(prompt_data.entries):
+                for i, j in enumerate(matched_indices):
+                    entry = prompt_data.entries[j]
                     try:
                         should_select = predicate(prompt_data, entry)
                     except Exception as e:
@@ -29,7 +36,7 @@ class SelectBy[T, S](Transform[T, S], LoggedComponent):
                         continue
                     if should_select:
                         self.logger.debug(
-                            f"Selecting choice at index {i} with value: {entry}", trace_point="selecting_choice"
+                            f"Selecting choice at position {i} with value: {entry}", trace_point="selecting_choice"
                         )
                         actions.append(action_type(i))
                 actions.append(MovePointer(original_position))
