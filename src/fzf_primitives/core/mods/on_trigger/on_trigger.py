@@ -82,7 +82,7 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
     def select_by(
         self, name: str, predicate: Callable[[PromptData[T, S], T], bool], action: SelectionAction = "select"
     ) -> Self:
-        """Selects items by the given predicate acting on an entry"""
+        """Selects (or deselects or toggles) items by the given predicate acting on an entry"""
         return self.run(name, SelectBy(predicate, action=action))
 
     def reload_entries(
@@ -99,8 +99,8 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         Reload the entries list.
 
         Args:
-            preserve_selections_by_key: Try to match previous selections with new entries on given predicate (usually some kind of equality).
-            If not provided, all previous selections will be cleared after reload.
+            preserve_selections_by_key: Try to match previous selections with new entries on given key function.
+                If not provided, all previous selections will be cleared after reload.
             repeat_interval: If provided, will auto-repeat the reload action every `repeat_interval` seconds. Must be at least 0.2.
         """
         name = f"{name}{' (sync)' if sync else ''}"
@@ -203,6 +203,12 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
     def select_all(self):
         return self.run("select all", "select-all")
 
+    def deselect(self):
+        return self.run("deselect", "deselect")
+
+    def deselect_all(self):
+        return self.run("deselect all", "deselect-all")
+
     def toggle(self):
         return self.run("toggle", "toggle")
 
@@ -253,11 +259,6 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
             lambda pd: [ServerCall(save_current_index, command_type="execute-silent"), "clear-query"]
             if pd.current_index is not None and pd.query != ""
             else ["offset-middle"],
-        )
-
-    def become(self, command_getter: Callable[[PromptData[T, S]], str]) -> Self:
-        return self.run(
-            "clear query and focus line", Transform[T, S](lambda pd: [ParametrizedAction(command_getter(pd), "become")])
         )
 
     def clip_current_preview(self, converter: Callable[[str], str] | None = None):
