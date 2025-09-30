@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, Literal
 
 from ....FzfPrompt import Action, PreviewFunction, PromptData, ServerCall, Transform
-from ....FzfPrompt.action_menu import MovePointer, SelectAt
+from ....FzfPrompt.action_menu import DeselectAt, MovePointer, SelectAt, ToggleAt
 from ....monitoring import LoggedComponent
 
 type EntriesGetter[T, S] = Callable[[PromptData[T, S]], list[T]]
+type SelectionAction = Literal["select", "deselect", "toggle"]
 
 
 class SelectBy[T, S](Transform[T, S], LoggedComponent):
-    def __init__(self, predicate: Callable[[PromptData[T, S], T], bool]):
+    def __init__(self, predicate: Callable[[PromptData[T, S], T], bool], action: SelectionAction = "select"):
         LoggedComponent.__init__(self)
 
         def get_select_actions(prompt_data: PromptData[T, S]) -> list[Action]:
@@ -18,6 +19,7 @@ class SelectBy[T, S](Transform[T, S], LoggedComponent):
                 original_position = prompt_data.state.current_index
                 if original_position is None:
                     return []
+                action_type = SelectAt if action == "select" else DeselectAt if action == "deselect" else ToggleAt
                 actions: list[Action] = []
                 for i, entry in enumerate(prompt_data.entries):
                     try:
@@ -29,7 +31,7 @@ class SelectBy[T, S](Transform[T, S], LoggedComponent):
                         self.logger.debug(
                             f"Selecting choice at index {i} with value: {entry}", trace_point="selecting_choice"
                         )
-                        actions.append(SelectAt(i))
+                        actions.append(action_type(i))
                 actions.append(MovePointer(original_position))
                 return actions
             except Exception as e:

@@ -33,6 +33,7 @@ from .presets import (
     ReloadEntries,
     Repeater,
     SelectBy,
+    SelectionAction,
     ShowInPreview,
     clip_current_preview,
     clip_options,
@@ -78,9 +79,11 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
     ) -> Self:
         return self.run(name, Transform(get_actions, bg=bg), *base_actions)
 
-    def select_by(self, name: str, predicate: Callable[[PromptData[T, S], T], bool]) -> Self:
+    def select_by(
+        self, name: str, predicate: Callable[[PromptData[T, S], T], bool], action: SelectionAction = "select"
+    ) -> Self:
         """Selects items by the given predicate acting on an entry"""
-        return self.run(name, SelectBy(predicate))
+        return self.run(name, SelectBy(predicate, action=action))
 
     def reload_entries(
         self,

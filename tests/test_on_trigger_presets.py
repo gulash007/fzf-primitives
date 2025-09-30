@@ -36,6 +36,33 @@ def test_select_by():
     assert result.selections == [2, 4, 6]
 
 
+@logging_setup.attach
+def test_deselect_by():
+    prompt = Prompt([1, 2, 3, 4, 5, 6, 7])
+
+    prompt.mod.options.multi()
+    prompt.mod.on_hotkey().CTRL_6.select_by("deselect even numbers", lambda pd, n: n % 2 == 0, action="deselect")
+    prompt.mod.automate_actions("select-all")
+    prompt.mod.automate("ctrl-6")
+    prompt.mod.automate(Prompt.config.default_accept_hotkey)
+    result = prompt.run()
+    assert result.selections == [1, 3, 5, 7]
+
+
+@logging_setup.attach
+def test_toggle_by():
+    prompt = Prompt([1, 2, 3, 4, 5, 6, 7])
+
+    prompt.mod.options.multi()
+    prompt.mod.on_hotkey().CTRL_6.select_by("toggle even numbers", lambda pd, n: n % 2 == 0, action="toggle")
+    prompt.mod.automate_actions("select-all")
+    prompt.mod.automate("ctrl-6")
+    prompt.mod.automate("ctrl-6")
+    prompt.mod.automate(Prompt.config.default_accept_hotkey)
+    result = prompt.run()
+    assert result.selections == [1, 3, 5, 7, 2, 4, 6], f"Got: {result.selections}"
+
+
 if __name__ == "__main__":
     test_clear_query_and_focus_line()
-    test_select_by()
+    test_toggle_by()
