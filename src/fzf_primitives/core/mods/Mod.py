@@ -52,12 +52,14 @@ class Mod[T, S](LoggedComponent):
 
     # automations
     # TODO: custom (accepts function acting on PromptData)?
-    def automate(self, *to_execute: Hotkey):
+    def automate(self, *to_execute: Hotkey) -> Mod[T, S]:
         """Currently can only automate hotkeys that have been explicitly bound in ActionMenu"""
         self._mods.append(lambda pd: pd.automator.automate(*to_execute))
+        return self
 
-    def automate_actions(self, *actions: Action[T, S]):
+    def automate_actions(self, *actions: Action[T, S]) -> Mod[T, S]:
         self._mods.append(lambda pd: pd.automator.automate_actions(*actions))
+        return self
 
     # other options
     @property
@@ -65,9 +67,10 @@ class Mod[T, S](LoggedComponent):
         return self._options
 
     # environment
-    def env(self, **env_vars: str):
+    def env(self, **env_vars: str) -> Mod[T, S]:
         """Set environment variables for fzf process (does not affect Python process)"""
         self._mods.append(lambda pd: pd.run_vars["env"].update(env_vars))
+        return self
 
     # presets
     def default(self) -> Self:
