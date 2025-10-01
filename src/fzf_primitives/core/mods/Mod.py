@@ -14,7 +14,7 @@ from .trigger_adder import attach_event_adder, attach_hotkey_adder
 class Mod[T, S](LoggedComponent):
     def __init__(self):
         super().__init__()
-        self._mods: list[Callable[[PromptData], None]] = []
+        self._mods: list[Callable[[PromptData], Any]] = []
         self._options = Options()
 
     def apply(self, prompt_data: PromptData[T, S]):
@@ -29,6 +29,10 @@ class Mod[T, S](LoggedComponent):
     def clear(self):
         self._mods = []
         self._options = Options()
+
+    def add(self, mod: Callable[[PromptData], Any]) -> Mod[T, S]:
+        self._mods.append(mod)
+        return self
 
     # on trigger
     @attach_hotkey_adder
