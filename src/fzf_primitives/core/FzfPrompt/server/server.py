@@ -38,8 +38,8 @@ class Server[T, S](Thread, LoggedComponent):
                 server_socket.bind(("localhost", 0))
                 socket_specs = server_socket.getsockname()
                 self.port = socket_specs[1]
-                self.prompt_data.run_vars["env"][SOCKET_NUMBER_ENV_VAR] = str(self.port)
-                self.prompt_data.run_vars["env"][MAKE_SERVER_CALL_ENV_VAR_NAME] = make_server_call.__file__
+                self.prompt_data.fzf_env[SOCKET_NUMBER_ENV_VAR] = str(self.port)
+                self.prompt_data.fzf_env[MAKE_SERVER_CALL_ENV_VAR_NAME] = make_server_call.__file__
 
                 server_socket.listen()
                 self.logger.info(f"Server listening on {socket_specs}...", trace_point="server_listening")

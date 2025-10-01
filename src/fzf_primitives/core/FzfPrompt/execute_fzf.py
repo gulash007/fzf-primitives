@@ -42,7 +42,7 @@ def execute_fzf[T, S](
                 shell=False,
                 input=prompt_data.fzf_input(),
                 check=True,
-                env=prompt_data.run_vars["env"],
+                env=prompt_data.fzf_env,
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
@@ -54,7 +54,7 @@ def execute_fzf[T, S](
                 stdin=subprocess.PIPE,  # ❗ this prevents reload actions from working
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                env=prompt_data.run_vars["env"],
+                env=prompt_data.fzf_env,
                 text=True,
                 encoding="utf-8",
             )

@@ -1,7 +1,7 @@
 # Syntax sugar layer
 from __future__ import annotations
 
-from typing import Callable, Self
+from typing import Any, Callable, Self
 
 from ..FzfPrompt import Action, ConflictResolution, PromptData
 from ..FzfPrompt.options import Event, Hotkey, Options
@@ -66,10 +66,16 @@ class Mod[T, S](LoggedComponent):
     def options(self) -> Options:
         return self._options
 
+    # run vars
+    def run_vars(self, **run_vars: Any) -> Mod[T, S]:
+        """Set run variables for fzf process (does not affect Python process)"""
+        self._mods.append(lambda pd: pd.run_vars.update(run_vars))
+        return self
+
     # environment
     def env(self, **env_vars: str) -> Mod[T, S]:
         """Set environment variables for fzf process (does not affect Python process)"""
-        self._mods.append(lambda pd: pd.run_vars["env"].update(env_vars))
+        self._mods.append(lambda pd: pd.fzf_env.update(env_vars))
         return self
 
     # presets

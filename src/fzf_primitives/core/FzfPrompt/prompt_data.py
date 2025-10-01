@@ -44,7 +44,8 @@ class PromptData[T, S](LoggedComponent):
         self._trigger: Trigger | None = None
         self._result: Result[T, S]
         self.id = datetime.now().isoformat()  # TODO: Use it?
-        self.run_vars: dict[str, Any] = {"env": os.environ.copy()}
+        self.run_vars: dict[str, Any] = {}
+        self.fzf_env: dict[str, str] = os.environ.copy()
         self._stage: PromptStage = "created"
         self._control_port: int | None = None
         self.make_server_call = make_server_call
