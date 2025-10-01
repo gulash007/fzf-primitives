@@ -64,6 +64,11 @@ class Mod[T, S](LoggedComponent):
     def options(self) -> Options:
         return self._options
 
+    # environment
+    def env(self, **env_vars: str):
+        """Set environment variables for fzf process (does not affect Python process)"""
+        self._mods.append(lambda pd: pd.run_vars["env"].update(env_vars))
+
     # presets
     def default(self) -> Self:
         """Some default useful preset"""
