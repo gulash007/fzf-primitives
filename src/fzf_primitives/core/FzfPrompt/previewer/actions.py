@@ -67,7 +67,7 @@ class ShowAndStorePreviewOutput(ServerCall, LoggedComponent):
     def __init__(self, command: str, preview: Preview) -> None:
         LoggedComponent.__init__(self)
         name = f"Store preview output of {preview.name}"
-        self._id = f"{name} (preview_id={preview.id}) (command hash {hash(command)})"
+        self._id = f"{name}#{id(self)} (preview_id={preview.id}) (command hash {hash(command)})"
 
         def store_preview_output(prompt_data: PromptData, preview_output: str = CommandOutput("echo $preview_output")):
             preview.output = preview_output
