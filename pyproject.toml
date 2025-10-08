@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [project.scripts]
-fzf-primitives = "fzf_primitives:main"
+fzf-primitives = "fzf_primitives.cli.fzf_primitives:app"
 
 [build-system]
 requires = ["uv_build>=0.8.15,<0.9.0"]

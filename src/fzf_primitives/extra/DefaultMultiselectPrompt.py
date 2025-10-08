@@ -22,6 +22,7 @@ class DefaultMultiselectPrompt[T, S](DefaultPrompt.DefaultPrompt[T, S]):
         super().__init__(entries, converter, obj, use_basic_hotkeys=override_basic_hotkeys)
         self.mod.options.multi()
         self.mod.on_hotkey().CTRL_A.toggle_all()
+        self.mod.on_hotkey().CTRL_6.clear_and_refocus()
 
 
 @app.command()
