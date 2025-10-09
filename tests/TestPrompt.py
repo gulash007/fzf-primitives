@@ -9,7 +9,7 @@ from enum import Enum, auto
 
 import pyperclip
 
-from fzf_primitives import Prompt
+from fzf_primitives import LoggingSetup, Preview, Prompt
 from fzf_primitives.actions import ParametrizedAction
 from fzf_primitives.config import Config
 from fzf_primitives.core.FzfPrompt import PreviewMutationArgs, PromptData
@@ -18,7 +18,6 @@ from fzf_primitives.core.FzfPrompt.previewer.Preview import ChangePreviewLabel
 from fzf_primitives.core.mods.vector_generator import VectorGenerator
 from fzf_primitives.core.monitoring import Logger
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
-from tests.LoggingSetup import LoggingSetup
 
 print(f"Imports: {perf_counter() - start} seconds")
 # TEST ALL KINDS OF STUFF

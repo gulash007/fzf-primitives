@@ -1,6 +1,10 @@
-import os
+from __future__ import annotations
 
-from .core.FzfPrompt.options.triggers import Hotkey
+import os
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .core.FzfPrompt.options.triggers import Hotkey
 
 ENV_VAR_FOR_LOGGING = "FZF_PRIMITIVES_ENABLE_INTERNAL_LOGGING"
 ENV_VAR_FOR_AUTOMATOR_DELAY = "FZF_PRIMITIVES_AUTOMATOR_DELAY"

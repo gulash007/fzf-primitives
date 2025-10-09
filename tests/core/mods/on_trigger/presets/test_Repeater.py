@@ -1,11 +1,10 @@
 from threading import Event, Thread
 
-from fzf_primitives import Prompt
+from fzf_primitives import LoggingSetup, Prompt
 from fzf_primitives.actions import ParametrizedAction
 from fzf_primitives.core.FzfPrompt import Binding
 from fzf_primitives.core.FzfPrompt.controller import Controller
 from fzf_primitives.core.monitoring import INTERNAL_LOG_DIR
-from tests.LoggingSetup import LoggingSetup
 
 logging_setup = LoggingSetup(INTERNAL_LOG_DIR / "test_repeater")
 

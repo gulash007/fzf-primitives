@@ -1,17 +1,29 @@
+from __future__ import annotations
+
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
-from typing import Callable, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Callable, ParamSpec, TypeVar
 
-from fzf_primitives.config import Config
-from fzf_primitives.core.monitoring import Logger
+if TYPE_CHECKING:
+    import loguru
+from ...config import Config
+from . import LazyLogger as Logger
 
 P = ParamSpec("P")
 R = TypeVar("R")
 
 
-class LoggingSetup:
+class LoggedComponent:
+    # HACK: Lazy loading of Logger module
+    @property
+    def logger(self) -> loguru.Logger:
+        return Logger.get_logger()
+
+
+class LoggingSetup(LoggedComponent):
     def __init__(self, log_subdir: Path, *, force_logging: bool = False):
+        super().__init__()
         self.__path = log_subdir / f"{datetime.now().isoformat(timespec='milliseconds')}.log"
         self.__logging_set_up = False
         self.handler_id: int
@@ -44,5 +56,3 @@ class LoggingSetup:
     @property
     def path(self) -> Path:
         return self.__path
-
-

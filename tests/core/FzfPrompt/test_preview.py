@@ -1,12 +1,11 @@
 from typing import Any
 
-from fzf_primitives import Prompt, PromptData
+from fzf_primitives import LoggingSetup, Prompt, PromptData
 from fzf_primitives.config import Config
 from fzf_primitives.core.FzfPrompt.previewer import Preview
 from fzf_primitives.core.FzfPrompt.server import CommandOutput
 from fzf_primitives.core.mods.preview_mod import FileViewer
 from fzf_primitives.core.monitoring import INTERNAL_LOG_DIR
-from tests.LoggingSetup import LoggingSetup
 
 logging_setup = LoggingSetup(INTERNAL_LOG_DIR / "test_preview")
 

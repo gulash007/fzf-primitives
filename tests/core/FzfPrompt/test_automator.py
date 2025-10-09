@@ -1,7 +1,6 @@
-from fzf_primitives import Prompt
+from fzf_primitives import LoggingSetup, Prompt
 from fzf_primitives.core.FzfPrompt.server.actions import ServerCall
 from fzf_primitives.core.monitoring import INTERNAL_LOG_DIR
-from tests.LoggingSetup import LoggingSetup
 
 logging_setup = LoggingSetup(INTERNAL_LOG_DIR / "test_automator")
 

@@ -1,3 +1,4 @@
+from fzf_primitives import LoggingSetup
 from fzf_primitives.config import Config
 from fzf_primitives.core.monitoring import LoggedComponent, Logger
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
@@ -5,7 +6,6 @@ from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
 # ❗ This breaks during test discovery if you put Config.logging_enabled = True in
 # some of the preceding tests
 from fzf_primitives.core.monitoring.LazyLogger import _DummyObject
-from tests.LoggingSetup import LoggingSetup
 
 
 def test_lazy_logging():

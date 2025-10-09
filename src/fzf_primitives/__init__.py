@@ -2,7 +2,7 @@ from . import actions
 from .core import Prompt
 from .core.FzfPrompt import Preview, PreviewMutationArgs, PromptData, Result
 from .core.mods import VectorGenerator
-from .core.monitoring import LoggedComponent, Logger
+from .core.monitoring import LoggedComponent, Logger, LoggingSetup
 from .extra import BasicLoop
 
 __all__ = [
@@ -10,6 +10,7 @@ __all__ = [
     "BasicLoop",
     "LoggedComponent",
     "Logger",
+    "LoggingSetup",
     "PromptData",
     "Preview",
     "PreviewMutationArgs",

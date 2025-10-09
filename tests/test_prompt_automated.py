@@ -6,11 +6,11 @@ from enum import Enum, auto
 
 import pytest
 
+from fzf_primitives import LoggingSetup
 from fzf_primitives.config import Config
 from fzf_primitives.core import Prompt
 from fzf_primitives.core.mods.preview_mod.presets import get_fzf_json, preview_basic
 from fzf_primitives.core.monitoring.constants import INTERNAL_LOG_DIR
-from tests.LoggingSetup import LoggingSetup
 
 # TODO: test resolved options (need to control for variables)
 

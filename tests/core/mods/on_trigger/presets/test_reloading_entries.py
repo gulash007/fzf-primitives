@@ -1,11 +1,10 @@
 import pytest
 
-from fzf_primitives import Prompt, PromptData
+from fzf_primitives import LoggingSetup, Prompt, PromptData
 from fzf_primitives.actions import MovePointer, ParametrizedAction
 from fzf_primitives.config import Config
 from fzf_primitives.core.FzfPrompt.action_menu.parametrized_actions import SelectAt
 from fzf_primitives.core.monitoring import INTERNAL_LOG_DIR
-from tests.LoggingSetup import LoggingSetup
 
 logging_setup = LoggingSetup(INTERNAL_LOG_DIR / "test_reloading_entries")
 
