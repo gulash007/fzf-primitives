@@ -11,23 +11,31 @@ R = TypeVar("R")
 
 
 class LoggingSetup:
-    def __init__(self, log_subdir: Path):
+    def __init__(self, log_subdir: Path, *, force_logging: bool = False):
         self.__path = log_subdir / f"{datetime.now().isoformat(timespec='milliseconds')}.log"
         self.__logging_set_up = False
         self.handler_id: int
+        self.force_logging = force_logging
 
     def attach(self, func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
         def with_logging_set_up(*args: P.args, **kwargs: P.kwargs) -> R:
-            if Config.logging_enabled and not self.__logging_set_up:
-                Logger.remove_preset_handlers()
-                self.handler_id = Logger.add_file_handler(self.__path, serialize=True)
-                self.__logging_set_up = True
-                try:
-                    return func(*args, **kwargs)
-                finally:
-                    Logger.remove(self.handler_id)
-                    self.__logging_set_up = False
+            original_logging_enabled = Config.logging_enabled
+            try:
+                if self.force_logging:
+                    Config.logging_enabled = True
+                if Config.logging_enabled and not self.__logging_set_up:
+                    Logger.remove_preset_handlers()
+                    # TODO: Add more customization options
+                    self.handler_id = Logger.add_file_handler(self.__path, serialize=True)
+                    self.__logging_set_up = True
+                    try:
+                        return func(*args, **kwargs)
+                    finally:
+                        Logger.remove(self.handler_id)
+                        self.__logging_set_up = False
+            finally:
+                Config.logging_enabled = original_logging_enabled
 
             return func(*args, **kwargs)
 
