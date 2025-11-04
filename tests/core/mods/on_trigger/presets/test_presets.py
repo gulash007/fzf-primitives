@@ -11,6 +11,20 @@ logging_setup = LoggingSetup(INTERNAL_LOG_DIR / "test_on_trigger_presets")
 
 
 @logging_setup.attach
+def test_copy_entry_into_query():
+    prompt = Prompt([1, 2, 3, 4, 5, 6, 7])
+
+    prompt.mod.automate_actions("down", "down")
+    prompt.mod.on_hotkey().CTRL_6.copy_entry_into_query()
+    prompt.mod.automate("ctrl-6")
+    prompt.mod.automate(Prompt.config.default_accept_hotkey)
+
+    result = prompt.run()
+    assert result.current == 3
+    assert result.query == "3"
+
+
+@logging_setup.attach
 def test_clear_query_and_focus_line():
     prompt = Prompt([1, 2, 3, 4, 5, 6, 7])
 

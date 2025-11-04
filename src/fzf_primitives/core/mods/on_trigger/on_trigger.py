@@ -261,6 +261,12 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
             else ["offset-middle"],
         )
 
+    def copy_entry_into_query(self):
+        return self.run_transform(
+            "copy entry into query",
+            lambda pd: ["clear-query", ParametrizedAction(pd.converter(pd.current), "put")] if pd.current else [],
+        )
+
     def clip_current_preview(self, converter: Callable[[str], str] | None = None):
         return self.run_function("clip current preview", functools.partial(clip_current_preview, converter=converter))
 
