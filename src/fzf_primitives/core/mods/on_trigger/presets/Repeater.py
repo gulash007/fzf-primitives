@@ -18,12 +18,15 @@ class Repeater[T, S]:
         repeat_when: Callable[[PromptData[T, S]], bool] = lambda pd: True,
     ) -> None:
         self.actions = actions
+        self._endpoints_added = False
         self.repeat_interval = repeat_interval
         self.repeat_when = repeat_when
         self.thread: AutomatingThread[T, S] | None = None
 
     def __call__(self, prompt_data: PromptData, FZF_PORT: str):
-        prompt_data.server.add_endpoints(Binding("", *self.actions), prompt_data.trigger)
+        if not self._endpoints_added:
+            prompt_data.server.add_endpoints(Binding("", *self.actions), prompt_data.trigger)
+            self._endpoints_added = True
         if not self.thread:
             self.thread = self.create_automating_thread(prompt_data, int(FZF_PORT))
             self.thread.start()
