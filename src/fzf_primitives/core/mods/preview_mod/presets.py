@@ -17,10 +17,25 @@ from ...monitoring import LoggedComponent
 
 
 class FileViewer:
-    def __init__(self, language: str | None = None, theme: CodeTheme = "dracula", plain: bool = True):
+    def __init__(
+        self,
+        language: str | None = None,
+        theme: CodeTheme = "dracula",
+        plain: bool = True,
+        max_size: int | None = 1024**2,
+    ):
+        """View file with syntax highlighting
+
+        Args:
+            language: The programming language of the file (used for syntax highlighting).
+            theme: The color theme to use for the preview.
+            plain: Whether to view without line numbers.
+            max_size: The maximum size of the file to preview in bytes.
+        """
         self.language = language
         self.theme: CodeTheme = theme
         self.plain = plain
+        self.max_size = max_size
 
     def view(self, *paths: str | Path, width: int | None = None):
         if not paths:
@@ -29,6 +44,9 @@ class FileViewer:
         proper_paths = [Path(p) if not isinstance(p, Path) else p for p in paths]
         for path in proper_paths:
             if path.is_file():
+                if self.max_size and path.stat().st_size > self.max_size:
+                    outputs.append("File is too large to preview...")
+                    continue
                 try:
                     path.read_text(encoding="utf-8")
                 except UnicodeDecodeError:
