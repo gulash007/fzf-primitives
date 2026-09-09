@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 from pathlib import Path
-from typing import Callable, Iterable, Unpack
+from typing import Any, Callable, Iterable, Unpack
 
 from ....core.monitoring import LoggedComponent
 from ...FzfPrompt import (
@@ -49,7 +49,7 @@ class PreviewMod[T, S](LoggedComponent):
         self._on_conflict: ConflictResolution = on_conflict
         self._preview: Preview[T, S]
         self._main = main
-        self._additional_mods = []
+        self._additional_mods: list[Callable[[PromptData[T, S]], Any]] = []
 
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         try:
@@ -99,6 +99,7 @@ class PreviewMod[T, S](LoggedComponent):
 
     def fzf_json(self) -> SpecificPreviewMod[T, S]:
         """Preset for viewing fzf JSON"""
+        self._additional_mods.append(lambda pd: pd.options.listen())
         return self.custom("fzf json", output_generator=get_fzf_json, label="fzf JSON")
 
     def fzf_env_vars(self) -> SpecificPreviewMod[T, S]:
