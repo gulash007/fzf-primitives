@@ -18,7 +18,7 @@ Event = Literal[
     "click-header",
 ]
 
-Hotkey = Literal[
+_Hotkey = Literal[
     "0",
     "1",
     "2",
@@ -337,5 +337,6 @@ Hotkey = Literal[
     "alt-shift-left",
     "alt-shift-right",
 ]
+type Hotkey = _Hotkey | str
 
 Trigger = Hotkey | Event
