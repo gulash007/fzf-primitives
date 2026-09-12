@@ -74,13 +74,11 @@ class AutomatingThread[T, S](Thread, LoggedComponent):
             except Exception as err:
                 self.logger.exception(str(err), trace_point="error_in_automating_thread")
                 self.should_stop = True
-                continue
-            finally:
-                if self.should_stop:
-                    # TODO: reset prompt back to previous
-                    self.prompt_data.controller.execute(
-                        self.port,
-                        Binding("", ParametrizedAction('echo "${FZF_PROMPT#Auto-updating...}"', "transform-prompt")),
-                    )
-                    break
-                time.sleep(self.repeat_interval)
+            if self.should_stop:
+                # TODO: reset prompt back to previous
+                self.prompt_data.controller.execute(
+                    self.port,
+                    Binding("", ParametrizedAction('echo "${FZF_PROMPT#Auto-updating...}"', "transform-prompt")),
+                )
+                break
+            time.sleep(self.repeat_interval)
