@@ -6,8 +6,6 @@ from abc import ABC
 from pathlib import Path
 from typing import Any, Callable, Self
 
-import pyperclip
-
 from ...FzfPrompt import (
     Action,
     ActionsBuilder,
@@ -256,9 +254,11 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
 
         return self.run_transform(
             "clear and refocus",
-            lambda pd: [ServerCall(save_current_index, command_type="execute-silent"), "clear-query"]
-            if pd.current_index is not None and pd.query != ""
-            else ["offset-middle"],
+            lambda pd: (
+                [ServerCall(save_current_index, command_type="execute-silent"), "clear-query"]
+                if pd.current_index is not None and pd.query != ""
+                else ["offset-middle"]
+            ),
         )
 
     def copy_entry_into_query(self):
@@ -280,6 +280,8 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         )
 
     def view_logs_in_terminal(self, log_file_path: str | Path):
+        import pyperclip
+
         command = f"less +F '{log_file_path}'"
         return self.run_function("copy command to view logs in terminal", lambda pd: pyperclip.copy(command))
 

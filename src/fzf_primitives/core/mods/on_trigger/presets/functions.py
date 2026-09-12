@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from typing import Callable
 
-import pyperclip
-
 from ....FzfPrompt import PromptData
 
 
 def clip_current_preview(prompt_data: PromptData, converter: Callable[[str], str] | None = None):
+    import pyperclip
+
     preview_str = prompt_data.get_current_preview()
     if converter:
         preview_str = converter(preview_str)
@@ -17,4 +17,6 @@ def clip_current_preview(prompt_data: PromptData, converter: Callable[[str], str
 
 # clip options
 def clip_options(prompt_data: PromptData):
+    import pyperclip
+
     pyperclip.copy(str(prompt_data.options))

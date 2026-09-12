@@ -1,12 +1,6 @@
 from __future__ import annotations
 
-from io import StringIO
 from typing import Literal
-
-from pygments.lexers import guess_lexer, guess_lexer_for_filename
-from pygments.util import ClassNotFound
-from rich.console import Console
-from rich.syntax import Syntax
 
 
 def syntax_highlight(
@@ -17,6 +11,10 @@ def syntax_highlight(
     width: int | None = None,
     line_numbers: bool = False,
 ) -> str:
+    from pygments.lexers import guess_lexer, guess_lexer_for_filename
+    from pygments.util import ClassNotFound
+    from rich.syntax import Syntax
+
     if not language:
         lexer = None
         if filename:
@@ -32,6 +30,10 @@ def syntax_highlight(
 
 
 def render_to_string(renderable, width: int | None = None) -> str:
+    from io import StringIO
+
+    from rich.console import Console
+
     buffer = StringIO()
     console = Console(file=buffer, width=width, force_terminal=True, color_system="truecolor")
     console.print(renderable)

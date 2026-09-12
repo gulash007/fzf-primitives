@@ -2,7 +2,6 @@ import os
 import sys
 from stat import S_ISFIFO
 
-import pyperclip
 import typer
 
 from ..core.FzfPrompt import PromptData, execute_fzf
@@ -23,6 +22,8 @@ def read_from_pipe():
 
 def read_entries():
     if (entries := read_from_pipe()) is None:
+        import pyperclip
+
         entries = pyperclip.paste()
     return entries.splitlines()
 

@@ -1,5 +1,3 @@
-import requests
-
 from ..monitoring import LoggedComponent
 from .action_menu import Binding
 
@@ -9,6 +7,7 @@ class Controller(LoggedComponent):
 
     def execute(self, port: int, binding: Binding):
         """Executes a binding"""
+        import requests
         try:
             response = requests.post(f"http://localhost:{port}", data=binding.action_string())
             if message := response.text:

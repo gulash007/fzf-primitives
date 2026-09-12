@@ -191,10 +191,12 @@ class SpecificPreviewOnTrigger[T, S](OnTriggerBase[T, S]):
                 Transform(
                     lambda pd: (
                         ServerCall[T, S](
-                            lambda pd: self._preview.update(**mutator(pd))
-                            if pd.previewer.current_preview.id == self._preview.id
-                            or not mutate_only_when_already_focused
-                            else None,
+                            lambda pd: (
+                                self._preview.update(**mutator(pd))
+                                if pd.previewer.current_preview.id == self._preview.id
+                                or not mutate_only_when_already_focused
+                                else None
+                            ),
                             command_type="execute-silent",
                         ),
                         *(

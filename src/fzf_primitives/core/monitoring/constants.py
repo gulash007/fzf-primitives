@@ -1,7 +1,7 @@
 from __future__ import annotations
-import traceback
-from typing import TYPE_CHECKING, Literal
+
 from pathlib import Path
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from loguru import FormatFunction, Record
@@ -11,6 +11,8 @@ LogFormat = Literal["default", "stackline"]
 
 
 def stackline(record: Record) -> str:
+    import traceback
+
     record["message"]
     record["extra"].update(
         stack_line=".".join(f"{Path(frame.filename).stem}.{frame.name}" for frame in traceback.extract_stack()[:-3])

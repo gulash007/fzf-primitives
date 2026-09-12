@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import socket
-import traceback
 from threading import Event, Thread
 from typing import TYPE_CHECKING
 
@@ -76,6 +75,7 @@ class Server[T, S](Thread, LoggedComponent):
             )
             response = endpoint.run(prompt_data, request) or response
         except Exception as err:
+            import traceback
             trb = traceback.format_exc()
             error_message = f"{trb}\nPayload contents:\n{payload}"
             self.logger.error("{}", error_message, trace_point="error_handling_request")

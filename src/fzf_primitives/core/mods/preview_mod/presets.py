@@ -5,9 +5,6 @@ import json
 import subprocess
 from pathlib import Path
 
-from rich import box
-from rich.panel import Panel
-
 from ....utils import CodeTheme, render_to_string
 from ...FzfPrompt import Binding, Preview, PromptData
 from ...FzfPrompt.action_menu.transform import Transform
@@ -72,6 +69,9 @@ class FileViewer:
 
         if len(outputs) > 1:
             for output, path in zip(outputs, proper_paths, strict=True):
+                from rich import box
+                from rich.panel import Panel
+
                 header = f"{'Directory' if path.is_dir() else 'File'}: {str(path)}"
                 outputs[outputs.index(output)] = (
                     f"{render_to_string(Panel(header, style='bold cyan', box=box.HEAVY))}\n{output}"

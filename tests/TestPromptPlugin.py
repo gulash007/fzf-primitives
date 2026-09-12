@@ -7,8 +7,6 @@ start = perf_counter()
 
 from enum import Enum, auto
 
-import pyperclip
-
 from fzf_primitives import LoggingSetup, Preview, Prompt
 from fzf_primitives.actions import ParametrizedAction
 from fzf_primitives.config import Config
@@ -49,6 +47,8 @@ TEST_CHOICES = list(DayOfTheWeek)
 
 
 def clip_socket_number(prompt_data, FZF_PRIMITIVES_SOCKET_NUMBER):
+    import pyperclip
+
     pyperclip.copy(FZF_PRIMITIVES_SOCKET_NUMBER)
 
 
