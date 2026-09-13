@@ -15,5 +15,6 @@ class Config:
     use_basic_hotkeys: bool = True
     default_accept_hotkey: Hotkey = "enter"
     default_abort_hotkey: Hotkey = "esc"
+    no_bindings_help_in_header: bool = False
 
     automator_delay: float = float(os.getenv(ENV_VAR_FOR_AUTOMATOR_DELAY, "0.25"))

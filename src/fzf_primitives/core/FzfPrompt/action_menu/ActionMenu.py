@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
+from ....config import Config
 from ...monitoring import LoggedComponent
 from ..decorators import single_use_method
 from ..options import Event, Hotkey, Options
@@ -56,7 +57,8 @@ class ActionMenu[T, S](LoggedComponent):
         options = Options()
         for trigger, binding in self.bindings.items():
             options.bind(trigger, binding.action_string())
-        options.add_header(self.get_bindings_help()).header_first()
+        if not Config.no_bindings_help_in_header:
+            options.add_header(self.get_bindings_help()).header_first()
         return options
 
 
