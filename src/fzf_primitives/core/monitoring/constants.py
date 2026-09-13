@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+import platformdirs
+
 if TYPE_CHECKING:
     from loguru import FormatFunction, Record
 
@@ -39,6 +41,6 @@ LOG_FORMATS: dict[LogFormat, str | FormatFunction] = {
     "stackline": stackline,
 }
 
-INTERNAL_LOG_DIR = Path(__file__).parents[4].joinpath("_logs/").absolute()
+INTERNAL_LOG_DIR = Path(platformdirs.user_log_dir("fzf_primitives")).absolute()
 MAIN_LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath("main.log")
 SERIALIZED_MAIN_LOG_FILE_PATH = INTERNAL_LOG_DIR.joinpath("main_serialized.log")
