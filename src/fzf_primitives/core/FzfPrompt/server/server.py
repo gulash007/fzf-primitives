@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import socket
 from threading import Event, Thread
 from typing import TYPE_CHECKING
@@ -10,13 +9,8 @@ if TYPE_CHECKING:
     from ..options import Trigger
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
-from . import make_server_call
-from .actions import (
-    MAKE_SERVER_CALL_ENV_VAR_NAME,
-    SOCKET_NUMBER_ENV_VAR,
-    ServerCall,
-)
-from .request import Request, ServerEndpoint
+from .actions import SOCKET_NUMBER_ENV_VAR, ServerCall
+from .request import ServerEndpoint
 
 
 class Server[T, S](Thread, LoggedComponent):
@@ -38,7 +32,6 @@ class Server[T, S](Thread, LoggedComponent):
                 socket_specs = server_socket.getsockname()
                 self.port = socket_specs[1]
                 self.prompt_data.fzf_env[SOCKET_NUMBER_ENV_VAR] = str(self.port)
-                self.prompt_data.fzf_env[MAKE_SERVER_CALL_ENV_VAR_NAME] = make_server_call.__file__
 
                 server_socket.listen()
                 self.logger.info(f"Server listening on {socket_specs}...", trace_point="server_listening")
@@ -61,39 +54,30 @@ class Server[T, S](Thread, LoggedComponent):
             self.setup_finished.set()
 
     def _handle_request(self, client_socket: socket.socket, prompt_data: PromptData[T, S]):
-        payload_length = int.from_bytes(client_socket.recv(4))
-        payload = client_socket.recv(payload_length, socket.MSG_WAITALL).decode("utf-8")
-
-        response = ""
+        payload_bytearray = bytearray()
+        while r := client_socket.recv(1024):
+            payload_bytearray.extend(r)
+        payload = payload_bytearray.decode("utf-8").strip()
         try:
-            request = Request.from_json(json.loads(payload))
-            endpoint = self.endpoints[request.endpoint_id]
-            self.logger.debug(
-                f"Resolving {endpoint.trigger}:'{request.endpoint_id}' ({len(self.endpoints)} endpoints registered)",
-                trace_point="resolving_server_call",
-                trigger=endpoint.trigger,
-            )
-            response = endpoint.run(prompt_data, request) or response
+            endpoint_id, *fields = ServerCall.parse_payload(payload)
+            self.logger.debug(f"Resolving '{endpoint_id}' ({len(self.endpoints)} server calls registered)")
+            response = self.endpoints[endpoint_id].run(prompt_data, fields)
         except Exception as err:
             import traceback
-            trb = traceback.format_exc()
-            error_message = f"{trb}\nPayload contents:\n{payload}"
-            self.logger.error("{}", error_message, trace_point="error_handling_request")
-            response = error_message
+
+            self.logger.error(trb := traceback.format_exc())
+            payload_info = f"Payload contents:\n{payload}"
+            self.logger.error(payload_info)
+            response = f"{trb}\n{payload_info}"
             if isinstance(err, KeyError):
                 response = f"{trb}\n{list(self.endpoints.keys())}"
-                self.logger.error(
-                    f"Available server calls:\n{list(self.endpoints.keys())}", trace_point="missing_server_call"
-                )
+                self.logger.error(f"Available server calls:\n{list(self.endpoints.keys())}")
+            client_socket.sendall(str(response).encode("utf-8"))
+        else:
+            if response:
+                client_socket.sendall(str(response).encode("utf-8"))
         finally:
-            response_bytes = str(response).encode("utf-8")
-            try:
-                client_socket.send(len(response_bytes).to_bytes(4))
-                client_socket.sendall(response_bytes)
-            except Exception as e:
-                self.logger.exception(f"Error sending response: {e}", trace_point="error_sending_response")
-            finally:
-                client_socket.close()
+            client_socket.close()
 
     def add_endpoints(self, binding: Binding[T, S], trigger: Trigger):
         for action in binding.actions:

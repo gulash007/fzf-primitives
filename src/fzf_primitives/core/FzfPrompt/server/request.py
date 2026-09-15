@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ..options import Trigger
@@ -15,20 +15,14 @@ class ServerEndpoint:
         self.id = id
         self.trigger: Trigger = trigger
 
-    def run(self, prompt_data: PromptData, request: Request) -> Any:
-        prompt_data.set_state(request.prompt_state, self.trigger)
-        return self.function(prompt_data, **request.kwargs)
-
-
-class Request:
-    def __init__(self, endpoint_id: str, prompt_state: PromptState, kwargs: dict):
-        self.endpoint_id = endpoint_id
-        self.prompt_state = prompt_state
-        self.kwargs = kwargs
-
-    @classmethod
-    def from_json(cls, data: dict) -> Self:
-        return cls(data["endpoint_id"], PromptState.from_json(data["prompt_state"]), data["kwargs"])
+    def run(self, prompt_data: PromptData, fields: list[str]) -> Any:
+        query = fields[0]
+        current_index = int(fields[1]) if fields[1].isdigit() else None
+        selected_count = int(fields[2])
+        target_indices = [int(x) for x in fields[3].split() if x.isdigit()]
+        prompt_data.set_state(PromptState(query, current_index, selected_count, target_indices), self.trigger)
+        kwargs = {k: v for k, v in zip(fields[4::2], fields[5::2])}
+        return self.function(prompt_data, **kwargs)
 
 
 class PromptState:
@@ -43,10 +37,6 @@ class PromptState:
         self.current_index = current_index
         self.selected_count = selected_count
         self.target_indices = target_indices
-
-    @classmethod
-    def from_json(cls, data: dict) -> Self:
-        return cls(**data)
 
     def __str__(self) -> str:
         return json.dumps(self.__dict__, indent=4)

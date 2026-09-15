@@ -13,7 +13,6 @@ from .controller import Controller
 from .options import Options, Trigger
 from .previewer import Previewer
 from .server import EndStatus, PostProcessor, PromptState, Server
-from .server.make_server_call import make_server_call
 
 
 class PromptData[T, S](LoggedComponent):
@@ -48,7 +47,6 @@ class PromptData[T, S](LoggedComponent):
         self.fzf_env: dict[str, str] = os.environ.copy()
         self._stage: PromptStage = "created"
         self._control_port: int | None = None
-        self.make_server_call = make_server_call
 
     @property
     def state(self) -> PromptState:

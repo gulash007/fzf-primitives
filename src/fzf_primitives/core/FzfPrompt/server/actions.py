@@ -16,7 +16,6 @@ from .placeholders import CommandOutput, FzfPlaceholder, VarOutput
 type ServerCallFunctionGeneric[T, S, R] = Callable[Concatenate[PromptData[T, S], ...], R]
 type ServerCallFunction[T, S] = ServerCallFunctionGeneric[T, S, Any]
 SOCKET_NUMBER_ENV_VAR = "FZF_PRIMITIVES_SOCKET_NUMBER"
-MAKE_SERVER_CALL_ENV_VAR_NAME = "FZF_PRIMITIVES_REQUEST_CREATING_SCRIPT"
 
 
 class RemembersHowItWasConstructed[T](type):
@@ -54,21 +53,30 @@ class ServerCall[T, S](ShellCommand[T, S], metaclass=RemembersHowItWasConstructe
     @staticmethod
     def _create_command(endpoint_id: str, function: ServerCallFunction) -> str:
         parameters = ServerCall._parse_function_parameters(function)
-        command = [
-            f'"${MAKE_SERVER_CALL_ENV_VAR_NAME}" "${SOCKET_NUMBER_ENV_VAR}" {shlex.quote(endpoint_id)}',
-            '{q} {n} $FZF_SELECT_COUNT "{+n}"',  # making use of fzf placeholders and env vars
+        fields = [
+            f"{shlex.quote(endpoint_id)}",
+            # making use of fzf placeholders and env vars
+            "{q}",
+            "{n}",
+            "$FZF_SELECT_COUNT",
+            '"{+n}"',
         ]
         for parameter in parameters:
             if isinstance(parameter.default, CommandOutput):
-                command.extend([parameter.name, f'"$({parameter.default} 2>&1)"'])
+                fields.extend([parameter.name, f'"$({parameter.default} 2>&1)"'])
             elif isinstance(parameter.default, VarOutput):
-                command.extend([parameter.name, f'"${parameter.default}"'])
+                fields.extend([parameter.name, f'"${parameter.default}"'])
             elif isinstance(parameter.default, FzfPlaceholder):
-                command.extend([parameter.name, parameter.default])
+                fields.extend([parameter.name, parameter.default])
             else:
                 # otherwise it's going to be injected with a shell variable of the same name (mainly env vars)
-                command.extend([parameter.name, f'"${parameter.name}"'])
-        return " ".join(command)
+                fields.extend([parameter.name, f'"${parameter.name}"'])
+        return (
+            "{ "
+            + f"printf '%s' {fields[0]}; printf '\\x1f%s' {' '.join(fields[1:])}"
+            + "; }"
+            + f' | nc localhost "${SOCKET_NUMBER_ENV_VAR}"'
+        )
 
     @staticmethod
     def _parse_function_parameters(function: ServerCallFunction) -> list[inspect.Parameter]:
@@ -78,6 +86,10 @@ class ServerCall[T, S](ShellCommand[T, S], metaclass=RemembersHowItWasConstructe
                 raise ValueError("Partial functions should only have passed keyworded arguments")
             params = list(filter(lambda p: p.name not in function.keywords, params))
         return params
+
+    @staticmethod
+    def parse_payload(payload: str) -> list[str]:
+        return payload.split("\x1f")
 
     def __str__(self) -> str:
         return f"[SC]{self.command_type}({self.id})"
