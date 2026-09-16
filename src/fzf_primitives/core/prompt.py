@@ -76,6 +76,6 @@ class Prompt[T, S]:
             on_conflict="prepend",
         )
         for trigger, binding in self._prompt_data.action_menu.bindings.items():
-            self._prompt_data.server.add_endpoints(binding, trigger)
+            self._prompt_data.server.add_endpoints(binding.actions, trigger)
         self._prompt_data.options += self._prompt_data.action_menu.resolve_options()
         self._stage = "ready to run"

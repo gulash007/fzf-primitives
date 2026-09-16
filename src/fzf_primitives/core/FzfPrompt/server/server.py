@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import socket
 from threading import Event, Thread
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 if TYPE_CHECKING:
-    from ..action_menu import Binding
+    from ..action_menu import Action
     from ..options import Trigger
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
@@ -82,8 +82,8 @@ class Server[T, S](Thread, LoggedComponent):
         finally:
             client_socket.close()
 
-    def add_endpoints(self, binding: Binding[T, S], trigger: Trigger):
-        for action in binding.actions:
+    def add_endpoints(self, actions: Iterable[Action], trigger: Trigger):
+        for action in actions:
             if isinstance(action, ServerCall):
                 self.add_endpoint(action, trigger)
 
