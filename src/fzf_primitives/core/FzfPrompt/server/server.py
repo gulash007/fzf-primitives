@@ -23,6 +23,9 @@ class Server[T, S](Thread, LoggedComponent):
         self.endpoints: dict[str, ServerEndpoint] = {}
         self.port: int
 
+    def set_port(self, port: int) -> None:
+        self.port = port
+
     # TODO: Use automator to end running prompt and propagate errors
     def run(self):
         try:
@@ -30,7 +33,7 @@ class Server[T, S](Thread, LoggedComponent):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
                 server_socket.bind(("localhost", 0))
                 socket_specs = server_socket.getsockname()
-                self.port = socket_specs[1]
+                self.set_port(socket_specs[1])
                 self.prompt_data.fzf_env[SOCKET_NUMBER_ENV_VAR] = str(self.port)
 
                 server_socket.listen()
