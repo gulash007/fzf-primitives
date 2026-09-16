@@ -12,7 +12,7 @@ from .actions import (
     ServerCallFunctionGeneric,
     VarOutput,
 )
-from .request import PromptState, ServerEndpoint
+from .ServerEndpoint import PromptState, ServerEndpoint
 from .server import ReusedServerCall, Server
 
 __all__ = [

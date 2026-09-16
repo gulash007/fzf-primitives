@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from ..prompt_data import PromptData
 from ...monitoring import LoggedComponent
 from .actions import SOCKET_NUMBER_ENV_VAR, ServerCall
-from .request import ServerEndpoint
+from .ServerEndpoint import ServerEndpoint
 
 
 class Server[T, S](Thread, LoggedComponent):
