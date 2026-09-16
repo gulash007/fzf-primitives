@@ -10,10 +10,11 @@ if TYPE_CHECKING:
 
 
 class ServerEndpoint:
-    def __init__(self, function: ServerCallFunction, id: str, trigger: Trigger) -> None:
+    def __init__(self, function: ServerCallFunction, id: str, trigger: Trigger, bg: bool = False) -> None:
         self.function = function
         self.id = id
         self.trigger: Trigger = trigger
+        self.bg: bool = bg
 
     def run(self, prompt_data: PromptData, fields: list[str]) -> Any:
         query = fields[0]

@@ -45,7 +45,7 @@ DEFAULT_STORE_OUTPUT = True
 
 class Preview[T, S]:
     # TODO: line wrap
-    def __init__(self, name: str, **kwargs: Unpack[PreviewMutationArgs[T, S]]):
+    def __init__(self, name: str, *, bg: bool = False, **kwargs: Unpack[PreviewMutationArgs[T, S]]):
         self.name = name
         self.id = f"{name}#{id(self)}"
         self.output_generator = kwargs.get("output_generator", DEFAULT_OUTPUT_GENERATOR)
@@ -55,6 +55,7 @@ class Preview[T, S]:
         self.line_wrap = kwargs.get("line_wrap", DEFAULT_LINE_WRAP)
         self.before_change_do = kwargs.get("before_change_do", DEFAULT_BEFORE_CHANGE_DO)
         self.store_output = kwargs.get("store_output", DEFAULT_STORE_OUTPUT)
+        self.bg = bg
         self._output: str | None = None
 
         # Using a Transform so that mutations of Preview are expressed when switching to it using just its basic binding
@@ -95,7 +96,7 @@ class Preview[T, S]:
         self._change_preview_output = (
             get_preview_shell_command(self.output_generator, self)
             if isinstance(self.output_generator, str)
-            else PreviewServerCall(self.output_generator, self)
+            else PreviewServerCall(self.output_generator, self, bg=self.bg)
         )
         self._change_preview_label = ChangePreviewLabel(self.label)
 

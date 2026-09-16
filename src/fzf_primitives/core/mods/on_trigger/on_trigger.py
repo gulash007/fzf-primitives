@@ -61,10 +61,17 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         return self.run_binding(Binding(name, *actions))
 
     def run_function(
-        self, name: str, function: ServerCallFunction[T, S], *base_actions: BaseAction, silent: bool = False
+        self,
+        name: str,
+        function: ServerCallFunction[T, S],
+        *base_actions: BaseAction,
+        silent: bool = False,
+        bg: bool = False,
     ) -> Self:
         return self.run(
-            name, ServerCall(function, command_type="execute-silent" if silent else "execute"), *base_actions
+            name,
+            ServerCall(function, command_type="execute-silent" if silent else "execute", bg=bg),
+            *base_actions,
         )
 
     def run_shell_command(

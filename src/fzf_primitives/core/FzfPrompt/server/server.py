@@ -62,40 +62,78 @@ class Server[T, S](Thread, LoggedComponent):
             payload_bytearray.extend(r)
         payload = payload_bytearray.decode("utf-8").strip()
         try:
-            endpoint_id, *fields = ServerCall.parse_payload(payload)
-            self.logger.debug(f"Resolving '{endpoint_id}' ({len(self.endpoints)} server calls registered)")
-            response = self.endpoints[endpoint_id].run(prompt_data, fields)
+            endpoint_id, *fields = self._parse_payload(payload)
+            endpoint = self._get_endpoint(endpoint_id)
+        except Exception as err:
+            self.logger.error(err)
+            self._send_response(client_socket, str(err))
+            client_socket.close()
+        else:
+            if endpoint.bg:
+                Thread(target=self._run_endpoint, args=(client_socket, prompt_data, endpoint, fields)).start()
+            else:
+                self._run_endpoint(client_socket, prompt_data, endpoint, fields)
+
+    def _run_endpoint(
+        self, client_socket: socket.socket, prompt_data: PromptData[T, S], endpoint: ServerEndpoint, fields: list[str]
+    ):
+        try:
+            response = endpoint.run(prompt_data, fields)
         except Exception as err:
             import traceback
 
-            self.logger.error(trb := traceback.format_exc())
-            payload_info = f"Payload contents:\n{payload}"
-            self.logger.error(payload_info)
-            response = f"{trb}\n{payload_info}"
-            if isinstance(err, KeyError):
-                response = f"{trb}\n{list(self.endpoints.keys())}"
-                self.logger.error(f"Available server calls:\n{list(self.endpoints.keys())}")
-            client_socket.sendall(str(response).encode("utf-8"))
+            trb = traceback.format_exc()
+            fields_info = f"Fields:\n\t{'\n\t'.join(fields)}"
+            message = f"Error occurred while running endpoint '{endpoint.id}':\n{err}\n{trb}\n{fields_info}"
+            self.logger.error(message)
+            self._send_response(client_socket, message)
         else:
             if response:
-                client_socket.sendall(str(response).encode("utf-8"))
+                self._send_response(client_socket, str(response))
         finally:
             client_socket.close()
+
+    def _parse_payload(self, payload: str) -> list[str]:
+        try:
+            return ServerCall.parse_payload(payload)
+        except Exception as err:
+            import traceback
+
+            trb = traceback.format_exc()
+            raise ServerFailedToParsePayload(f"Failed to parse payload:\n{trb}\nPayload contents:\n{payload}") from err
+
+    def _get_endpoint(self, endpoint_id: str) -> ServerEndpoint:
+        self.logger.debug(f"Resolving '{endpoint_id}' ({len(self.endpoints)} server calls registered)")
+        endpoint = self.endpoints.get(endpoint_id)
+        if not endpoint:
+            raise ServerEndpointNotFound(f"Server endpoint '{endpoint_id}' not found")
+        return endpoint
+
+    def _send_response(self, client_socket: socket.socket, response: str):
+        client_socket.sendall(response.encode("utf-8"))
 
     def add_endpoints(self, actions: Iterable[Action], trigger: Trigger):
         for action in actions:
             if isinstance(action, ServerCall):
                 self.add_endpoint(action, trigger)
 
-    def add_endpoint(self, action: ServerCall[T, S], trigger: Trigger):
-        if action.id in self.endpoints:
+    def add_endpoint(self, server_call: ServerCall[T, S], trigger: Trigger):
+        if server_call.id in self.endpoints:
             raise ReusedServerCall(
-                f"ServerCall ({action.name}) already resolved as endpoint. Please use unique ServerCall instances."
+                f"ServerCall ({server_call.name}) already resolved as endpoint. Please use unique ServerCall instances."
             )
-        endpoint = ServerEndpoint(action.function, action.id, trigger)
+        endpoint = ServerEndpoint(server_call.function, server_call.id, trigger, bg=server_call.bg)
         self.logger.debug(f"🤙 Adding server endpoint: {endpoint.id}", trace_point="adding_server_endpoint")
         self.endpoints[endpoint.id] = endpoint
 
 
 class ReusedServerCall(Exception):
+    pass
+
+
+class ServerFailedToParsePayload(Exception):
+    pass
+
+
+class ServerEndpointNotFound(Exception):
     pass

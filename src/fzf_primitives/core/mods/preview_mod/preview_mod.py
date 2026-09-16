@@ -78,6 +78,7 @@ class PreviewMod[T, S](LoggedComponent):
         line_wrap: bool = DEFAULT_LINE_WRAP,
         before_change_do: PreviewChangePreProcessor[T, S] = DEFAULT_BEFORE_CHANGE_DO,
         store_output: bool = DEFAULT_STORE_OUTPUT,
+        bg: bool = False,
     ):
         self._preview = Preview[T, S](
             name,
@@ -88,6 +89,7 @@ class PreviewMod[T, S](LoggedComponent):
             line_wrap=line_wrap,
             before_change_do=before_change_do,
             store_output=store_output,
+            bg=bg,
         )
         self._additional_mods.append(specific_preview_mod := SpecificPreviewMod(self._preview))
         return specific_preview_mod

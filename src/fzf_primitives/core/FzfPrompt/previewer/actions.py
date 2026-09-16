@@ -36,11 +36,11 @@ class SetAsCurrentPreview[T, S](ServerCall[T, S], LoggedComponent):
 
 
 class PreviewServerCall[T, S](ServerCall[T, S], LoggedComponent):
-    def __init__(self, preview_function: PreviewFunction[T, S], preview: Preview[T, S]) -> None:
+    def __init__(self, preview_function: PreviewFunction[T, S], preview: Preview[T, S], *, bg: bool = False) -> None:
         LoggedComponent.__init__(self)
         self.preview = preview
         self.preview_function = preview_function
-        super().__init__(preview_function, f"PreviewServerCall of {preview.name}", command_type="change-preview")
+        super().__init__(preview_function, f"PreviewServerCall of {preview.name}", command_type="change-preview", bg=bg)
 
         def preview_call(prompt_data: PromptData[T, S], **kwargs):
             output = preview_function(prompt_data, **kwargs)

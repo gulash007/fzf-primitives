@@ -36,9 +36,11 @@ class ServerCall[T, S](ShellCommand[T, S], metaclass=RemembersHowItWasConstructe
         function: ServerCallFunction[T, S],
         description: str | None = None,
         command_type: ShellCommandActionType = "execute",
+        bg: bool = False,
     ) -> None:
         self.name = description or f"f:{self._get_function_name(function)}"
         self.function = function
+        self.bg = bg
 
         command = self._create_command(self.id, self.function)
         super().__init__(command, command_type)
