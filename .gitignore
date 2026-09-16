@@ -133,4 +133,5 @@ dmypy.json
 
 _logs/
 tests/example-filesystem
+tests/core/FzfPrompt/server/test_request/created_command.txt
 .personal
