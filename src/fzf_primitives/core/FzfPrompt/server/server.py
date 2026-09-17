@@ -112,7 +112,7 @@ class Server[T, S](Thread, LoggedComponent):
     def _send_response(self, client_socket: socket.socket, response: str):
         try:
             client_socket.sendall(response.encode("utf-8"))
-        except BrokenPipeError:
+        except (BrokenPipeError, ConnectionResetError):
             pass
 
     def add_endpoints(self, actions: Iterable[Action], trigger: Trigger):
