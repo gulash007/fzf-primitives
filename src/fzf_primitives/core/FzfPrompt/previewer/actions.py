@@ -107,7 +107,11 @@ class ChangePreviewWindow(ParametrizedAction):
         super().__init__(
             ",".join(
                 val
-                for val in (str(self.window_size), self.window_position, "wrap" if self.line_wrap else "nowrap")
+                for val in (
+                    str(self.window_size) if self.window_size is not None else "",
+                    self.window_position if self.window_position is not None else "",
+                    "wrap" if self.line_wrap is True else "nowrap" if self.line_wrap is False else "",
+                )
                 if val is not None
             ),
             "change-preview-window",
