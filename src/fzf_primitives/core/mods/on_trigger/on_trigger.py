@@ -45,6 +45,10 @@ class OnTriggerBase[T, S](ABC, LoggedComponent):
         self._binding: Binding[T, S] = Binding("")
         self._additional_mods: list[Callable[[PromptData[T, S]], Any]] = []
 
+    @property
+    def binding(self) -> Binding[T, S]:
+        return self._binding
+
     def __call__(self, prompt_data: PromptData[T, S]) -> None:
         prompt_data.action_menu.add(self._trigger, self._binding, on_conflict=self._on_conflict)
         for mod in self._additional_mods:
@@ -59,6 +63,14 @@ class OnTriggerBase[T, S](ABC, LoggedComponent):
 class OnTrigger[T, S](OnTriggerBase[T, S]):
     def run(self, name: str, *actions: Action[T, S]) -> Self:
         return self.run_binding(Binding(name, *actions))
+
+    def add(self, other: Self) -> Self:
+        actions = []
+        for action in other.binding.actions:
+            if isinstance(action, ServerCall):
+                action = action.copy()
+            actions.append(action)
+        return self.run_binding(Binding(other.binding.name, *actions))
 
     def run_function(
         self,
