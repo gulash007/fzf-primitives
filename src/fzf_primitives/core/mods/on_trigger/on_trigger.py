@@ -307,11 +307,10 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
     def open_files(
         self, file_getter: Callable[[PromptData[T, S]], list[str]] | None = None, app: FileEditor = "VS Code"
     ):
-        """❗ VS Code doesn't handle files with leading or trailing spaces/tabs/newlines (it strips them)
-        NeoVim opens them all"""
+        """❗ VS Code doesn't handle files with leading or trailing spaces/tabs/newlines (it strips them). NeoVim opens them all."""
         file_getter = file_getter or (lambda pd: [pd.converter(f) for f in pd.targets])
         command = FILE_EDITORS[app]
-        return self.run_function(f"open files in {app}", lambda pd: subprocess.run([command, "--", *file_getter(pd)]))
+        return self.run_function(f"open files in {app}", lambda pd: subprocess.run([*command, "--", *file_getter(pd)]))
 
     def ring_bell(self):
         """Rings the terminal bell"""
