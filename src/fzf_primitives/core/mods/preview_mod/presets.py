@@ -122,9 +122,7 @@ def preview_basic(prompt_data: PromptData):
 def get_fzf_json(prompt_data: PromptData, FZF_PORT: str):
     import json
 
-    import requests
-
-    return json.dumps(requests.get(f"http://127.0.0.1:{FZF_PORT}").json(), indent=2)
+    return json.dumps(prompt_data.get_state_json(), indent=2)
 
 
 def get_fzf_env_vars(

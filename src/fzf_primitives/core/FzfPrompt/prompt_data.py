@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from .automator import Automator
 from ..monitoring import LoggedComponent
 from .action_menu import ActionMenu
-from .controller import Controller
+from .controller import Controller, ExperimentalStateJson
 from .options import Options, Trigger
 from .previewer import Previewer
 from .server import EndStatus, PostProcessor, PromptState, Server
@@ -151,6 +151,10 @@ class PromptData[T, S](LoggedComponent):
     @control_port.setter
     def control_port(self, port: int):
         self._control_port = port
+
+    def get_state_json(self) -> ExperimentalStateJson:
+        """Gets the current state of the prompt as a dictionary. Requires --listen option."""
+        return self.controller.get_state_json(self.control_port)
 
 
 class Result[T, S](list[T]):
