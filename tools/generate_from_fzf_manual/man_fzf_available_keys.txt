@@ -6,7 +6,7 @@
        ctrl-]
        ctrl-^	      (ctrl-6)
        ctrl-/	      (ctrl-_)
-       ctrl-alt-[a-z]
+       ctrl-alt-[a-z] (ctrl-alt-h is ctrl-alt-backspace on non-Windows)
        alt-[*]	      (Any case-sensitive single character is allowed)
        f[1-12]
        enter	      (return ctrl-m)
@@ -16,9 +16,14 @@
        alt-down
        alt-left
        alt-right
+       alt-home
+       alt-end
+       alt-backspace  (alt-bspace alt-bs)
+       alt-delete
+       alt-page-up
+       alt-page-down
        alt-enter
        alt-space
-       alt-backspace  (alt-bspace alt-bs)
        tab
        shift-tab      (btab)
        esc
@@ -32,15 +37,62 @@
        insert
        page-up	      (pgup)
        page-down      (pgdn)
+       ctrl-up
+       ctrl-down
+       ctrl-left
+       ctrl-right
+       ctrl-home
+       ctrl-end
+       ctrl-backspace  (ctrl-bspace ctrl-bs)
+       ctrl-delete
+       ctrl-page-up
+       ctrl-page-down
        shift-up
        shift-down
        shift-left
        shift-right
+       shift-home
+       shift-end
        shift-delete
+       shift-page-up
+       shift-page-down
        alt-shift-up
        alt-shift-down
        alt-shift-left
        alt-shift-right
+       alt-shift-home
+       alt-shift-end
+       alt-shift-delete
+       alt-shift-page-up
+       alt-shift-page-down
+       ctrl-alt-up
+       ctrl-alt-down
+       ctrl-alt-left
+       ctrl-alt-right
+       ctrl-alt-home
+       ctrl-alt-end
+       ctrl-alt-backspace  (ctrl-alt-bspace ctrl-alt-bs) (ctrl-alt-h (non-Windows))
+       ctrl-alt-delete
+       ctrl-alt-page-up
+       ctrl-alt-page-down
+       ctrl-shift-up
+       ctrl-shift-down
+       ctrl-shift-left
+       ctrl-shift-right
+       ctrl-shift-home
+       ctrl-shift-end
+       ctrl-shift-delete
+       ctrl-shift-page-up
+       ctrl-shift-page-down
+       ctrl-alt-shift-up
+       ctrl-alt-shift-down
+       ctrl-alt-shift-left
+       ctrl-alt-shift-right
+       ctrl-alt-shift-home
+       ctrl-alt-shift-end
+       ctrl-alt-shift-delete
+       ctrl-alt-shift-page-up
+       ctrl-alt-shift-page-down
        left-click
        right-click
        double-click
@@ -54,3 +106,4 @@
        shift-scroll-down
        or any single character
 
+       Note that some terminal emulators may not support ctrl-* bindings.

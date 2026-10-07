@@ -27,6 +27,18 @@
 		   # Put the cursor on the second item when the query string is empty
 		   # * Note that you can't use 'change' event in this case because the second position may not be available
 		   fzf --sync --bind 'result:transform:[[ -z {q} ]] && echo "pos(2)"'
+
+       result-final
+	      Same as result, but suppressed while the input stream is still open. Use this when you want a one-shot action per query
+	      instead of one per intermediate snapshot during loading.
+
+	      e.g.
+		   # 'result' fires per intermediate snapshot (header keeps updating during load);
+		   # 'result-final' fires once after the stream closes (footer shows the final count)
+		   (seq 100; sleep 1; seq 100) | fzf --query 1 \
+		     --bind 'result:transform-header(echo result: $FZF_MATCH_COUNT),result-final:transform-footer(echo final:
+	      $FZF_MATCH_COUNT)'
+
        change
 	      Triggered whenever the query string is changed
 
@@ -98,3 +110,26 @@
 					  echo "$FZF_CLICK_HEADER_WORD> "
 					)'
 
+       click-footer
+	      Triggered when a mouse click occurs within the footer. Sets FZF_CLICK_FOOTER_LINE and FZF_CLICK_FOOTER_COLUMN environment
+	      variables starting from 1. It optionally sets FZF_CLICK_FOOTER_WORD if clicked on a word.
+
+       every(N)
+	      Triggered every N seconds (N can be a fractional number, e.g.  0.5). The minimum interval is 0.01 seconds; values are floored
+	      to that.
+
+	      Combine with the FZF_IDLE_TIME (whole seconds) and FZF_IDLE_TIME_MS (milliseconds) environment variables to build idle-based
+	      behavior without a separate event.
+
+	      e.g.
+		   # Live process list, refreshed every 2 seconds.
+		   # --track --id-nth 2 keeps the cursor on the same PID across reloads.
+		   fzf --header-lines 1 --track --id-nth 2 \
+		       --bind 'start,every(2):reload-sync:ps -ef'
+
+		   # Auto-accept after 10 seconds of inactivity, with a countdown in the footer after 5s.
+		   fzf --bind 'every(1):bg-transform:
+		     if   [[ $FZF_IDLE_TIME -lt 5  ]]; then echo change-footer:
+		     elif [[ $FZF_IDLE_TIME -lt 10 ]]; then echo "change-footer:auto-accept in $((10 - FZF_IDLE_TIME))s"
+		     else echo accept
+		     fi'
