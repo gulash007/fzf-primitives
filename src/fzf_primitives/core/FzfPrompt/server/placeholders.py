@@ -46,6 +46,11 @@ class FzfEnvVarPicker:
         return VarOutput("FZF_COLUMNS")
 
     @property
+    def FZF_DIRECTION(_):
+        """Direction of the list (up or down)"""
+        return VarOutput("FZF_DIRECTION")
+
+    @property
     def FZF_TOTAL_COUNT(_):
         """Total number of items"""
         return VarOutput("FZF_TOTAL_COUNT")
@@ -66,6 +71,20 @@ class FzfEnvVarPicker:
         return VarOutput("FZF_POS")
 
     @property
+    def FZF_CURRENT_ITEM(_):
+        """Text of the current item (unset if the list is empty)
+        is omitted when the item contains a NUL byte, because exec(2) cannot pass it.
+        It is also omitted when the item is larger than 64 KB, so that a huge item cannot overflow
+        the environment size limit and break preview and other child commands.
+        """
+        return VarOutput("FZF_CURRENT_ITEM")
+
+    @property
+    def FZF_WRAP(_):
+        """The line wrapping mode (char, word) when enabled"""
+        return VarOutput("FZF_WRAP")
+
+    @property
     def FZF_QUERY(_):
         """Current query string"""
         return VarOutput("FZF_QUERY")
@@ -79,6 +98,11 @@ class FzfEnvVarPicker:
     def FZF_NTH(_):
         """Current --nth option"""
         return VarOutput("FZF_NTH")
+
+    @property
+    def FZF_WITH_NTH(_):
+        """Current --with-nth option"""
+        return VarOutput("FZF_WITH_NTH")
 
     @property
     def FZF_PROMPT(_):
@@ -131,9 +155,24 @@ class FzfEnvVarPicker:
         return VarOutput("FZF_KEY")
 
     @property
+    def FZF_IDLE_TIME(_):
+        """Whole seconds since the last user activity"""
+        return VarOutput("FZF_IDLE_TIME")
+
+    @property
+    def FZF_IDLE_TIME_MS(_):
+        """Milliseconds since the last user activity"""
+        return VarOutput("FZF_IDLE_TIME_MS")
+
+    @property
     def FZF_PORT(_):
         """Port number when --listen option is used"""
         return VarOutput("FZF_PORT")
+
+    @property
+    def FZF_SOCK(_):
+        """Unix socket path when --listen option is used"""
+        return VarOutput("FZF_SOCK")
 
     @property
     def FZF_PREVIEW_TOP(_):
@@ -154,6 +193,11 @@ class FzfEnvVarPicker:
     def FZF_PREVIEW_COLUMNS(_):
         """Number of columns in the preview window"""
         return VarOutput("FZF_PREVIEW_COLUMNS")
+
+    @property
+    def FZF_RAW(_):
+        """Only in raw mode. 1 if the current item matches, 0 otherwise"""
+        return VarOutput("FZF_RAW")
 
 
 class FzfPlaceholder(str):
