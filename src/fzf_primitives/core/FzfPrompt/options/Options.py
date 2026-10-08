@@ -20,6 +20,7 @@ from .values import (
 )
 
 
+## Options
 class Options:
     def __init__(self, *fzf_options: FzfOption | str) -> None:
         self._options: list[str] = list(fzf_options)
@@ -71,7 +72,7 @@ class Options:
     def __eq__(self, __other) -> bool:
         return self.options == __other.options
 
-    # SEARCH
+    ### SEARCH
     def extended(self) -> Self:
         return self.add("--extended")
 
@@ -230,7 +231,7 @@ class Options:
     def no_black(self) -> Self:
         return self.add("--no-black")
 
-    # DISPLAY MODE
+    ### DISPLAY MODE
     def height(self, height_option: str) -> Self:
         return self.add(f"--height={height_option}")
 
@@ -284,7 +285,7 @@ class Options:
     def no_border_label(self) -> Self:
         return self.add("--no-border-label")
 
-    # LIST SECTION
+    ### LIST SECTION
     def multi(self, limit: int | None = None) -> Self:
         return self.add(f"--multi={limit}" if limit is not None else "--multi")
 
@@ -428,7 +429,7 @@ class Options:
     def no_list_label(self) -> Self:
         return self.add("--no-list-label")
 
-    # INPUT SECTION
+    ### INPUT SECTION
     def no_input(self) -> Self:
         return self.add("--no-input")
 
@@ -477,7 +478,7 @@ class Options:
     def no_input_label(self) -> Self:
         return self.add("--no-input-label")
 
-    # PREVIEW WINDOW
+    ### PREVIEW WINDOW
     def preview(self, command: str) -> Self:
         return self.add(f"--preview={command}")
 
@@ -510,7 +511,7 @@ class Options:
     def no_preview_label(self) -> Self:
         return self.add("--no-preview-label")
 
-    # HEADER
+    ### HEADER
     def header(self, header: str) -> Self:
         return self.add(f"--header={header}")
 
@@ -562,7 +563,7 @@ class Options:
     def no_header_lines(self) -> Self:
         return self.add("--no-header-lines")
 
-    # FOOTER
+    ### FOOTER
     def footer(self, footer: str) -> Self:
         return self.add(f"--footer={footer}")
 
@@ -596,7 +597,7 @@ class Options:
     def no_footer_label(self) -> Self:
         return self.add("--no-footer-label")
 
-    # SCRIPTING
+    ### SCRIPTING
     def query(self, query: str) -> Self:
         return self.add(f"--query={query}")
 
@@ -633,7 +634,7 @@ class Options:
     def no_clear(self) -> Self:
         return self.add("--no-clear")
 
-    # KEY/EVENT BINDINGS
+    ### KEY/EVENT BINDINGS
     def bind(self, trigger: Hotkey | Event, action: str) -> Self:
         return self.add(f"--bind={trigger}:{action}")
 
@@ -648,7 +649,7 @@ class Options:
     ) -> Self:
         return self.bind(trigger, f"{command_type}({command})")
 
-    # ADVANCED
+    ### ADVANCED
     def with_shell(self, interpreter: str) -> Self:
         return self.add(f"--with-shell={interpreter}")
 
@@ -664,7 +665,7 @@ class Options:
     def bench(self, duration: float = 0) -> Self:
         return self.add(f"--bench={duration}")
 
-    # DIRECTORY TRAVERSAL
+    ### DIRECTORY TRAVERSAL
     def walker(self, *walker_values: WalkerValue) -> Self:
         return self.add(f"--walker={','.join(walker_values)}")
 
@@ -674,7 +675,7 @@ class Options:
     def walker_skip(self, *paths: str) -> Self:
         return self.add(f"--walker-skip={','.join(paths)}")
 
-    # HISTORY
+    ### HISTORY
     def history(self, path: str) -> Self:
         return self.add(f"--history={path}")
 
@@ -684,10 +685,10 @@ class Options:
     def no_history(self) -> Self:
         return self.add("--no-history")
 
-    # SHELL INTEGRATION
+    ### SHELL INTEGRATION
     pass
 
-    # OTHERS
+    ### OTHERS
     def no_mouse(self) -> Self:
         return self.add("--no-mouse")
 
@@ -703,5 +704,5 @@ class Options:
     def no_ambidouble(self) -> Self:
         return self.add("--no-ambidouble")
 
-    # HELP
+    ### HELP
     pass
