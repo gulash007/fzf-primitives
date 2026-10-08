@@ -1,6 +1,6 @@
 from typing import Callable
 
-from ...FzfPrompt.options import Hotkey, Event
+from ...FzfPrompt.options import Event, Hotkey
 from ..on_trigger import OnTriggerBase
 
 
@@ -906,6 +906,136 @@ class HotkeyAdder[_M: OnTriggerBase]:  # _M to prevent conflict with M hotkey
         return self._set_and_return_mod("ctrl-z")
 
     @property
+    def CTRL_SHIFT_A(self) -> _M:
+        """ctrl-A (free)"""
+        return self._set_and_return_mod("ctrl-A")
+
+    @property
+    def CTRL_SHIFT_B(self) -> _M:
+        """ctrl-B (free)"""
+        return self._set_and_return_mod("ctrl-B")
+
+    @property
+    def CTRL_SHIFT_C(self) -> _M:
+        """ctrl-C (free)"""
+        return self._set_and_return_mod("ctrl-C")
+
+    @property
+    def CTRL_SHIFT_D(self) -> _M:
+        """ctrl-D (free)"""
+        return self._set_and_return_mod("ctrl-D")
+
+    @property
+    def CTRL_SHIFT_E(self) -> _M:
+        """ctrl-E (free)"""
+        return self._set_and_return_mod("ctrl-E")
+
+    @property
+    def CTRL_SHIFT_F(self) -> _M:
+        """ctrl-F (free)"""
+        return self._set_and_return_mod("ctrl-F")
+
+    @property
+    def CTRL_SHIFT_G(self) -> _M:
+        """ctrl-G (free)"""
+        return self._set_and_return_mod("ctrl-G")
+
+    @property
+    def CTRL_SHIFT_H(self) -> _M:
+        """ctrl-H (free)"""
+        return self._set_and_return_mod("ctrl-H")
+
+    @property
+    def CTRL_SHIFT_I(self) -> _M:
+        """ctrl-I (free)"""
+        return self._set_and_return_mod("ctrl-I")
+
+    @property
+    def CTRL_SHIFT_J(self) -> _M:
+        """ctrl-J (free)"""
+        return self._set_and_return_mod("ctrl-J")
+
+    @property
+    def CTRL_SHIFT_K(self) -> _M:
+        """ctrl-K (free)"""
+        return self._set_and_return_mod("ctrl-K")
+
+    @property
+    def CTRL_SHIFT_L(self) -> _M:
+        """ctrl-L (free)"""
+        return self._set_and_return_mod("ctrl-L")
+
+    @property
+    def CTRL_SHIFT_M(self) -> _M:
+        """ctrl-M (free)"""
+        return self._set_and_return_mod("ctrl-M")
+
+    @property
+    def CTRL_SHIFT_N(self) -> _M:
+        """ctrl-N (free)"""
+        return self._set_and_return_mod("ctrl-N")
+
+    @property
+    def CTRL_SHIFT_O(self) -> _M:
+        """ctrl-O (free)"""
+        return self._set_and_return_mod("ctrl-O")
+
+    @property
+    def CTRL_SHIFT_P(self) -> _M:
+        """ctrl-P (free)"""
+        return self._set_and_return_mod("ctrl-P")
+
+    @property
+    def CTRL_SHIFT_Q(self) -> _M:
+        """ctrl-Q (free)"""
+        return self._set_and_return_mod("ctrl-Q")
+
+    @property
+    def CTRL_SHIFT_R(self) -> _M:
+        """ctrl-R (free)"""
+        return self._set_and_return_mod("ctrl-R")
+
+    @property
+    def CTRL_SHIFT_S(self) -> _M:
+        """ctrl-S (free)"""
+        return self._set_and_return_mod("ctrl-S")
+
+    @property
+    def CTRL_SHIFT_T(self) -> _M:
+        """ctrl-T (free)"""
+        return self._set_and_return_mod("ctrl-T")
+
+    @property
+    def CTRL_SHIFT_U(self) -> _M:
+        """ctrl-U (free)"""
+        return self._set_and_return_mod("ctrl-U")
+
+    @property
+    def CTRL_SHIFT_V(self) -> _M:
+        """ctrl-V (free)"""
+        return self._set_and_return_mod("ctrl-V")
+
+    @property
+    def CTRL_SHIFT_W(self) -> _M:
+        """ctrl-W (free)"""
+        return self._set_and_return_mod("ctrl-W")
+
+    @property
+    def CTRL_SHIFT_X(self) -> _M:
+        """ctrl-X (free)"""
+        return self._set_and_return_mod("ctrl-X")
+
+    @property
+    def CTRL_SHIFT_Y(self) -> _M:
+        """ctrl-Y (free)"""
+        return self._set_and_return_mod("ctrl-Y")
+
+    @property
+    def CTRL_SHIFT_Z(self) -> _M:
+        """ctrl-Z (free)"""
+        return self._set_and_return_mod("ctrl-Z")
+
+    @property
     def CTRL_SQUARE_CLOSE(self) -> _M:
         """ctrl-] (free)"""
         return self._set_and_return_mod("ctrl-]")
@@ -936,9 +1066,64 @@ class HotkeyAdder[_M: OnTriggerBase]:  # _M to prevent conflict with M hotkey
         return self._set_and_return_mod("ctrl-space")
 
     @property
+    def CTRL_BACKSPACE(self) -> _M:
+        """ctrl-backspace (free)"""
+        return self._set_and_return_mod("ctrl-backspace")
+
+    @property
+    def CTRL_BSPACE(self) -> _M:
+        """ctrl-bspace (free)"""
+        return self._set_and_return_mod("ctrl-bspace")
+
+    @property
+    def CTRL_BS(self) -> _M:
+        """ctrl-bs (free)"""
+        return self._set_and_return_mod("ctrl-bs")
+
+    @property
     def CTRL_DELETE(self) -> _M:
         """ctrl-delete (free)"""
         return self._set_and_return_mod("ctrl-delete")
+
+    @property
+    def CTRL_UP(self) -> _M:
+        """ctrl-up (free)"""
+        return self._set_and_return_mod("ctrl-up")
+
+    @property
+    def CTRL_DOWN(self) -> _M:
+        """ctrl-down (free)"""
+        return self._set_and_return_mod("ctrl-down")
+
+    @property
+    def CTRL_LEFT(self) -> _M:
+        """ctrl-left (free)"""
+        return self._set_and_return_mod("ctrl-left")
+
+    @property
+    def CTRL_RIGHT(self) -> _M:
+        """ctrl-right (free)"""
+        return self._set_and_return_mod("ctrl-right")
+
+    @property
+    def CTRL_HOME(self) -> _M:
+        """ctrl-home (free)"""
+        return self._set_and_return_mod("ctrl-home")
+
+    @property
+    def CTRL_END(self) -> _M:
+        """ctrl-end (free)"""
+        return self._set_and_return_mod("ctrl-end")
+
+    @property
+    def CTRL_PAGE_UP(self) -> _M:
+        """ctrl-page-up (free)"""
+        return self._set_and_return_mod("ctrl-page-up")
+
+    @property
+    def CTRL_PAGE_DOWN(self) -> _M:
+        """ctrl-page-down (free)"""
+        return self._set_and_return_mod("ctrl-page-down")
 
     @property
     def ALT_0(self) -> _M:
@@ -1451,6 +1636,11 @@ class HotkeyAdder[_M: OnTriggerBase]:  # _M to prevent conflict with M hotkey
         return self._set_and_return_mod("alt-bs")
 
     @property
+    def ALT_DELETE(self) -> _M:
+        """alt-delete (free)"""
+        return self._set_and_return_mod("alt-delete")
+
+    @property
     def ALT_UP(self) -> _M:
         """alt-up (free)"""
         return self._set_and_return_mod("alt-up")
@@ -1469,6 +1659,26 @@ class HotkeyAdder[_M: OnTriggerBase]:  # _M to prevent conflict with M hotkey
     def ALT_RIGHT(self) -> _M:
         """alt-right (free)"""
         return self._set_and_return_mod("alt-right")
+
+    @property
+    def ALT_HOME(self) -> _M:
+        """alt-home (free)"""
+        return self._set_and_return_mod("alt-home")
+
+    @property
+    def ALT_END(self) -> _M:
+        """alt-end (free)"""
+        return self._set_and_return_mod("alt-end")
+
+    @property
+    def ALT_PAGE_UP(self) -> _M:
+        """alt-page-up (free)"""
+        return self._set_and_return_mod("alt-page-up")
+
+    @property
+    def ALT_PAGE_DOWN(self) -> _M:
+        """alt-page-down (free)"""
+        return self._set_and_return_mod("alt-page-down")
 
     @property
     def SHIFT_TAB(self) -> _M:
@@ -1499,6 +1709,26 @@ class HotkeyAdder[_M: OnTriggerBase]:  # _M to prevent conflict with M hotkey
     def SHIFT_RIGHT(self) -> _M:
         """shift-right (default: forward-word)"""
         return self._set_and_return_mod("shift-right")
+
+    @property
+    def SHIFT_HOME(self) -> _M:
+        """shift-home (free)"""
+        return self._set_and_return_mod("shift-home")
+
+    @property
+    def SHIFT_END(self) -> _M:
+        """shift-end (free)"""
+        return self._set_and_return_mod("shift-end")
+
+    @property
+    def SHIFT_PAGE_UP(self) -> _M:
+        """shift-page-up (free)"""
+        return self._set_and_return_mod("shift-page-up")
+
+    @property
+    def SHIFT_PAGE_DOWN(self) -> _M:
+        """shift-page-down (free)"""
+        return self._set_and_return_mod("shift-page-down")
 
     @property
     def SHIFT_LEFT_CLICK(self) -> _M:
@@ -1651,6 +1881,201 @@ class HotkeyAdder[_M: OnTriggerBase]:  # _M to prevent conflict with M hotkey
         return self._set_and_return_mod("ctrl-alt-z")
 
     @property
+    def CTRL_ALT_SHIFT_A(self) -> _M:
+        """ctrl-alt-A (free)"""
+        return self._set_and_return_mod("ctrl-alt-A")
+
+    @property
+    def CTRL_ALT_SHIFT_B(self) -> _M:
+        """ctrl-alt-B (free)"""
+        return self._set_and_return_mod("ctrl-alt-B")
+
+    @property
+    def CTRL_ALT_SHIFT_C(self) -> _M:
+        """ctrl-alt-C (free)"""
+        return self._set_and_return_mod("ctrl-alt-C")
+
+    @property
+    def CTRL_ALT_SHIFT_D(self) -> _M:
+        """ctrl-alt-D (free)"""
+        return self._set_and_return_mod("ctrl-alt-D")
+
+    @property
+    def CTRL_ALT_SHIFT_E(self) -> _M:
+        """ctrl-alt-E (free)"""
+        return self._set_and_return_mod("ctrl-alt-E")
+
+    @property
+    def CTRL_ALT_SHIFT_F(self) -> _M:
+        """ctrl-alt-F (free)"""
+        return self._set_and_return_mod("ctrl-alt-F")
+
+    @property
+    def CTRL_ALT_SHIFT_G(self) -> _M:
+        """ctrl-alt-G (free)"""
+        return self._set_and_return_mod("ctrl-alt-G")
+
+    @property
+    def CTRL_ALT_SHIFT_H(self) -> _M:
+        """ctrl-alt-H (free)"""
+        return self._set_and_return_mod("ctrl-alt-H")
+
+    @property
+    def CTRL_ALT_SHIFT_I(self) -> _M:
+        """ctrl-alt-I (free)"""
+        return self._set_and_return_mod("ctrl-alt-I")
+
+    @property
+    def CTRL_ALT_SHIFT_J(self) -> _M:
+        """ctrl-alt-J (free)"""
+        return self._set_and_return_mod("ctrl-alt-J")
+
+    @property
+    def CTRL_ALT_SHIFT_K(self) -> _M:
+        """ctrl-alt-K (free)"""
+        return self._set_and_return_mod("ctrl-alt-K")
+
+    @property
+    def CTRL_ALT_SHIFT_L(self) -> _M:
+        """ctrl-alt-L (free)"""
+        return self._set_and_return_mod("ctrl-alt-L")
+
+    @property
+    def CTRL_ALT_SHIFT_M(self) -> _M:
+        """ctrl-alt-M (free)"""
+        return self._set_and_return_mod("ctrl-alt-M")
+
+    @property
+    def CTRL_ALT_SHIFT_N(self) -> _M:
+        """ctrl-alt-N (free)"""
+        return self._set_and_return_mod("ctrl-alt-N")
+
+    @property
+    def CTRL_ALT_SHIFT_O(self) -> _M:
+        """ctrl-alt-O (free)"""
+        return self._set_and_return_mod("ctrl-alt-O")
+
+    @property
+    def CTRL_ALT_SHIFT_P(self) -> _M:
+        """ctrl-alt-P (free)"""
+        return self._set_and_return_mod("ctrl-alt-P")
+
+    @property
+    def CTRL_ALT_SHIFT_Q(self) -> _M:
+        """ctrl-alt-Q (free)"""
+        return self._set_and_return_mod("ctrl-alt-Q")
+
+    @property
+    def CTRL_ALT_SHIFT_R(self) -> _M:
+        """ctrl-alt-R (free)"""
+        return self._set_and_return_mod("ctrl-alt-R")
+
+    @property
+    def CTRL_ALT_SHIFT_S(self) -> _M:
+        """ctrl-alt-S (free)"""
+        return self._set_and_return_mod("ctrl-alt-S")
+
+    @property
+    def CTRL_ALT_SHIFT_T(self) -> _M:
+        """ctrl-alt-T (free)"""
+        return self._set_and_return_mod("ctrl-alt-T")
+
+    @property
+    def CTRL_ALT_SHIFT_U(self) -> _M:
+        """ctrl-alt-U (free)"""
+        return self._set_and_return_mod("ctrl-alt-U")
+
+    @property
+    def CTRL_ALT_SHIFT_V(self) -> _M:
+        """ctrl-alt-V (free)"""
+        return self._set_and_return_mod("ctrl-alt-V")
+
+    @property
+    def CTRL_ALT_SHIFT_W(self) -> _M:
+        """ctrl-alt-W (free)"""
+        return self._set_and_return_mod("ctrl-alt-W")
+
+    @property
+    def CTRL_ALT_SHIFT_X(self) -> _M:
+        """ctrl-alt-X (free)"""
+        return self._set_and_return_mod("ctrl-alt-X")
+
+    @property
+    def CTRL_ALT_SHIFT_Y(self) -> _M:
+        """ctrl-alt-Y (free)"""
+        return self._set_and_return_mod("ctrl-alt-Y")
+
+    @property
+    def CTRL_ALT_SHIFT_Z(self) -> _M:
+        """ctrl-alt-Z (free)"""
+        return self._set_and_return_mod("ctrl-alt-Z")
+
+    @property
+    def CTRL_ALT_BACKSPACE(self) -> _M:
+        """ctrl-alt-backspace (free)"""
+        return self._set_and_return_mod("ctrl-alt-backspace")
+
+    @property
+    def CTRL_ALT_BSPACE(self) -> _M:
+        """ctrl-alt-bspace (free)"""
+        return self._set_and_return_mod("ctrl-alt-bspace")
+
+    @property
+    def CTRL_ALT_BS(self) -> _M:
+        """ctrl-alt-bs (free)"""
+        return self._set_and_return_mod("ctrl-alt-bs")
+
+    @property
+    def CTRL_ALT_DELETE(self) -> _M:
+        """ctrl-alt-delete (free)"""
+        return self._set_and_return_mod("ctrl-alt-delete")
+
+    @property
+    def CTRL_ALT_UP(self) -> _M:
+        """ctrl-alt-up (free)"""
+        return self._set_and_return_mod("ctrl-alt-up")
+
+    @property
+    def CTRL_ALT_DOWN(self) -> _M:
+        """ctrl-alt-down (free)"""
+        return self._set_and_return_mod("ctrl-alt-down")
+
+    @property
+    def CTRL_ALT_LEFT(self) -> _M:
+        """ctrl-alt-left (free)"""
+        return self._set_and_return_mod("ctrl-alt-left")
+
+    @property
+    def CTRL_ALT_RIGHT(self) -> _M:
+        """ctrl-alt-right (free)"""
+        return self._set_and_return_mod("ctrl-alt-right")
+
+    @property
+    def CTRL_ALT_HOME(self) -> _M:
+        """ctrl-alt-home (free)"""
+        return self._set_and_return_mod("ctrl-alt-home")
+
+    @property
+    def CTRL_ALT_END(self) -> _M:
+        """ctrl-alt-end (free)"""
+        return self._set_and_return_mod("ctrl-alt-end")
+
+    @property
+    def CTRL_ALT_PAGE_UP(self) -> _M:
+        """ctrl-alt-page-up (free)"""
+        return self._set_and_return_mod("ctrl-alt-page-up")
+
+    @property
+    def CTRL_ALT_PAGE_DOWN(self) -> _M:
+        """ctrl-alt-page-down (free)"""
+        return self._set_and_return_mod("ctrl-alt-page-down")
+
+    @property
+    def ALT_SHIFT_DELETE(self) -> _M:
+        """alt-shift-delete (free)"""
+        return self._set_and_return_mod("alt-shift-delete")
+
+    @property
     def ALT_SHIFT_UP(self) -> _M:
         """alt-shift-up (free)"""
         return self._set_and_return_mod("alt-shift-up")
@@ -1669,6 +2094,116 @@ class HotkeyAdder[_M: OnTriggerBase]:  # _M to prevent conflict with M hotkey
     def ALT_SHIFT_RIGHT(self) -> _M:
         """alt-shift-right (free)"""
         return self._set_and_return_mod("alt-shift-right")
+
+    @property
+    def ALT_SHIFT_HOME(self) -> _M:
+        """alt-shift-home (free)"""
+        return self._set_and_return_mod("alt-shift-home")
+
+    @property
+    def ALT_SHIFT_END(self) -> _M:
+        """alt-shift-end (free)"""
+        return self._set_and_return_mod("alt-shift-end")
+
+    @property
+    def ALT_SHIFT_PAGE_UP(self) -> _M:
+        """alt-shift-page-up (free)"""
+        return self._set_and_return_mod("alt-shift-page-up")
+
+    @property
+    def ALT_SHIFT_PAGE_DOWN(self) -> _M:
+        """alt-shift-page-down (free)"""
+        return self._set_and_return_mod("alt-shift-page-down")
+
+    @property
+    def CTRL_SHIFT_DELETE(self) -> _M:
+        """ctrl-shift-delete (free)"""
+        return self._set_and_return_mod("ctrl-shift-delete")
+
+    @property
+    def CTRL_SHIFT_UP(self) -> _M:
+        """ctrl-shift-up (free)"""
+        return self._set_and_return_mod("ctrl-shift-up")
+
+    @property
+    def CTRL_SHIFT_DOWN(self) -> _M:
+        """ctrl-shift-down (free)"""
+        return self._set_and_return_mod("ctrl-shift-down")
+
+    @property
+    def CTRL_SHIFT_LEFT(self) -> _M:
+        """ctrl-shift-left (free)"""
+        return self._set_and_return_mod("ctrl-shift-left")
+
+    @property
+    def CTRL_SHIFT_RIGHT(self) -> _M:
+        """ctrl-shift-right (free)"""
+        return self._set_and_return_mod("ctrl-shift-right")
+
+    @property
+    def CTRL_SHIFT_HOME(self) -> _M:
+        """ctrl-shift-home (free)"""
+        return self._set_and_return_mod("ctrl-shift-home")
+
+    @property
+    def CTRL_SHIFT_END(self) -> _M:
+        """ctrl-shift-end (free)"""
+        return self._set_and_return_mod("ctrl-shift-end")
+
+    @property
+    def CTRL_SHIFT_PAGE_UP(self) -> _M:
+        """ctrl-shift-page-up (free)"""
+        return self._set_and_return_mod("ctrl-shift-page-up")
+
+    @property
+    def CTRL_SHIFT_PAGE_DOWN(self) -> _M:
+        """ctrl-shift-page-down (free)"""
+        return self._set_and_return_mod("ctrl-shift-page-down")
+
+    @property
+    def CTRL_ALT_SHIFT_DELETE(self) -> _M:
+        """ctrl-alt-shift-delete (free)"""
+        return self._set_and_return_mod("ctrl-alt-shift-delete")
+
+    @property
+    def CTRL_ALT_SHIFT_UP(self) -> _M:
+        """ctrl-alt-shift-up (free)"""
+        return self._set_and_return_mod("ctrl-alt-shift-up")
+
+    @property
+    def CTRL_ALT_SHIFT_DOWN(self) -> _M:
+        """ctrl-alt-shift-down (free)"""
+        return self._set_and_return_mod("ctrl-alt-shift-down")
+
+    @property
+    def CTRL_ALT_SHIFT_LEFT(self) -> _M:
+        """ctrl-alt-shift-left (free)"""
+        return self._set_and_return_mod("ctrl-alt-shift-left")
+
+    @property
+    def CTRL_ALT_SHIFT_RIGHT(self) -> _M:
+        """ctrl-alt-shift-right (free)"""
+        return self._set_and_return_mod("ctrl-alt-shift-right")
+
+    @property
+    def CTRL_ALT_SHIFT_HOME(self) -> _M:
+        """ctrl-alt-shift-home (free)"""
+        return self._set_and_return_mod("ctrl-alt-shift-home")
+
+    @property
+    def CTRL_ALT_SHIFT_END(self) -> _M:
+        """ctrl-alt-shift-end (free)"""
+        return self._set_and_return_mod("ctrl-alt-shift-end")
+
+    @property
+    def CTRL_ALT_SHIFT_PAGE_UP(self) -> _M:
+        """ctrl-alt-shift-page-up (free)"""
+        return self._set_and_return_mod("ctrl-alt-shift-page-up")
+
+    @property
+    def CTRL_ALT_SHIFT_PAGE_DOWN(self) -> _M:
+        """ctrl-alt-shift-page-down (free)"""
+        return self._set_and_return_mod("ctrl-alt-shift-page-down")
 
 
 class TriggerAdder[M: OnTriggerBase](HotkeyAdder[M], EventAdder[M]):

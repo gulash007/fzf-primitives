@@ -154,6 +154,7 @@ MODIFIERS = {
     "ctrl-alt": "CTRL_ALT",
     "alt-shift": "ALT_SHIFT",
     "ctrl-shift": "CTRL_SHIFT",
+    "ctrl-alt-shift": "CTRL_ALT_SHIFT",
 }
 
 
