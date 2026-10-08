@@ -10,7 +10,7 @@ A Python convenience wrapper for the [fzf](https://github.com/junegunn/fzf) comm
 - Supports piping large datasets to `fzf` for real-time fuzzy searching.
 
 ## Prerequisites
-
-Before using this package, make sure you have `fzf` installed on your system. You can install `fzf` by following the instructions [here](https://github.com/junegunn/fzf#installation).
+- Before using this package, make sure you have `fzf` installed on your system. You can install `fzf` by following the instructions [here](https://github.com/junegunn/fzf#installation).
+- Requires fzf 0.74.3 or higher
 
 ## Installation
