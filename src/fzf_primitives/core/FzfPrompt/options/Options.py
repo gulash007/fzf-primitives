@@ -240,8 +240,10 @@ class Options:
     def min_height(self, min_height_option: str) -> Self:
         return self.add(f"--min-height={min_height_option}")
 
-    def tmux(self, tmux_option: str | None = None) -> Self:
+    def popup(self, tmux_option: str | None = None) -> Self:
         return self.add(f"--tmux={tmux_option}" if tmux_option is not None else "--tmux")
+
+    tmux = popup
 
     def no_tmux(self) -> Self:
         return self.add("--no-tmux")
@@ -316,11 +318,17 @@ class Options:
     def no_multi_line(self) -> Self:
         return self.add("--no-multi-line")
 
+    def raw(self) -> Self:
+        return self.add("--raw")
+
     def track(self) -> Self:
         return self.add("--track")
 
     def no_track(self) -> Self:
         return self.add("--no-track")
+
+    def id_nth(self, field_index_expression: str) -> Self:
+        return self.add(f"--id-nth={field_index_expression}")
 
     def tac(self) -> Self:
         """Reverse the order of the input"""
@@ -342,6 +350,12 @@ class Options:
 
     def no_gap_line(self) -> Self:
         return self.add("--no-gap-line")
+
+    def freeze_left(self, field_count: int) -> Self:
+        return self.add(f"--freeze-left={field_count}")
+
+    def freeze_right(self, field_count: int) -> Self:
+        return self.add(f"--freeze-right={field_count}")
 
     def keep_right(self) -> Self:
         return self.add("--keep-right")
@@ -366,6 +380,12 @@ class Options:
 
     def jump_labels(self, labels: str) -> Self:
         return self.add(f"--jump-labels={labels}")
+
+    def gutter(self, char: str) -> Self:
+        return self.add(f"--gutter={char}")
+
+    def gutter_raw(self, char: str) -> Self:
+        return self.add(f"--gutter-raw={char}")
 
     def pointer(self, pointer: str) -> Self:
         if len(pointer) > 2:
@@ -469,6 +489,9 @@ class Options:
 
     def preview_label(self, label: str) -> Self:
         return self.add(f"--preview-label={label}")
+
+    def preview_wrap_sign(self, indicator: str) -> Self:
+        return self.add(f"--preview-wrap-sign={indicator}")
 
     def preview_label_pos(self, position: LabelPosition) -> Self:
         return self.add(f"--preview-label-pos={position}")
@@ -629,11 +652,17 @@ class Options:
     def with_shell(self, interpreter: str) -> Self:
         return self.add(f"--with-shell={interpreter}")
 
-    def listen(self, port_number: int = 0, unsafe: bool = False) -> Self:
-        return self.add(f"--listen{'-unsafe' if unsafe else ''}={port_number}")
+    def listen(self, at: str | int = 0, unsafe: bool = False) -> Self:
+        return self.add(f"--listen{'-unsafe' if unsafe else ''}={at}")
 
     def no_listen(self) -> Self:
         return self.add("--no-listen")
+
+    def threads(self, count: int) -> Self:
+        return self.add(f"--threads={count}")
+
+    def bench(self, duration: float = 0) -> Self:
+        return self.add(f"--bench={duration}")
 
     # DIRECTORY TRAVERSAL
     def walker(self, *walker_values: WalkerValue) -> Self:

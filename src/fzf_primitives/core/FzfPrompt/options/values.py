@@ -28,6 +28,7 @@ Border = Literal[
     "sharp",
     "bold",
     "double",
+    "dashed",
     "horizontal",
     "vertical",
     "top",
@@ -37,7 +38,7 @@ Border = Literal[
     "none",
 ]
 LabelPosition = Literal["top", "bottom"]
-WindowPosition = Literal["up", "down", "left", "right"]
+WindowPosition = Literal["up", "down", "left", "right", "next"]
 RelativeWindowSize = Literal[
     "1%",
     "2%",
