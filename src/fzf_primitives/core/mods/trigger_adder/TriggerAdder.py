@@ -33,6 +33,12 @@ class EventAdder[M: OnTriggerBase]:
         return self._set_and_return_mod("result")
 
     @property
+    def RESULT_FINAL(self) -> M:
+        """Same as result, but suppressed while the input stream is still open.
+        Use this when you want a one-shot action per query instead of one per intermediate snapshot during loading."""
+        return self._set_and_return_mod("result-final")
+
+    @property
     def CHANGE(self) -> M:
         """Triggered whenever the query string is changed"""
         return self._set_and_return_mod("change")
@@ -74,8 +80,21 @@ class EventAdder[M: OnTriggerBase]:
 
     @property
     def CLICK_HEADER(self) -> M:
-        """Triggered when a mouse click occurs within the header. Sets FZF_CLICK_HEADER_LINE and FZF_CLICK_HEADER_COLUMN environment variables starting from 1. It optionally sets FZF_CLICK_HEADER_WORD and FZF_CLICK_HEADER_NTH if clicked on a word."""
+        """Triggered when a mouse click occurs within the header.
+        Sets FZF_CLICK_HEADER_LINE and FZF_CLICK_HEADER_COLUMN environment variables starting from 1.
+        It optionally sets FZF_CLICK_HEADER_WORD and FZF_CLICK_HEADER_NTH if clicked on a word."""
         return self._set_and_return_mod("click-header")
+
+    @property
+    def CLICK_FOOTER(self) -> M:
+        """Triggered when a mouse click occurs within the footer.
+        Sets FZF_CLICK_FOOTER_LINE and FZF_CLICK_FOOTER_COLUMN environment variables starting from 1.
+        It optionally sets FZF_CLICK_FOOTER_WORD and FZF_CLICK_FOOTER_NTH if clicked on a word."""
+        return self._set_and_return_mod("click-footer")
+
+    def EVERY(self, interval: float) -> M:
+        """Triggered at a regular interval specified by `interval` in seconds"""
+        return self._set_and_return_mod(f"every({interval})")
 
 
 class HotkeyAdder[_M: OnTriggerBase]:  # _M to prevent conflict with M hotkey

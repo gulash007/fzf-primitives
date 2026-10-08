@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import Literal
 
-Event = Literal[
+_Event = Literal[
     "start",
     "load",
     "resize",
     "result",
+    "result-final",
     "change",
     "focus",
     "multi",
@@ -16,7 +17,14 @@ Event = Literal[
     "jump",
     "jump-cancel",
     "click-header",
+    "click-footer",
+    "every(2)",
+    "every(1)",
+    "every(0.5)",
+    "every(0.25)",
+    "every(0.1)",
 ]
+type Event = _Event | str
 
 _Hotkey = Literal[
     "0",
