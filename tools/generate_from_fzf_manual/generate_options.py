@@ -1,5 +1,6 @@
 import json
 import re
+import sys
 from pathlib import Path
 
 
@@ -68,6 +69,7 @@ UNUSED_OPTIONS = [
     "--bash",
     "--fish",
     "--zsh",
+    "--nushell",
     "--man",
     "--help",
     "--version",
@@ -97,6 +99,8 @@ if __name__ == "__main__":
         )
         f.write("\n")
 
+    if not sys.argv[1:] or sys.argv[1] != "--finalize":
+        sys.exit(0)
     # assumes fzf_options_grouped.json is cleaned up
     with open(Path(__file__).parent / "fzf_options_grouped.json", "r", encoding="utf-8") as f:
         obj = json.load(f)
