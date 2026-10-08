@@ -60,7 +60,7 @@ class Server[T, S](Thread, LoggedComponent):
         payload_bytearray = bytearray()
         while r := client_socket.recv(1024):
             payload_bytearray.extend(r)
-        payload = payload_bytearray.decode("utf-8").strip()
+        payload = payload_bytearray.decode("utf-8")
         try:
             endpoint_id, *fields = self._parse_payload(payload)
             endpoint = self._get_endpoint(endpoint_id)

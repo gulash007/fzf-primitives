@@ -1,3 +1,5 @@
+import pytest
+
 from fzf_primitives import Prompt
 from fzf_primitives.core.FzfPrompt.server import CommandOutput, FzfPlaceholder, VarOutput
 
@@ -12,14 +14,27 @@ def test_command_output():
     assert result.obj == "test"
 
 
-def test_var_output():
-    def function_with_var_output(prompt_data, action=VarOutput.preset.FZF_ACTION):
-        prompt_data.obj.append(action)
-        return action
-
+@pytest.mark.parametrize(
+    "fn,expected",
+    [
+        (
+            lambda prompt_data, action=VarOutput.preset.FZF_ACTION: prompt_data.obj.append(action),
+            ["start", "up", "down", "down", "select"],
+        ),
+        (
+            lambda prompt_data, FZF_ACTION: prompt_data.obj.append(FZF_ACTION),
+            ["start", "up", "down", "down", "select"],
+        ),
+        (
+            lambda prompt_data, NON_EXISTENT: prompt_data.obj.append(NON_EXISTENT),
+            ["", "", "", "", ""],
+        ),
+    ],
+)
+def test_var_output(fn, expected):
     prompt = Prompt([1, 2, 3], obj=[])
     prompt.mod.options.multi()
-    prompt.mod.preview().custom("set var output", function_with_var_output)
+    prompt.mod.preview().custom("set var output", fn)
     prompt.mod.on_hotkey().CTRL_Q.accept()
     prompt.mod.automate_actions("up")
     prompt.mod.automate_actions("down")
@@ -27,7 +42,7 @@ def test_var_output():
     prompt.mod.automate_actions("select")
     prompt.mod.automate("ctrl-q")
     result = prompt.run()
-    assert result.obj == ["start", "up", "down", "down", "select"], f"Got {result.obj}"
+    assert result.obj == expected, f"Got {result.obj}"
 
 
 def test_fzf_placeholders():
