@@ -218,6 +218,21 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         """Ends prompt with status 'quit'"""
         return self.end_prompt("quit", "quit")
 
+    def pos(self, pos: int):
+        """fzf action pos(i) is 1-based, not 0-based, though it accepts negative values similar to Python.
+        Also 0 is the same as 1. This means that pos(0) or pos(1) is the first item, pos(-1) is the last item."""
+        return self.run("pos", ParametrizedAction(str(pos), "pos"))
+
+    def move_to(self, index: int):
+        """Moves the pointer to the specified index in the filtered list.
+
+        ❗ This conveniently converts indexing to 0-based like in Python.
+        """
+        return self.run("move to", MovePointer(index))
+
+    def clear_query(self):
+        return self.run("clear query", "clear-query")
+
     def clip(self):
         return self.run_shell_command("clip", SHELL_COMMAND.clip_selections)
 
