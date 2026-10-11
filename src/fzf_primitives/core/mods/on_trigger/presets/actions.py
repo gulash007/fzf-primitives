@@ -2,13 +2,49 @@ from __future__ import annotations
 
 from typing import Callable, Literal
 
-from ....FzfPrompt.server import FzfPlaceholder, VarOutput
 from ....FzfPrompt import Action, PreviewFunction, PromptData, ServerCall, Transform
 from ....FzfPrompt.action_menu import DeselectAt, MovePointer, SelectAt, ToggleAt
+from ....FzfPrompt.server import FzfPlaceholder, VarOutput
 from ....monitoring import LoggedComponent
 
 type EntriesGetter[T, S] = Callable[[PromptData[T, S]], list[T]]
 type SelectionAction = Literal["select", "deselect", "toggle"]
+
+
+class MoveBy[T, S](Transform[T, S], LoggedComponent):
+    def __init__(self, predicate: Callable[[PromptData[T, S], T], bool], direction: Literal["up", "down"]):
+        LoggedComponent.__init__(self)
+
+        # TODO: handle --raw mode dynamically as toggle-raw action exists
+        # TODO: implement wrapping
+        def get_move_action(
+            prompt_data: PromptData[T, S],
+            current_position=VarOutput.preset.FZF_POS,
+            matched_indices=FzfPlaceholder.preset.MATCHED_INDICES,
+        ) -> list[Action]:
+            matched_indices = [int(i) for i in matched_indices.split() if i.strip().isdigit()]
+            current_index = int(current_position) - 1
+            self.logger.debug(f"Current index: {current_index}", trace_point="current_index")
+            # Implement the logic for moving to the next/previous item based on the predicate and direction
+            candidates = (
+                matched_indices[current_index + 1 :] if direction == "down" else matched_indices[:current_index][::-1]
+            )
+            for step, index_in_entries in enumerate(candidates, start=1):
+                position = current_index + step if direction == "down" else current_index - step
+                entry = prompt_data.entries[index_in_entries]
+                try:
+                    should_move = predicate(prompt_data, entry)
+                except Exception as e:
+                    self.logger.warning(f"{e.__class__.__name__}: {e}", trace_point="error_in_move_to_predicate")
+                    continue
+                if should_move:
+                    self.logger.debug(
+                        f"Moving to entry at position {position} with value: {entry}", trace_point="evaluating_entry"
+                    )
+                    return [MovePointer(position)]
+            return []
+
+        super().__init__(get_move_action, f"Moving to {direction} by: {predicate.__name__}")
 
 
 class SelectBy[T, S](Transform[T, S], LoggedComponent):

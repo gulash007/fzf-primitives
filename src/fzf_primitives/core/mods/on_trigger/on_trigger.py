@@ -4,7 +4,7 @@ import functools
 import subprocess
 from abc import ABC
 from pathlib import Path
-from typing import Any, Callable, Self
+from typing import Any, Callable, Self, Literal
 
 from ...FzfPrompt import (
     Action,
@@ -28,6 +28,7 @@ from .presets import (
     FILE_EDITORS,
     EntriesGetter,
     FileEditor,
+    MoveBy,
     ReloadEntries,
     Repeater,
     SelectBy,
@@ -95,6 +96,12 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         self, name: str, get_actions: ActionsBuilder[T, S], *base_actions: BaseAction, bg: bool = False
     ) -> Self:
         return self.run(name, Transform(get_actions, bg=bg), *base_actions)
+
+    def move_by(
+        self, name: str, predicate: Callable[[PromptData[T, S], T], bool], direction: Literal["up", "down"]
+    ) -> Self:
+        """Moves the pointer by the given predicate acting on an entry"""
+        return self.run(name, MoveBy(predicate, direction=direction))
 
     def select_by(
         self, name: str, predicate: Callable[[PromptData[T, S], T], bool], action: SelectionAction = "select"
