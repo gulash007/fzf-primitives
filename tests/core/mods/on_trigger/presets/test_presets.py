@@ -1,3 +1,5 @@
+from typing import Literal
+
 import pytest
 
 from fzf_primitives import LoggingSetup, Prompt
@@ -37,6 +39,33 @@ def test_clear_query_and_focus_line():
 
     result = prompt.run()
     assert result.current == 3
+
+
+@pytest.mark.parametrize(
+    ["query", "initial_pos", "direction", "expected"],
+    [
+        ("", 1, "down", 12),
+        ("", 2, "down", 24),
+        ("2", 3, "down", 26),
+        ("5", 1, "down", 35),
+        ("", -1, "up", 48),
+        ("2", -2, "up", 12),
+        ("3", -1, "up", 36),
+    ],
+)
+@logging_setup.attach
+def test_move_by(query: str, initial_pos: int, direction: Literal["down", "up"], expected: int):
+    prompt = Prompt([11, 12, 23, 24, 26, 35, 36, 48, 57])
+
+    prompt.mod.options.multi().no_sort().query(query)
+    prompt.mod.on_hotkey().CTRL_6.move_by(
+        f"move {direction} to the next even number", lambda pd, n: n % 2 == 0, direction
+    )
+    prompt.mod.automate_actions(ParametrizedAction(str(initial_pos), "pos"))
+    prompt.mod.automate("ctrl-6")
+    prompt.mod.automate(Prompt.config.default_accept_hotkey)
+    result = prompt.run()
+    assert result.current == expected
 
 
 @pytest.mark.parametrize(["query", "expected"], [("", [12, 24, 36]), ("2", [12, 24])])
