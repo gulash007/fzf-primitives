@@ -102,7 +102,7 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         name: str,
         predicate: Callable[[PromptData[T, S], T], bool],
         direction: Literal["up", "down"],
-        fallback: Literal["stay", "last checked", "top", "bottom"],
+        fallback: Literal["stay", "last checked", "top", "bottom"] = "stay",
     ) -> Self:
         """Moves the pointer by the given predicate acting on an entry"""
         return self.run(name, MoveBy(predicate, direction=direction, fallback=fallback))
