@@ -12,7 +12,12 @@ type SelectionAction = Literal["select", "deselect", "toggle"]
 
 
 class MoveBy[T, S](Transform[T, S], LoggedComponent):
-    def __init__(self, predicate: Callable[[PromptData[T, S], T], bool], direction: Literal["up", "down"]):
+    def __init__(
+        self,
+        predicate: Callable[[PromptData[T, S], T], bool],
+        direction: Literal["up", "down"],
+        fallback: Literal["stay", "last checked", "top", "bottom"] = "stay",
+    ):
         LoggedComponent.__init__(self)
 
         # TODO: handle --raw mode dynamically as toggle-raw action exists
@@ -29,6 +34,7 @@ class MoveBy[T, S](Transform[T, S], LoggedComponent):
             candidates = (
                 matched_indices[current_index + 1 :] if direction == "down" else matched_indices[:current_index][::-1]
             )
+            position = current_index
             for step, index_in_entries in enumerate(candidates, start=1):
                 position = current_index + step if direction == "down" else current_index - step
                 entry = prompt_data.entries[index_in_entries]
@@ -42,6 +48,18 @@ class MoveBy[T, S](Transform[T, S], LoggedComponent):
                         f"Moving to entry at position {position} with value: {entry}", trace_point="evaluating_entry"
                     )
                     return [MovePointer(position)]
+            else:
+                match fallback:
+                    case "last checked":
+                        return [MovePointer(position)]
+                    case "top":
+                        return ["first"]
+                    case "last":
+                        return ["last"]
+                    case "stay":
+                        return []
+                    case _:
+                        return []
             return []
 
         super().__init__(get_move_action, f"Moving to {direction} by: {predicate.__name__}")

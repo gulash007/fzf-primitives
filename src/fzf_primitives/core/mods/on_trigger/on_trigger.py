@@ -98,10 +98,14 @@ class OnTrigger[T, S](OnTriggerBase[T, S]):
         return self.run(name, Transform(get_actions, bg=bg), *base_actions)
 
     def move_by(
-        self, name: str, predicate: Callable[[PromptData[T, S], T], bool], direction: Literal["up", "down"]
+        self,
+        name: str,
+        predicate: Callable[[PromptData[T, S], T], bool],
+        direction: Literal["up", "down"],
+        fallback: Literal["stay", "last checked", "top", "bottom"],
     ) -> Self:
         """Moves the pointer by the given predicate acting on an entry"""
-        return self.run(name, MoveBy(predicate, direction=direction))
+        return self.run(name, MoveBy(predicate, direction=direction, fallback=fallback))
 
     def select_by(
         self, name: str, predicate: Callable[[PromptData[T, S], T], bool], action: SelectionAction = "select"
